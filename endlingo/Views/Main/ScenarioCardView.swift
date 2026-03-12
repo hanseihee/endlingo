@@ -7,7 +7,7 @@ struct ScenarioCardView: View {
     @State private var showTranslation = false
     @State private var selectedWord: String?
 
-    private var vocabulary: VocabularyService { .shared }
+    @State private var vocabulary = VocabularyService.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -112,7 +112,7 @@ private struct WordDetailSheet: View {
     let lessonDate: String
     @Environment(\.dismiss) private var dismiss
 
-    private var vocabulary: VocabularyService { .shared }
+    @State private var vocabulary = VocabularyService.shared
     private var isSaved: Bool { vocabulary.isSaved(word) }
 
     var body: some View {

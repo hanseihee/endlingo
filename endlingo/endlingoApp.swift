@@ -1,22 +1,24 @@
-//
-//  endlingoApp.swift
-//  endlingo
-//
-//  Created by seihee han on 3/12/26.
-//
-
 import SwiftUI
 
 @main
 struct endlingoApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
+    @State private var auth = AuthService.shared
+
     var body: some Scene {
         WindowGroup {
-            if hasCompletedOnboarding {
-                ContentView()
-            } else {
-                OnboardingContainerView(hasCompletedOnboarding: $hasCompletedOnboarding)
+            Group {
+                if auth.isLoading {
+                    ProgressView()
+                } else if hasCompletedOnboarding {
+                    ContentView()
+                } else {
+                    OnboardingContainerView(hasCompletedOnboarding: $hasCompletedOnboarding)
+                }
+            }
+            .onOpenURL { url in
+                Task { await auth.handleDeepLink(url: url) }
             }
         }
     }

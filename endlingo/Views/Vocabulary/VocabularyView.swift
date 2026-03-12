@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct VocabularyView: View {
-    private var vocabulary: VocabularyService { .shared }
+    @State private var vocabulary = VocabularyService.shared
 
     var body: some View {
         NavigationStack {

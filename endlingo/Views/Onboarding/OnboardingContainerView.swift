@@ -6,15 +6,27 @@ struct OnboardingContainerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Progress bar
-            ProgressView(value: viewModel.progress)
-                .tint(.blue)
-                .padding(.horizontal, 24)
-                .padding(.top, 8)
-                .animation(.easeInOut(duration: 0.3), value: viewModel.progress)
+            // Progress bar (로그인 화면에서는 숨김)
+            if viewModel.currentStep != .login {
+                ProgressView(value: viewModel.progress)
+                    .tint(.blue)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
+                    .animation(.easeInOut(duration: 0.3), value: viewModel.progress)
+            }
 
             // Content
             TabView(selection: $viewModel.currentStep) {
+                LoginView(
+                    onLoginSuccess: {
+                        viewModel.proceedAfterLogin()
+                    },
+                    onGuestLogin: {
+                        viewModel.proceedAfterLogin()
+                    }
+                )
+                .tag(OnboardingStep.login)
+
                 LevelSelectionView(viewModel: viewModel)
                     .tag(OnboardingStep.level)
 
@@ -35,8 +47,8 @@ struct OnboardingContainerView: View {
             .tabViewStyle(.page(indexDisplayMode: .never))
             .animation(.easeInOut(duration: 0.3), value: viewModel.currentStep)
 
-            // Bottom buttons
-            if viewModel.currentStep != .complete {
+            // Bottom buttons (로그인/완료 화면에서는 숨김)
+            if viewModel.currentStep != .login && viewModel.currentStep != .complete {
                 bottomButtons
             }
         }

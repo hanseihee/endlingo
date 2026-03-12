@@ -2,7 +2,7 @@ import SwiftUI
 
 @Observable
 final class OnboardingViewModel {
-    var currentStep: OnboardingStep = .level
+    var currentStep: OnboardingStep = .login
     var selectedLevel: EnglishLevel?
     var selectedEnvironment: LearningEnvironment?
     var selectedHour: Int = 9
@@ -24,6 +24,7 @@ final class OnboardingViewModel {
 
     var canProceed: Bool {
         switch currentStep {
+        case .login:       return true
         case .level:       return selectedLevel != nil
         case .environment: return selectedEnvironment != nil
         case .time:        return true
@@ -33,6 +34,7 @@ final class OnboardingViewModel {
 
     var progress: Double {
         switch currentStep {
+        case .login:       return 0.0
         case .level:       return 0.33
         case .environment: return 0.66
         case .time:        return 1.0
@@ -40,9 +42,17 @@ final class OnboardingViewModel {
         }
     }
 
+    /// 로그인 완료 후 다음 단계로
+    func proceedAfterLogin() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            currentStep = .level
+        }
+    }
+
     func next() {
         withAnimation(.easeInOut(duration: 0.3)) {
             switch currentStep {
+            case .login:       currentStep = .level
             case .level:       currentStep = .environment
             case .environment: currentStep = .time
             case .time:        currentStep = .complete
@@ -54,7 +64,8 @@ final class OnboardingViewModel {
     func back() {
         withAnimation(.easeInOut(duration: 0.3)) {
             switch currentStep {
-            case .level:       break
+            case .login:       break
+            case .level:       break // 로그인 화면으로 돌아가지 않음
             case .environment: currentStep = .level
             case .time:        currentStep = .environment
             case .complete:    currentStep = .time
@@ -75,6 +86,7 @@ final class OnboardingViewModel {
 }
 
 enum OnboardingStep {
+    case login
     case level
     case environment
     case time
