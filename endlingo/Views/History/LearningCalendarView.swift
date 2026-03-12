@@ -133,6 +133,8 @@ private struct DayCellView: View {
     var body: some View {
         Text("\(day)")
             .font(.caption2)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
             .foregroundStyle(xp > 0 ? .white : .primary)
             .frame(maxWidth: .infinity)
             .aspectRatio(1, contentMode: .fit)
