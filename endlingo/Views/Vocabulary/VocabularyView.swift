@@ -2,6 +2,7 @@ import SwiftUI
 
 struct VocabularyView: View {
     @State private var vocabulary = VocabularyService.shared
+    @State private var showAddSheet = false
 
     var body: some View {
         NavigationStack {
@@ -13,6 +14,18 @@ struct VocabularyView: View {
                 }
             }
             .navigationTitle("단어장")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showAddSheet = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
+            .sheet(isPresented: $showAddSheet) {
+                AddWordSheet()
+            }
         }
     }
 
@@ -56,12 +69,154 @@ struct VocabularyView: View {
                 .font(.body)
                 .foregroundStyle(.secondary)
 
-            Text("레슨에서 단어를 탭하여 저장하세요")
+            Text("레슨에서 단어를 탭하거나\n+ 버튼으로 직접 추가하세요")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
 
             Spacer()
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - 단어 추가 시트
+
+private struct AddWordSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var vocabulary = VocabularyService.shared
+
+    @State private var wordInput = ""
+    @State private var meanings: [WordMeaning] = []
+    @State private var selected: Set<UUID> = []
+    @State private var isSearching = false
+    @State private var searched = false
+
+    private var canSearch: Bool {
+        !wordInput.trimmingCharacters(in: .whitespaces).isEmpty && !isSearching
+    }
+
+    private var selectedText: String? {
+        let items = meanings.filter { selected.contains($0.id) }
+        guard !items.isEmpty else { return nil }
+        return items.map { $0.pos.isEmpty ? $0.text : "(\($0.pos)) \($0.text)" }.joined(separator: ", ")
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 16) {
+                // 입력 필드
+                HStack(spacing: 12) {
+                    TextField("영어 단어 입력", text: $wordInput)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .padding(14)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .onSubmit { search() }
+
+                    Button {
+                        search()
+                    } label: {
+                        Group {
+                            if isSearching {
+                                ProgressView()
+                                    .tint(.white)
+                            } else {
+                                Image(systemName: "magnifyingglass")
+                            }
+                        }
+                        .frame(width: 48, height: 48)
+                        .background(canSearch ? Color.blue : Color.gray.opacity(0.4))
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .disabled(!canSearch)
+                }
+                .padding(.horizontal, 20)
+
+                // 검색 결과
+                if searched {
+                    Text(wordInput.trimmingCharacters(in: .whitespaces).lowercased())
+                        .font(.title2.bold())
+
+                    if meanings.isEmpty {
+                        Text("뜻을 찾을 수 없습니다")
+                            .font(.callout)
+                            .foregroundStyle(.tertiary)
+                    } else if vocabulary.isSaved(wordInput.trimmingCharacters(in: .whitespaces)) {
+                        Label("이미 저장된 단어입니다", systemImage: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.green)
+                    } else {
+                        ScrollView {
+                            MeaningSelectionGrid(meanings: meanings, selected: $selected)
+                                .padding(.horizontal, 20)
+                        }
+                    }
+                }
+
+                Spacer(minLength: 0)
+
+                // 저장 버튼
+                if searched && !meanings.isEmpty && !vocabulary.isSaved(wordInput.trimmingCharacters(in: .whitespaces)) {
+                    Button {
+                        saveWord()
+                    } label: {
+                        Label("단어장에 저장", systemImage: "bookmark.fill")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(selected.isEmpty ? Color.gray.opacity(0.4) : Color.blue)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .disabled(selected.isEmpty)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 16)
+                }
+            }
+            .padding(.top, 20)
+            .navigationTitle("단어 추가")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("닫기") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.large])
+    }
+
+    private func search() {
+        guard canSearch else { return }
+        isSearching = true
+        meanings = []
+        selected = []
+        searched = false
+
+        Task {
+            meanings = await DictionaryService.shared.lookup(wordInput)
+            if meanings.count == 1, let first = meanings.first {
+                selected.insert(first.id)
+            }
+            isSearching = false
+            searched = true
+        }
+    }
+
+    private func saveWord() {
+        let trimmed = wordInput.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !trimmed.isEmpty else { return }
+
+        let today = {
+            let f = DateFormatter()
+            f.dateFormat = "yyyy-MM-dd"
+            f.timeZone = TimeZone(identifier: "Asia/Seoul")
+            return f.string(from: Date())
+        }()
+
+        vocabulary.save(trimmed, meaning: selectedText, sentence: "", lessonDate: today)
+        dismiss()
     }
 }

@@ -94,7 +94,7 @@ final class VocabularyService {
         await fetchRemote()
     }
 
-    /// 로그아웃 시 호출: 단어 목록 초기화
+    /// 기화
     func clearAfterLogout() {
         words = []
     }

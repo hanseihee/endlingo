@@ -1,12 +1,18 @@
 import Foundation
 
+struct WordMeaning: Identifiable, Hashable {
+    let id = UUID()
+    let pos: String      // (명), (동) 등
+    let text: String     // 한국어 뜻
+}
+
 final class DictionaryService {
     static let shared = DictionaryService()
 
     private init() {}
 
-    /// Google Translate API로 영단어의 한국어 뜻을 조회
-    func lookup(_ word: String) async -> String? {
+    /// Google Translate API로 영단어의 한국어 뜻 목록을 조회
+    func lookup(_ word: String) async -> [WordMeaning] {
         let cleaned = word.trimmingCharacters(in: .punctuationCharacters)
             .trimmingCharacters(in: .whitespaces)
             .lowercased()
@@ -14,40 +20,43 @@ final class DictionaryService {
         guard !cleaned.isEmpty,
               let encoded = cleaned.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               let url = URL(string: "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&dt=bd&q=\(encoded)")
-        else { return nil }
+        else { return [] }
 
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             return parseResponse(data)
         } catch {
-            return nil
+            return []
         }
     }
 
-    private func parseResponse(_ data: Data) -> String? {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [Any] else { return nil }
+    private func parseResponse(_ data: Data) -> [WordMeaning] {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [Any] else { return [] }
+
+        var results: [WordMeaning] = []
 
         // [1] = dictionary entries by part of speech
         if let dictEntries = json[safe: 1] as? [Any] {
-            var parts: [String] = []
             for entry in dictEntries {
                 guard let posArray = entry as? [Any],
                       let pos = posArray[safe: 0] as? String,
                       let meanings = posArray[safe: 1] as? [String] else { continue }
-                let top = meanings.prefix(3).joined(separator: ", ")
-                parts.append("(\(posLabel(pos))) \(top)")
+                let label = posLabel(pos)
+                for m in meanings {
+                    results.append(WordMeaning(pos: label, text: m))
+                }
             }
-            if !parts.isEmpty { return parts.joined(separator: "\n") }
         }
 
-        // fallback: [0][0][0] = simple translation
-        if let translations = json[safe: 0] as? [Any],
+        // fallback: simple translation
+        if results.isEmpty,
+           let translations = json[safe: 0] as? [Any],
            let first = translations[safe: 0] as? [Any],
            let korean = first[safe: 0] as? String {
-            return korean
+            results.append(WordMeaning(pos: "", text: korean))
         }
 
-        return nil
+        return results
     }
 
     private func posLabel(_ pos: String) -> String {

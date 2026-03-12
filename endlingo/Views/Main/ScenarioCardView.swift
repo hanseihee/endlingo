@@ -113,12 +113,19 @@ private struct WordDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var vocabulary = VocabularyService.shared
-    @State private var meaning: String?
-    @State private var isLoadingMeaning = true
+    @State private var meanings: [WordMeaning] = []
+    @State private var selected: Set<UUID> = []
+    @State private var isLoading = true
     private var isSaved: Bool { vocabulary.isSaved(word) }
 
+    private var selectedText: String? {
+        let items = meanings.filter { selected.contains($0.id) }
+        guard !items.isEmpty else { return nil }
+        return items.map { $0.pos.isEmpty ? $0.text : "(\($0.pos)) \($0.text)" }.joined(separator: ", ")
+    }
+
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             // 드래그 핸들
             Capsule()
                 .fill(Color(.tertiaryLabel))
@@ -129,24 +136,6 @@ private struct WordDetailSheet: View {
             Text(word)
                 .font(.title.bold())
 
-            // 뜻
-            Group {
-                if isLoadingMeaning {
-                    ProgressView()
-                        .frame(height: 40)
-                } else if let meaning {
-                    Text(meaning)
-                        .font(.callout)
-                        .foregroundStyle(.primary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                } else {
-                    Text("뜻을 찾을 수 없습니다")
-                        .font(.callout)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-
             // 문장 컨텍스트
             Text(highlightedSentence)
                 .font(.caption)
@@ -154,7 +143,23 @@ private struct WordDetailSheet: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
 
-            Spacer()
+            // 뜻 목록
+            if isLoading {
+                ProgressView()
+                    .frame(height: 40)
+            } else if meanings.isEmpty {
+                Text("뜻을 찾을 수 없습니다")
+                    .font(.callout)
+                    .foregroundStyle(.tertiary)
+            } else {
+                ScrollView {
+                    MeaningSelectionGrid(meanings: meanings, selected: $selected)
+                        .padding(.horizontal, 20)
+                }
+                .frame(maxHeight: 200)
+            }
+
+            Spacer(minLength: 0)
 
             // 저장/삭제 버튼
             Button {
@@ -165,7 +170,7 @@ private struct WordDetailSheet: View {
                         vocabulary.remove(id: entry.id)
                     }
                 } else {
-                    vocabulary.save(word, meaning: meaning, sentence: sentence, lessonDate: lessonDate)
+                    vocabulary.save(word, meaning: selectedText, sentence: sentence, lessonDate: lessonDate)
                 }
                 dismiss()
             } label: {
@@ -180,14 +185,19 @@ private struct WordDetailSheet: View {
                 .background(isSaved ? Color.red : Color.blue)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
+            .disabled(!isSaved && selected.isEmpty)
             .padding(.horizontal, 24)
             .padding(.bottom, 16)
         }
-        .presentationDetents([.height(340)])
+        .presentationDetents([.medium])
         .presentationDragIndicator(.hidden)
         .task {
-            meaning = await DictionaryService.shared.lookup(word)
-            isLoadingMeaning = false
+            meanings = await DictionaryService.shared.lookup(word)
+            // 뜻이 1개면 자동 선택
+            if meanings.count == 1, let first = meanings.first {
+                selected.insert(first.id)
+            }
+            isLoading = false
         }
     }
 
@@ -229,5 +239,56 @@ private struct GrammarPointRow: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color(.tertiarySystemGroupedBackground))
         )
+    }
+}
+
+// MARK: - 뜻 선택 그리드
+
+struct MeaningSelectionGrid: View {
+    let meanings: [WordMeaning]
+    @Binding var selected: Set<UUID>
+
+    var body: some View {
+        LazyVStack(spacing: 8) {
+            ForEach(meanings) { item in
+                let isOn = selected.contains(item.id)
+                Button {
+                    if isOn {
+                        selected.remove(item.id)
+                    } else {
+                        selected.insert(item.id)
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        if !item.pos.isEmpty {
+                            Text(item.pos)
+                                .font(.caption2.bold())
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.blue.opacity(0.7))
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                        }
+                        Text(item.text)
+                            .font(.callout)
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(isOn ? .blue : .secondary)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(isOn ? Color.blue.opacity(0.08) : Color(.tertiarySystemGroupedBackground))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(isOn ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 }
