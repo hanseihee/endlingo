@@ -23,14 +23,16 @@ struct VocabularyView: View {
                     Text(entry.word)
                         .font(.headline)
 
+                    if let meaning = entry.meaning {
+                        Text(meaning)
+                            .font(.subheadline)
+                            .foregroundStyle(.primary.opacity(0.8))
+                    }
+
                     Text(entry.sentence)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
-
-                    Text(entry.lessonDate)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
                 }
                 .padding(.vertical, 4)
             }

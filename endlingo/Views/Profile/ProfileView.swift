@@ -35,6 +35,9 @@ struct ProfileView: View {
                             let comps = Calendar.current.dateComponents([.hour, .minute], from: newValue)
                             notificationHour = comps.hour ?? 9
                             notificationMinute = comps.minute ?? 0
+                            NotificationService.shared.scheduleDailyNotification(
+                                hour: notificationHour, minute: notificationMinute
+                            )
                         }
                 }
 

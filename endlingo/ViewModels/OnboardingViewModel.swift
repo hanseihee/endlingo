@@ -82,6 +82,15 @@ final class OnboardingViewModel {
         UserDefaults.standard.set(environment.rawValue, forKey: "selectedEnvironment")
         UserDefaults.standard.set(selectedHour, forKey: "notificationHour")
         UserDefaults.standard.set(selectedMinute, forKey: "notificationMinute")
+
+        Task {
+            let granted = await NotificationService.shared.requestPermission()
+            if granted {
+                await NotificationService.shared.scheduleDailyNotification(
+                    hour: selectedHour, minute: selectedMinute
+                )
+            }
+        }
     }
 }
 

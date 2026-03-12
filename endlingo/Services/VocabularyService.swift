@@ -32,13 +32,13 @@ final class VocabularyService {
 
     // MARK: - Public API
 
-    func save(_ word: String, sentence: String, lessonDate: String) {
+    func save(_ word: String, meaning: String?, sentence: String, lessonDate: String) {
         guard !isSaved(word) else { return }
 
         if auth.isLoggedIn, let userId = auth.userId {
             let entry = SavedWord(
                 id: UUID(), userId: userId,
-                word: word, sentence: sentence,
+                word: word, meaning: meaning, sentence: sentence,
                 lessonDate: lessonDate, savedAt: Date()
             )
             words.insert(entry, at: 0)
@@ -46,7 +46,7 @@ final class VocabularyService {
         } else {
             let entry = SavedWord(
                 id: UUID(), userId: nil,
-                word: word, sentence: sentence,
+                word: word, meaning: meaning, sentence: sentence,
                 lessonDate: lessonDate, savedAt: Date()
             )
             words.insert(entry, at: 0)
@@ -78,7 +78,8 @@ final class VocabularyService {
         for word in localWords {
             let entry = SavedWord(
                 id: word.id, userId: userId,
-                word: word.word, sentence: word.sentence,
+                word: word.word, meaning: word.meaning,
+                sentence: word.sentence,
                 lessonDate: word.lessonDate, savedAt: word.savedAt
             )
             await remoteInsert(entry)

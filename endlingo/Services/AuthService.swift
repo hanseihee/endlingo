@@ -70,6 +70,8 @@ final class AuthService {
                 currentUser = nil
                 isLoggedIn = false
                 VocabularyService.shared.clearAfterLogout()
+                NotificationService.shared.cancelAll()
+                resetUserData()
             }
         } catch {
             print("Delete account error: \(error)")
@@ -85,6 +87,8 @@ final class AuthService {
         currentUser = nil
         isLoggedIn = false
         VocabularyService.shared.clearAfterLogout()
+        NotificationService.shared.cancelAll()
+        resetUserData()
     }
 
     // MARK: - Deep Link
@@ -107,6 +111,21 @@ final class AuthService {
     var accessToken: String? {
         get async {
             try? await client.auth.session.accessToken
+        }
+    }
+
+    // MARK: - Reset
+
+    private func resetUserData() {
+        let keys = [
+            "hasCompletedOnboarding",
+            "selectedLevel",
+            "selectedEnvironment",
+            "notificationHour",
+            "notificationMinute"
+        ]
+        for key in keys {
+            UserDefaults.standard.removeObject(forKey: key)
         }
     }
 

@@ -113,10 +113,12 @@ private struct WordDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var vocabulary = VocabularyService.shared
+    @State private var meaning: String?
+    @State private var isLoadingMeaning = true
     private var isSaved: Bool { vocabulary.isSaved(word) }
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             // 드래그 핸들
             Capsule()
                 .fill(Color(.tertiaryLabel))
@@ -127,9 +129,27 @@ private struct WordDetailSheet: View {
             Text(word)
                 .font(.title.bold())
 
+            // 뜻
+            Group {
+                if isLoadingMeaning {
+                    ProgressView()
+                        .frame(height: 40)
+                } else if let meaning {
+                    Text(meaning)
+                        .font(.callout)
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                } else {
+                    Text("뜻을 찾을 수 없습니다")
+                        .font(.callout)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+
             // 문장 컨텍스트
             Text(highlightedSentence)
-                .font(.callout)
+                .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
@@ -145,7 +165,7 @@ private struct WordDetailSheet: View {
                         vocabulary.remove(id: entry.id)
                     }
                 } else {
-                    vocabulary.save(word, sentence: sentence, lessonDate: lessonDate)
+                    vocabulary.save(word, meaning: meaning, sentence: sentence, lessonDate: lessonDate)
                 }
                 dismiss()
             } label: {
@@ -163,15 +183,19 @@ private struct WordDetailSheet: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 16)
         }
-        .presentationDetents([.height(280)])
+        .presentationDetents([.height(340)])
         .presentationDragIndicator(.hidden)
+        .task {
+            meaning = await DictionaryService.shared.lookup(word)
+            isLoadingMeaning = false
+        }
     }
 
     private var highlightedSentence: AttributedString {
         var result = AttributedString(sentence)
         if let range = result.range(of: word, options: .caseInsensitive) {
             result[range].foregroundColor = .primary
-            result[range].font = .callout.bold()
+            result[range].font = .caption.bold()
         }
         return result
     }
