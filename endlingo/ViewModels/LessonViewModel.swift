@@ -1,6 +1,7 @@
 import SwiftUI
 
 @Observable
+@MainActor
 final class LessonViewModel {
     var lesson: DailyLesson?
     var isLoading = false

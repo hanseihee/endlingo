@@ -3,29 +3,35 @@ import Foundation
 final class LessonService {
     static let shared = LessonService()
 
-    private let baseURL = "https://alvawqinuacabfnqduoy.supabase.co/rest/v1"
-    private let apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsdmF3cWludWFjYWJmbnFkdW95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNjExNDgsImV4cCI6MjA4ODgzNzE0OH0.C-gnavFBHa-gIyvoGngaYfV6htDTiFyOmj5MemIlzhY"
-
     private let decoder = JSONDecoder()
 
-    // 오늘 레슨 메모리 캐시
     private var cache: [String: DailyLesson] = [:]
+    private var cacheDate: String?
 
     private init() {}
 
     func fetchTodayLesson(level: EnglishLevel, environment: LearningEnvironment) async throws -> DailyLesson {
-        let today = Self.todayDateString()
+        let today = SupabaseConfig.todayDateString
+
+        // 날짜가 바뀌면 캐시 초기화
+        if cacheDate != today {
+            cache.removeAll()
+            cacheDate = today
+        }
+
         let cacheKey = "\(today)_\(level.rawValue)_\(environment.rawValue)"
 
         if let cached = cache[cacheKey] {
             return cached
         }
 
-        let urlString = "\(baseURL)/daily_lessons?select=*&date=eq.\(today)&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&limit=1"
+        let urlString = "\(SupabaseConfig.restBaseURL)/daily_lessons?select=*&date=eq.\(today)&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&limit=1"
 
-        var request = URLRequest(url: URL(string: urlString)!)
-        request.setValue(apiKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        guard let url = URL(string: urlString) else { throw LessonError.notFound }
+
+        var request = URLRequest(url: url)
+        request.setValue(SupabaseConfig.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(SupabaseConfig.anonKey)", forHTTPHeaderField: "Authorization")
 
         let (data, _) = try await URLSession.shared.data(for: request)
         let lessons = try decoder.decode([DailyLesson].self, from: data)
@@ -36,13 +42,6 @@ final class LessonService {
 
         cache[cacheKey] = lesson
         return lesson
-    }
-
-    private static func todayDateString() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
-        return formatter.string(from: Date())
     }
 }
 

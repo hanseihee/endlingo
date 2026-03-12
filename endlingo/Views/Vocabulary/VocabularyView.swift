@@ -97,9 +97,7 @@ private struct AddWordSheet: View {
     }
 
     private var selectedText: String? {
-        let items = meanings.filter { selected.contains($0.id) }
-        guard !items.isEmpty else { return nil }
-        return items.map { $0.pos.isEmpty ? $0.text : "(\($0.pos)) \($0.text)" }.joined(separator: ", ")
+        WordMeaning.formatSelected(from: meanings, selected: selected)
     }
 
     var body: some View {
@@ -209,14 +207,7 @@ private struct AddWordSheet: View {
         let trimmed = wordInput.trimmingCharacters(in: .whitespaces).lowercased()
         guard !trimmed.isEmpty else { return }
 
-        let today = {
-            let f = DateFormatter()
-            f.dateFormat = "yyyy-MM-dd"
-            f.timeZone = TimeZone(identifier: "Asia/Seoul")
-            return f.string(from: Date())
-        }()
-
-        vocabulary.save(trimmed, meaning: selectedText, sentence: "", lessonDate: today)
+        vocabulary.save(trimmed, meaning: selectedText, sentence: "", lessonDate: SupabaseConfig.todayDateString)
         dismiss()
     }
 }

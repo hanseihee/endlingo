@@ -7,8 +7,8 @@ final class VocabularyService {
 
     private(set) var words: [SavedWord] = []
 
-    private let baseURL = "https://alvawqinuacabfnqduoy.supabase.co/rest/v1"
-    private let apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsdmF3cWludWFjYWJmbnFkdW95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNjExNDgsImV4cCI6MjA4ODgzNzE0OH0.C-gnavFBHa-gIyvoGngaYfV6htDTiFyOmj5MemIlzhY"
+    private var baseURL: String { SupabaseConfig.restBaseURL }
+    private var apiKey: String { SupabaseConfig.anonKey }
 
     private let fileURL: URL
     private let encoder: JSONEncoder = {
@@ -105,7 +105,8 @@ final class VocabularyService {
         guard let token = await auth.accessToken else { return }
 
         let urlString = "\(baseURL)/saved_words?select=*&order=saved_at.desc"
-        var request = URLRequest(url: URL(string: urlString)!)
+        guard let url = URL(string: urlString) else { return }
+        var request = URLRequest(url: url)
         request.setValue(apiKey, forHTTPHeaderField: "apikey")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
@@ -121,7 +122,8 @@ final class VocabularyService {
         guard let token = await auth.accessToken else { return }
 
         let urlString = "\(baseURL)/saved_words"
-        var request = URLRequest(url: URL(string: urlString)!)
+        guard let url = URL(string: urlString) else { return }
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "apikey")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -143,7 +145,8 @@ final class VocabularyService {
         guard let token = await auth.accessToken else { return }
 
         let urlString = "\(baseURL)/saved_words?id=eq.\(id.uuidString)"
-        var request = URLRequest(url: URL(string: urlString)!)
+        guard let url = URL(string: urlString) else { return }
+        var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.setValue(apiKey, forHTTPHeaderField: "apikey")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")

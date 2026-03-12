@@ -119,9 +119,7 @@ private struct WordDetailSheet: View {
     private var isSaved: Bool { vocabulary.isSaved(word) }
 
     private var selectedText: String? {
-        let items = meanings.filter { selected.contains($0.id) }
-        guard !items.isEmpty else { return nil }
-        return items.map { $0.pos.isEmpty ? $0.text : "(\($0.pos)) \($0.text)" }.joined(separator: ", ")
+        WordMeaning.formatSelected(from: meanings, selected: selected)
     }
 
     var body: some View {
@@ -151,6 +149,10 @@ private struct WordDetailSheet: View {
                 Text("뜻을 찾을 수 없습니다")
                     .font(.callout)
                     .foregroundStyle(.tertiary)
+            } else if isSaved {
+                Label("이미 저장된 단어입니다", systemImage: "checkmark.circle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.green)
             } else {
                 ScrollView {
                     MeaningSelectionGrid(meanings: meanings, selected: $selected)
@@ -161,33 +163,24 @@ private struct WordDetailSheet: View {
 
             Spacer(minLength: 0)
 
-            // 저장/삭제 버튼
-            Button {
-                if isSaved {
-                    if let entry = vocabulary.words.first(where: {
-                        $0.word.caseInsensitiveCompare(word) == .orderedSame
-                    }) {
-                        vocabulary.remove(id: entry.id)
-                    }
-                } else {
+            // 저장 버튼
+            if !isLoading && !meanings.isEmpty && !isSaved {
+                Button {
                     vocabulary.save(word, meaning: selectedText, sentence: sentence, lessonDate: lessonDate)
+                    dismiss()
+                } label: {
+                    Label("단어장에 저장", systemImage: "bookmark.fill")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(selected.isEmpty ? Color.gray.opacity(0.4) : Color.blue)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
-                dismiss()
-            } label: {
-                Label(
-                    isSaved ? "단어장에서 삭제" : "단어장에 저장",
-                    systemImage: isSaved ? "bookmark.slash.fill" : "bookmark.fill"
-                )
-                .font(.body.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(isSaved ? Color.red : Color.blue)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .disabled(selected.isEmpty)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 16)
             }
-            .disabled(!isSaved && selected.isEmpty)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 16)
         }
         .presentationDetents([.medium])
         .presentationDragIndicator(.hidden)
@@ -242,53 +235,3 @@ private struct GrammarPointRow: View {
     }
 }
 
-// MARK: - 뜻 선택 그리드
-
-struct MeaningSelectionGrid: View {
-    let meanings: [WordMeaning]
-    @Binding var selected: Set<UUID>
-
-    var body: some View {
-        LazyVStack(spacing: 8) {
-            ForEach(meanings) { item in
-                let isOn = selected.contains(item.id)
-                Button {
-                    if isOn {
-                        selected.remove(item.id)
-                    } else {
-                        selected.insert(item.id)
-                    }
-                } label: {
-                    HStack(spacing: 8) {
-                        if !item.pos.isEmpty {
-                            Text(item.pos)
-                                .font(.caption2.bold())
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.blue.opacity(0.7))
-                                .clipShape(RoundedRectangle(cornerRadius: 4))
-                        }
-                        Text(item.text)
-                            .font(.callout)
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(isOn ? .blue : .secondary)
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(isOn ? Color.blue.opacity(0.08) : Color(.tertiarySystemGroupedBackground))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(isOn ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 1)
-                    )
-                }
-                .buttonStyle(.plain)
-            }
-        }
-    }
-}
