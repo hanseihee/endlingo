@@ -50,6 +50,7 @@ final class AuthService {
         currentUser = session.user
         isLoggedIn = true
         await VocabularyService.shared.syncAfterLogin()
+        await GamificationService.shared.syncAfterLogin()
     }
 
     func resetPassword(email: String) async throws {
@@ -70,6 +71,7 @@ final class AuthService {
                 currentUser = nil
                 isLoggedIn = false
                 VocabularyService.shared.clearAfterLogout()
+                GamificationService.shared.clearAfterLogout()
                 NotificationService.shared.cancelAll()
                 resetUserData()
             }
@@ -87,6 +89,7 @@ final class AuthService {
         currentUser = nil
         isLoggedIn = false
         VocabularyService.shared.clearAfterLogout()
+        GamificationService.shared.clearAfterLogout()
         NotificationService.shared.cancelAll()
         resetUserData()
     }
@@ -99,6 +102,7 @@ final class AuthService {
             currentUser = session.user
             isLoggedIn = true
             await VocabularyService.shared.syncAfterLogin()
+            await GamificationService.shared.syncAfterLogin()
         } catch {
             print("Deep link error: \(error)")
         }
@@ -156,6 +160,7 @@ final class AuthService {
             currentUser = session.user
             isLoggedIn = true
             await VocabularyService.shared.syncAfterLogin()
+            await GamificationService.shared.syncAfterLogin()
         } catch {
             // No stored session
         }

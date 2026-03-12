@@ -20,7 +20,17 @@ struct LessonView: View {
         }
         .task {
             await viewModel.loadTodayLesson()
+            if let lesson = viewModel.lesson {
+                recordLesson(lesson)
+            }
         }
+    }
+
+    private func recordLesson(_ lesson: DailyLesson) {
+        GamificationService.shared.recordLessonView(
+            level: lesson.level,
+            environment: lesson.environment
+        )
     }
 
     private func lessonContent(_ lesson: DailyLesson) -> some View {

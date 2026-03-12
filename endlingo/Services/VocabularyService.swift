@@ -43,6 +43,7 @@ final class VocabularyService {
             )
             words.insert(entry, at: 0)
             Task { await remoteInsert(entry) }
+            GamificationService.shared.awardWordSaveXP()
         } else {
             let entry = SavedWord(
                 id: UUID(), userId: nil,
@@ -51,6 +52,7 @@ final class VocabularyService {
             )
             words.insert(entry, at: 0)
             persistLocal()
+            GamificationService.shared.awardWordSaveXP()
         }
     }
 
