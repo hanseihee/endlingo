@@ -5,8 +5,10 @@ struct ProfileView: View {
     @AppStorage("selectedEnvironment") private var selectedEnvironment: String = ""
     @AppStorage("notificationHour") private var notificationHour: Int = 9
     @AppStorage("notificationMinute") private var notificationMinute: Int = 0
+    @AppStorage("pronunciationAccent") private var pronunciationAccent: String = "en-US"
 
     @State private var auth = AuthService.shared
+    @State private var gamification = GamificationService.shared
     @State private var showLogoutConfirm = false
     @State private var showDeleteConfirm = false
     @State private var notificationTime = Date()
@@ -14,6 +16,30 @@ struct ProfileView: View {
     var body: some View {
         NavigationStack {
             List {
+                // 배지
+                Section {
+                    NavigationLink {
+                        BadgesView()
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "trophy.fill")
+                                .font(.title3)
+                                .foregroundStyle(.yellow)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("배지")
+                                    .font(.callout.weight(.semibold))
+
+                                let earned = gamification.earnedBadges.count
+                                let total = BadgeType.allCases.count
+                                Text("\(earned)/\(total)개 획득")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+
                 // 학습 설정
                 Section("학습 설정") {
                     Picker("레벨", selection: $selectedLevel) {
@@ -39,6 +65,11 @@ struct ProfileView: View {
                                 hour: notificationHour, minute: notificationMinute
                             )
                         }
+
+                    Picker("발음", selection: $pronunciationAccent) {
+                        Text("🇺🇸 미국식").tag("en-US")
+                        Text("🇬🇧 영국식").tag("en-GB")
+                    }
                 }
 
                 // 계정

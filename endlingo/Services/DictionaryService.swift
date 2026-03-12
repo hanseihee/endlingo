@@ -103,8 +103,8 @@ final class DictionaryService {
            let idx = results.firstIndex(where: { $0.text == primaryText }) {
             let item = results.remove(at: idx)
             results.insert(item, at: 0)
-        } else if let primaryText {
-            // 사전 항목에 없으면 직접 추가
+        } else if let primaryText, results.isEmpty {
+            // 사전 항목이 없을 때만 대표 번역을 fallback으로 추가
             results.insert(WordMeaning(pos: "", text: primaryText, synonyms: []), at: 0)
         }
 

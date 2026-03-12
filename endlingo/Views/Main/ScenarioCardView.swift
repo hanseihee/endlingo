@@ -8,6 +8,7 @@ struct ScenarioCardView: View {
     @State private var selectedWord: String?
 
     @State private var vocabulary = VocabularyService.shared
+    @State private var speech = SpeechService.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -36,15 +37,20 @@ struct ScenarioCardView: View {
                 .padding(.horizontal, 4)
 
             // 영어 문장 (탭 가능)
-            TappableTextView(text: scenario.sentenceEn) { word in
-                selectedWord = word
+            ZStack(alignment: .topTrailing) {
+                TappableTextView(text: scenario.sentenceEn) { word in
+                    selectedWord = word
+                }
+                .padding(16)
+                .padding(.trailing, 28)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.blue.opacity(0.06))
+                )
+
+                SpeakButton(text: scenario.sentenceEn, id: "scenario-\(index)")
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.blue.opacity(0.06))
-            )
 
             // 한국어 번역 토글
             Button {
@@ -89,6 +95,9 @@ struct ScenarioCardView: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
+        .onDisappear {
+            speech.stop()
+        }
         .sheet(isPresented: Binding(
             get: { selectedWord != nil },
             set: { if !$0 { selectedWord = nil } }

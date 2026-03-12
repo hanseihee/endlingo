@@ -5,8 +5,16 @@ enum QuizType: String {
     case koToEn = "ko_to_en"
 }
 
+enum QuizWordSource: String, CaseIterable {
+    case saved = "저장한 단어"
+    case builtin = "필수 영단어"
+    case mixed = "전체"
+}
+
 struct QuizQuestion {
-    let word: SavedWord
+    let wordText: String
+    let meaningText: String
+    let wordId: UUID?
     let quizType: QuizType
     let options: [String]
     let correctIndex: Int
@@ -25,6 +33,31 @@ final class QuizViewModel {
 
     private let gamification = GamificationService.shared
 
+    // MARK: - 외운 단어 관리
+
+    private static let masteredKey = "masteredWords"
+
+    private(set) var masteredWords: Set<String> = {
+        let array = UserDefaults.standard.stringArray(forKey: masteredKey) ?? []
+        return Set(array)
+    }()
+
+    var masteredCount: Int { masteredWords.count }
+
+    func isMastered(_ word: String) -> Bool {
+        masteredWords.contains(word.lowercased())
+    }
+
+    func toggleMastered(_ word: String) {
+        let key = word.lowercased()
+        if masteredWords.contains(key) {
+            masteredWords.remove(key)
+        } else {
+            masteredWords.insert(key)
+        }
+        UserDefaults.standard.set(Array(masteredWords), forKey: Self.masteredKey)
+    }
+
     var currentQuestion: QuizQuestion? {
         guard currentIndex < questions.count else { return nil }
         return questions[currentIndex]
@@ -34,17 +67,26 @@ final class QuizViewModel {
         questions.isEmpty ? 0 : Double(currentIndex) / Double(questions.count)
     }
 
-    var canStartQuiz: Bool {
-        VocabularyService.shared.words.filter { $0.meaning != nil }.count >= 4
+    func canStartQuiz(source: QuizWordSource) -> Bool {
+        switch source {
+        case .saved:
+            return VocabularyService.shared.words.filter { $0.meaning != nil }.count >= 5
+        case .builtin:
+            return BuiltInWordBank.shared.isLoaded
+        case .mixed:
+            let savedCount = VocabularyService.shared.words.filter { $0.meaning != nil }.count
+            let builtinCount = BuiltInWordBank.shared.words.count
+            return savedCount + builtinCount >= 5
+        }
     }
 
-    func generateQuiz(type: QuizType, count: Int = 10) {
-        let words = VocabularyService.shared.words.filter { $0.meaning != nil }
-        guard words.count >= 4 else { return }
+    func generateQuiz(type: QuizType, source: QuizWordSource, count: Int = 10) {
+        let pool = buildWordPool(source: source)
+        guard pool.count >= 4 else { return }
 
-        let selected = Array(words.shuffled().prefix(min(count, words.count)))
-        questions = selected.map { word in
-            makeQuestion(word: word, type: type, allWords: words)
+        let selected = Array(pool.shuffled().prefix(min(count, pool.count)))
+        questions = selected.map { item in
+            makeQuestion(item: item, type: type, allItems: pool)
         }
 
         currentIndex = 0
@@ -70,8 +112,8 @@ final class QuizViewModel {
         totalXPEarned += xp
 
         gamification.recordQuizAnswer(
-            wordId: question.word.id,
-            word: question.word.word,
+            wordId: question.wordId ?? UUID(),
+            word: question.wordText,
             quizType: question.quizType.rawValue,
             isCorrect: isCorrect
         )
@@ -87,9 +129,39 @@ final class QuizViewModel {
         }
     }
 
-    private func makeQuestion(word: SavedWord, type: QuizType, allWords: [SavedWord]) -> QuizQuestion {
-        let distractors = allWords
-            .filter { $0.id != word.id }
+    // MARK: - Private
+
+    private struct WordItem {
+        let word: String
+        let meaning: String
+        let id: UUID?
+    }
+
+    private func buildWordPool(source: QuizWordSource) -> [WordItem] {
+        var pool: [WordItem] = []
+
+        if source == .saved || source == .mixed {
+            let saved = VocabularyService.shared.words
+                .filter { $0.meaning != nil }
+                .map { WordItem(word: $0.word, meaning: $0.meaning!, id: $0.id) }
+            pool.append(contentsOf: saved)
+        }
+
+        if source == .builtin || source == .mixed {
+            let builtin = BuiltInWordBank.shared.words
+                .map { WordItem(word: $0.word, meaning: $0.meaning, id: nil) }
+            pool.append(contentsOf: builtin)
+        }
+
+        // 외운 단어 제외
+        pool = pool.filter { !masteredWords.contains($0.word.lowercased()) }
+
+        return pool
+    }
+
+    private func makeQuestion(item: WordItem, type: QuizType, allItems: [WordItem]) -> QuizQuestion {
+        let distractors = allItems
+            .filter { $0.word != item.word }
             .shuffled()
             .prefix(3)
 
@@ -98,15 +170,17 @@ final class QuizViewModel {
         var options: [String]
         switch type {
         case .enToKo:
-            options = distractors.map { $0.meaning ?? "" }
-            options.insert(word.meaning ?? "", at: correctIndex)
+            options = distractors.map { $0.meaning }
+            options.insert(item.meaning, at: correctIndex)
         case .koToEn:
             options = distractors.map { $0.word }
-            options.insert(word.word, at: correctIndex)
+            options.insert(item.word, at: correctIndex)
         }
 
         return QuizQuestion(
-            word: word,
+            wordText: item.word,
+            meaningText: item.meaning,
+            wordId: item.id,
             quizType: type,
             options: options,
             correctIndex: correctIndex

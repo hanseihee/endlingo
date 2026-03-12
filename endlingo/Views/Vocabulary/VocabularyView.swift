@@ -3,6 +3,7 @@ import SwiftUI
 struct VocabularyView: View {
     @State private var vocabulary = VocabularyService.shared
     @State private var showAddSheet = false
+    @State private var showQuiz = false
 
     var body: some View {
         NavigationStack {
@@ -12,6 +13,9 @@ struct VocabularyView: View {
                 } else {
                     wordList
                 }
+            }
+            .sheet(isPresented: $showQuiz) {
+                QuizView()
             }
             .navigationTitle("단어장")
             .toolbar {
@@ -31,21 +35,56 @@ struct VocabularyView: View {
 
     private var wordList: some View {
         List {
-            ForEach(vocabulary.words) { entry in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(entry.word)
-                        .font(.headline)
+            // 퀴즈 버튼
+            Button {
+                showQuiz = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "sparkles")
+                        .font(.title3)
+                        .foregroundStyle(.orange)
 
-                    if let meaning = entry.meaning {
-                        Text(meaning)
-                            .font(.subheadline)
-                            .foregroundStyle(.primary.opacity(0.8))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("단어 퀴즈")
+                            .font(.callout.weight(.semibold))
+                            .foregroundStyle(.primary)
+                        Text("영단어 실력을 테스트하세요")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
 
-                    Text(entry.sentence)
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+
+            ForEach(vocabulary.words) { entry in
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(entry.word)
+                            .font(.headline)
+
+                        if let meaning = entry.meaning {
+                            Text(meaning)
+                                .font(.subheadline)
+                                .foregroundStyle(.primary.opacity(0.8))
+                        }
+
+                        if !entry.sentence.isEmpty {
+                            Text(entry.sentence)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                        }
+                    }
+
+                    Spacer()
+
+                    SpeakButton(text: entry.word, id: "vocab-\(entry.id)")
                 }
                 .padding(.vertical, 4)
             }
@@ -59,6 +98,40 @@ struct VocabularyView: View {
 
     private var emptyView: some View {
         VStack(spacing: 16) {
+            // 퀴즈 버튼
+            Button {
+                showQuiz = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "sparkles")
+                        .font(.title3)
+                        .foregroundStyle(.orange)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("단어 퀴즈")
+                            .font(.callout.weight(.semibold))
+                            .foregroundStyle(.primary)
+                        Text("영단어 실력을 테스트하세요")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color(.secondarySystemGroupedBackground))
+                )
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+
             Spacer()
 
             Image(systemName: "character.book.closed.fill")
@@ -71,7 +144,7 @@ struct VocabularyView: View {
 
             Text("레슨에서 단어를 탭하거나\n+ 버튼으로 직접 추가하세요")
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.orange)
                 .multilineTextAlignment(.center)
 
             Spacer()

@@ -5,25 +5,71 @@ struct LessonView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if viewModel.isLoading {
-                    loadingView
-                } else if let lesson = viewModel.lesson {
-                    lessonContent(lesson)
-                } else if let error = viewModel.errorMessage {
-                    errorView(error)
-                } else {
-                    loadingView
+            VStack(spacing: 0) {
+                datePicker
+
+                Group {
+                    if viewModel.isLoading {
+                        loadingView
+                    } else if let lesson = viewModel.lesson {
+                        lessonContent(lesson)
+                    } else if let error = viewModel.errorMessage {
+                        errorView(error)
+                    } else {
+                        loadingView
+                    }
                 }
+                .frame(maxHeight: .infinity)
             }
-            .navigationTitle("오늘의 레슨")
+            .navigationTitle(viewModel.isToday ? "오늘의 레슨" : "지난 레슨")
         }
         .task {
             await viewModel.loadTodayLesson()
-            if let lesson = viewModel.lesson {
+            if viewModel.isToday, let lesson = viewModel.lesson {
                 recordLesson(lesson)
             }
         }
+    }
+
+    // MARK: - 날짜 선택
+
+    private var datePicker: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(viewModel.availableDates, id: \.self) { date in
+                        let isSelected = viewModel.dateString(for: date) == viewModel.dateString(for: viewModel.selectedDate)
+
+                        Button {
+                            viewModel.selectDate(date)
+                        } label: {
+                            VStack(spacing: 4) {
+                                Text(viewModel.weekdayLabel(for: date))
+                                    .font(.caption2)
+                                    .foregroundStyle(isSelected ? .white : .secondary)
+
+                                Text(viewModel.dayLabel(for: date))
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(isSelected ? .white : .primary)
+                            }
+                            .frame(width: 48, height: 48)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .id(viewModel.dateString(for: date))
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+            }
+            .onAppear {
+                proxy.scrollTo(viewModel.dateString(for: viewModel.selectedDate), anchor: .trailing)
+            }
+        }
+        .background(Color(.systemBackground))
     }
 
     private func recordLesson(_ lesson: DailyLesson) {
@@ -63,7 +109,7 @@ struct LessonView: View {
         }
         .scrollIndicators(.hidden)
         .refreshable {
-            await viewModel.loadTodayLesson()
+            await viewModel.loadLesson()
         }
     }
 
@@ -71,7 +117,7 @@ struct LessonView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.2)
-            Text("오늘의 레슨을 불러오는 중...")
+            Text("레슨을 불러오는 중...")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -88,7 +134,7 @@ struct LessonView: View {
                 .foregroundStyle(.secondary)
 
             Button {
-                Task { await viewModel.loadTodayLesson() }
+                Task { await viewModel.loadLesson() }
             } label: {
                 Text("다시 시도")
                     .font(.body.weight(.medium))

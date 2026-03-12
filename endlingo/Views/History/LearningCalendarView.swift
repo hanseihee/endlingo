@@ -4,7 +4,7 @@ struct LearningCalendarView: View {
     @State private var gamification = GamificationService.shared
     @State private var displayMonth: Date = Date()
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 7)
     private let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
 
     private var calendar: Calendar {
@@ -48,20 +48,22 @@ struct LearningCalendarView: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             // 월 네비게이션
             HStack {
                 Button {
                     moveMonth(by: -1)
                 } label: {
                     Image(systemName: "chevron.left")
-                        .font(.body.weight(.medium))
+                        .font(.body.weight(.semibold))
+                        .frame(width: 36, height: 36)
+                        .contentShape(Rectangle())
                 }
 
                 Spacer()
 
                 Text("\(year)년 \(month)월")
-                    .font(.headline)
+                    .font(.title3.bold())
 
                 Spacer()
 
@@ -69,22 +71,24 @@ struct LearningCalendarView: View {
                     moveMonth(by: 1)
                 } label: {
                     Image(systemName: "chevron.right")
-                        .font(.body.weight(.medium))
+                        .font(.body.weight(.semibold))
+                        .frame(width: 36, height: 36)
+                        .contentShape(Rectangle())
                 }
                 .disabled(isCurrentMonth)
             }
 
             // 요일 헤더
-            LazyVGrid(columns: columns, spacing: 4) {
+            LazyVGrid(columns: columns, spacing: 6) {
                 ForEach(weekdays, id: \.self) { day in
                     Text(day)
-                        .font(.caption2.weight(.medium))
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
                 }
             }
 
             // 날짜 그리드
-            LazyVGrid(columns: columns, spacing: 4) {
+            LazyVGrid(columns: columns, spacing: 6) {
                 ForEach(Array(days.enumerated()), id: \.offset) { _, item in
                     if item.day == 0 {
                         Color.clear
@@ -132,28 +136,38 @@ private struct DayCellView: View {
 
     var body: some View {
         Text("\(day)")
-            .font(.caption2)
+            .font(.subheadline.weight(isToday ? .bold : .medium))
             .lineLimit(1)
             .minimumScaleFactor(0.7)
-            .foregroundStyle(xp > 0 ? .white : .primary)
+            .foregroundStyle(foregroundColor)
             .frame(maxWidth: .infinity)
             .aspectRatio(1, contentMode: .fit)
             .background(
-                RoundedRectangle(cornerRadius: 4)
+                RoundedRectangle(cornerRadius: 8)
                     .fill(cellColor)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 4)
-                    .stroke(isToday ? Color.blue : Color.clear, lineWidth: 1.5)
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isToday ? Color.blue : Color.clear, lineWidth: 2)
             )
     }
 
+    private var foregroundColor: Color {
+        if isToday && xp == 0 {
+            return .blue
+        }
+        return xp > 0 ? .white : .primary
+    }
+
     private var cellColor: Color {
+        if isToday && xp == 0 {
+            return Color.blue.opacity(0.1)
+        }
         switch xp {
         case 0: return Color(.systemGray6)
-        case 1...9: return Color.green.opacity(0.3)
-        case 10...19: return Color.green.opacity(0.5)
-        case 20...29: return Color.green.opacity(0.7)
+        case 1...9: return Color.green.opacity(0.35)
+        case 10...19: return Color.green.opacity(0.55)
+        case 20...29: return Color.green.opacity(0.75)
         default: return Color.green.opacity(0.9)
         }
     }

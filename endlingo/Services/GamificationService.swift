@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 @Observable
 @MainActor
@@ -132,6 +133,125 @@ final class GamificationService {
     /// 배지 획득 알림 초기화
     func dismissNewBadge() {
         newBadge = nil
+    }
+
+    // MARK: - 주간 비교
+
+    struct WeekStats {
+        var learningDays: Int = 0
+        var totalXP: Int = 0
+        var quizCount: Int = 0
+        var quizCorrect: Int = 0
+        var wordsSaved: Int = 0
+
+        var quizAccuracy: Double {
+            quizCount > 0 ? Double(quizCorrect) / Double(quizCount) * 100 : 0
+        }
+    }
+
+    func weekStats(for weekStart: Date) -> WeekStats {
+        let cal = kstCalendar
+        let dates = (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: weekStart) }
+        let dateStrings = Set(dates.map { kstFormatter.string(from: $0) })
+
+        var s = WeekStats()
+        s.learningDays = Set(learningRecords.filter { dateStrings.contains($0.date) }.map(\.date)).count
+        let weekRecordXP = learningRecords.filter { dateStrings.contains($0.date) }.reduce(0) { $0 + $1.xpEarned }
+        let weekQuizXP = quizResults.filter { dateStrings.contains($0.date) }.reduce(0) { $0 + $1.xpEarned }
+        s.totalXP = weekRecordXP + weekQuizXP
+        let weekQuiz = quizResults.filter { dateStrings.contains($0.date) }
+        s.quizCount = weekQuiz.count
+        s.quizCorrect = weekQuiz.filter(\.isCorrect).count
+        s.wordsSaved = VocabularyService.shared.words.filter { dateStrings.contains($0.lessonDate) }.count
+        return s
+    }
+
+    /// 이번 주 월요일
+    var thisWeekStart: Date {
+        let cal = kstCalendar
+        var c = cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())
+        c.weekday = 2 // 월요일
+        return cal.date(from: c) ?? Date()
+    }
+
+    /// 지난 주 월요일
+    var lastWeekStart: Date {
+        kstCalendar.date(byAdding: .weekOfYear, value: -1, to: thisWeekStart) ?? thisWeekStart
+    }
+
+    // MARK: - 활동 타임라인
+
+    struct ActivityItem: Identifiable {
+        let id = UUID()
+        let icon: String
+        let color: Color
+        let text: String
+        let xp: Int
+        let date: Date
+    }
+
+    func recentActivities(days: Int = 7) -> [String: [ActivityItem]] {
+        let cal = kstCalendar
+        let cutoff = cal.date(byAdding: .day, value: -days, to: cal.startOfDay(for: Date()))!
+
+        var items: [ActivityItem] = []
+
+        // 레슨
+        for r in learningRecords where r.createdAt >= cutoff {
+            items.append(ActivityItem(
+                icon: "book.fill", color: .blue,
+                text: "레슨 완료", xp: r.xpEarned, date: r.createdAt
+            ))
+        }
+
+        // 퀴즈 (날짜별 묶기)
+        let quizByDate = Dictionary(grouping: quizResults.filter { $0.createdAt >= cutoff }, by: \.date)
+        for (_, results) in quizByDate {
+            let correct = results.filter(\.isCorrect).count
+            let total = results.count
+            let xp = results.reduce(0) { $0 + $1.xpEarned }
+            let date = results.first?.createdAt ?? Date()
+            items.append(ActivityItem(
+                icon: "brain.head.profile.fill", color: .purple,
+                text: "퀴즈 \(correct)/\(total) 정답", xp: xp, date: date
+            ))
+        }
+
+        // 단어 저장
+        let savedByDate = Dictionary(grouping: VocabularyService.shared.words.filter { $0.savedAt >= cutoff }, by: \.lessonDate)
+        for (_, words) in savedByDate {
+            let xp = words.count * XP.wordSave
+            let date = words.first?.savedAt ?? Date()
+            items.append(ActivityItem(
+                icon: "bookmark.fill", color: .green,
+                text: "단어 \(words.count)개 저장", xp: xp, date: date
+            ))
+        }
+
+        // 날짜별 그룹핑 (최신순)
+        items.sort { $0.date > $1.date }
+        var grouped: [String: [ActivityItem]] = [:]
+        for item in items {
+            let key = kstFormatter.string(from: item.date)
+            grouped[key, default: []].append(item)
+        }
+        return grouped
+    }
+
+    // MARK: - Helpers
+
+    private var kstCalendar: Calendar {
+        var cal = Calendar.current
+        cal.timeZone = TimeZone(identifier: "Asia/Seoul")!
+        cal.firstWeekday = 2 // 월요일 시작
+        return cal
+    }
+
+    private var kstFormatter: DateFormatter {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return f
     }
 
     // MARK: - Sync
@@ -332,7 +452,7 @@ final class GamificationService {
         request.setValue(SupabaseConfig.anonKey, forHTTPHeaderField: "apikey")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("resolution=ignore-duplicates", forHTTPHeaderField: "Prefer")
+        request.setValue("return=minimal, resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
         request.httpBody = try? encoder.encode(item)
 
         do {
@@ -363,9 +483,19 @@ final class GamificationService {
         var request = URLRequest(url: url)
         request.setValue(SupabaseConfig.anonKey, forHTTPHeaderField: "apikey")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
 
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let http = response as? HTTPURLResponse
+            // 비정상 응답 또는 빈 데이터
+            guard let statusCode = http?.statusCode, statusCode == 200, !data.isEmpty else {
+                return []
+            }
+            // 에러 응답(dictionary)인 경우 배열이 아님 → 건너뛰기
+            if let first = data.first, first != UInt8(ascii: "[") {
+                return []
+            }
             return try decoder.decode([T].self, from: data)
         } catch {
             print("Fetch \(table) error: \(error)")

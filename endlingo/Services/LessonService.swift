@@ -11,21 +11,17 @@ final class LessonService {
     private init() {}
 
     func fetchTodayLesson(level: EnglishLevel, environment: LearningEnvironment) async throws -> DailyLesson {
-        let today = SupabaseConfig.todayDateString
+        try await fetchLesson(date: SupabaseConfig.todayDateString, level: level, environment: environment)
+    }
 
-        // 날짜가 바뀌면 캐시 초기화
-        if cacheDate != today {
-            cache.removeAll()
-            cacheDate = today
-        }
-
-        let cacheKey = "\(today)_\(level.rawValue)_\(environment.rawValue)"
+    func fetchLesson(date: String, level: EnglishLevel, environment: LearningEnvironment) async throws -> DailyLesson {
+        let cacheKey = "\(date)_\(level.rawValue)_\(environment.rawValue)"
 
         if let cached = cache[cacheKey] {
             return cached
         }
 
-        let urlString = "\(SupabaseConfig.restBaseURL)/daily_lessons?select=*&date=eq.\(today)&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&limit=1"
+        let urlString = "\(SupabaseConfig.restBaseURL)/daily_lessons?select=*&date=eq.\(date)&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&limit=1"
 
         guard let url = URL(string: urlString) else { throw LessonError.notFound }
 
