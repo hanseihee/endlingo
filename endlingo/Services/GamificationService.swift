@@ -248,15 +248,48 @@ final class GamificationService {
     private func checkBadges() {
         let earned = Set(earnedBadges.map { $0.badgeType })
         let wordCount = VocabularyService.shared.words.count
+        let days = stats.totalLearningDays
+        let streak = stats.bestStreak
+        let quizzes = stats.totalQuizzes
+        let accuracy = stats.quizAccuracy
+        let level = stats.userLevel
 
         let checks: [(BadgeType, Bool)] = [
+            // 학습
             (.firstStep, !learningRecords.isEmpty),
-            (.wordCollector50, wordCount >= 50),
-            (.wordCollector100, wordCount >= 100),
-            (.sevenDayStreak, stats.bestStreak >= 7),
-            (.thirtyDayStreak, stats.bestStreak >= 30),
-            (.quizMaster, stats.quizAccuracy >= 90 && stats.totalQuizzes >= 20),
-            (.quizEnthusiast, stats.totalQuizzes >= 100),
+            (.learning7, days >= 7),
+            (.learning30, days >= 30),
+            (.learning100, days >= 100),
+            (.learning365, days >= 365),
+            // 단어
+            (.word10, wordCount >= 10),
+            (.word50, wordCount >= 50),
+            (.word100, wordCount >= 100),
+            (.word300, wordCount >= 300),
+            (.word500, wordCount >= 500),
+            (.word1000, wordCount >= 1000),
+            // 스트릭
+            (.streak3, streak >= 3),
+            (.streak7, streak >= 7),
+            (.streak14, streak >= 14),
+            (.streak30, streak >= 30),
+            (.streak60, streak >= 60),
+            (.streak100, streak >= 100),
+            (.streak365, streak >= 365),
+            // 퀴즈
+            (.quizFirst, quizzes >= 1),
+            (.quiz10, quizzes >= 10),
+            (.quiz50, quizzes >= 50),
+            (.quiz100, quizzes >= 100),
+            (.quiz500, quizzes >= 500),
+            (.quizPerfect10, hasConsecutiveCorrect(10)),
+            (.quizAccuracy80, accuracy >= 80 && quizzes >= 50),
+            (.quizAccuracy90, accuracy >= 90 && quizzes >= 50),
+            // 레벨
+            (.level5, level >= 5),
+            (.level10, level >= 10),
+            (.level20, level >= 20),
+            (.level50, level >= 50),
         ]
 
         for (badge, unlocked) in checks {
@@ -275,6 +308,17 @@ final class GamificationService {
                 persistLocal(earnedBadges, to: badgesFileURL)
             }
         }
+    }
+
+    private func hasConsecutiveCorrect(_ count: Int) -> Bool {
+        guard quizResults.count >= count else { return false }
+        let sorted = quizResults.sorted { $0.createdAt < $1.createdAt }
+        var consecutive = 0
+        for result in sorted {
+            consecutive = result.isCorrect ? consecutive + 1 : 0
+            if consecutive >= count { return true }
+        }
+        return false
     }
 
     // MARK: - Remote (Supabase)
