@@ -16,35 +16,26 @@ struct OnboardingContainerView: View {
             }
 
             // Content
-            TabView(selection: $viewModel.currentStep) {
-                LoginView(
-                    onLoginSuccess: {
-                        viewModel.proceedAfterLogin()
-                    },
-                    onGuestLogin: {
-                        viewModel.proceedAfterLogin()
-                    }
-                )
-                .tag(OnboardingStep.login)
-
-                LevelSelectionView(viewModel: viewModel)
-                    .tag(OnboardingStep.level)
-
-                EnvironmentSelectionView(viewModel: viewModel)
-                    .tag(OnboardingStep.environment)
-
-                TimePickerView(viewModel: viewModel)
-                    .tag(OnboardingStep.time)
-
-                OnboardingCompleteView(viewModel: viewModel) {
-                    viewModel.completeOnboarding()
-                    withAnimation {
-                        hasCompletedOnboarding = true
+            Group {
+                switch viewModel.currentStep {
+                case .login:
+                    LoginView(
+                        onLoginSuccess: { viewModel.proceedAfterLogin() },
+                        onGuestLogin: { viewModel.proceedAfterLogin() }
+                    )
+                case .level:
+                    LevelSelectionView(viewModel: viewModel)
+                case .environment:
+                    EnvironmentSelectionView(viewModel: viewModel)
+                case .time:
+                    TimePickerView(viewModel: viewModel)
+                case .complete:
+                    OnboardingCompleteView(viewModel: viewModel) {
+                        viewModel.completeOnboarding()
+                        withAnimation { hasCompletedOnboarding = true }
                     }
                 }
-                .tag(OnboardingStep.complete)
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
             .animation(.easeInOut(duration: 0.3), value: viewModel.currentStep)
 
             // Bottom buttons (로그인/완료 화면에서는 숨김)

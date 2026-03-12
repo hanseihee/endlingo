@@ -5,11 +5,11 @@ struct ProfileView: View {
     @AppStorage("selectedEnvironment") private var selectedEnvironment: String = ""
     @AppStorage("notificationHour") private var notificationHour: Int = 9
     @AppStorage("notificationMinute") private var notificationMinute: Int = 0
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
 
     @State private var auth = AuthService.shared
     @State private var showLogoutConfirm = false
     @State private var showDeleteConfirm = false
+    @State private var notificationTime = Date()
 
     var body: some View {
         NavigationStack {
@@ -30,12 +30,12 @@ struct ProfileView: View {
                         }
                     }
 
-                    HStack {
-                        Text("알림 시간")
-                        Spacer()
-                        Text(String(format: "%d:%02d", notificationHour, notificationMinute))
-                            .foregroundStyle(.secondary)
-                    }
+                    DatePicker("알림 시간", selection: $notificationTime, displayedComponents: .hourAndMinute)
+                        .onChange(of: notificationTime) { _, newValue in
+                            let comps = Calendar.current.dateComponents([.hour, .minute], from: newValue)
+                            notificationHour = comps.hour ?? 9
+                            notificationMinute = comps.minute ?? 0
+                        }
                 }
 
                 // 계정
@@ -85,16 +85,14 @@ struct ProfileView: View {
                     }
                 }
 
-                // 초기화
-                Section {
-                    Button(role: .destructive) {
-                        hasCompletedOnboarding = false
-                    } label: {
-                        Label("온보딩 다시 하기", systemImage: "arrow.counterclockwise")
-                    }
-                }
             }
             .navigationTitle("프로필")
+            .onAppear {
+                var comps = DateComponents()
+                comps.hour = notificationHour
+                comps.minute = notificationMinute
+                notificationTime = Calendar.current.date(from: comps) ?? Date()
+            }
             .alert("로그아웃", isPresented: $showLogoutConfirm) {
                 Button("로그아웃", role: .destructive) {
                     Task { await auth.signOut() }
