@@ -1,12 +1,11 @@
 import Foundation
 
+@MainActor
 final class LessonService {
     static let shared = LessonService()
 
-    private let decoder = JSONDecoder()
-
     private var cache: [String: DailyLesson] = [:]
-    private var cacheDate: String?
+    private var cachedToday: String?
 
     private init() {}
 
@@ -15,22 +14,21 @@ final class LessonService {
     }
 
     func fetchLesson(date: String, level: EnglishLevel, environment: LearningEnvironment) async throws -> DailyLesson {
+        // 날짜가 바뀌면 캐시 무효화
+        let today = SupabaseConfig.todayDateString
+        if cachedToday != today {
+            cache.removeAll()
+            cachedToday = today
+        }
+
         let cacheKey = "\(date)_\(level.rawValue)_\(environment.rawValue)"
 
         if let cached = cache[cacheKey] {
             return cached
         }
 
-        let urlString = "\(SupabaseConfig.restBaseURL)/daily_lessons?select=*&date=eq.\(date)&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&limit=1"
-
-        guard let url = URL(string: urlString) else { throw LessonError.notFound }
-
-        var request = URLRequest(url: url)
-        request.setValue(SupabaseConfig.anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(SupabaseConfig.anonKey)", forHTTPHeaderField: "Authorization")
-
-        let (data, _) = try await URLSession.shared.data(for: request)
-        let lessons = try decoder.decode([DailyLesson].self, from: data)
+        let query = "select=*&date=eq.\(date)&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&limit=1"
+        let lessons: [DailyLesson] = await SupabaseAPI.fetch("daily_lessons", query: query)
 
         guard let lesson = lessons.first else {
             throw LessonError.notFound

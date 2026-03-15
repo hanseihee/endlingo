@@ -65,7 +65,7 @@ final class OnboardingViewModel {
         withAnimation(.easeInOut(duration: 0.3)) {
             switch currentStep {
             case .login:       break
-            case .level:       break // 로그인 화면으로 돌아가지 않음
+            case .level:       currentStep = .login
             case .environment: currentStep = .level
             case .time:        currentStep = .environment
             case .complete:    currentStep = .time
@@ -86,7 +86,7 @@ final class OnboardingViewModel {
         Task {
             let granted = await NotificationService.shared.requestPermission()
             if granted {
-                await NotificationService.shared.scheduleDailyNotification(
+                NotificationService.shared.scheduleDailyNotification(
                     hour: selectedHour, minute: selectedMinute
                 )
             }

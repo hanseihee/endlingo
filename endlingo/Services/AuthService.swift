@@ -49,8 +49,10 @@ final class AuthService {
         let session = try await client.auth.signIn(email: email, password: password)
         currentUser = session.user
         isLoggedIn = true
-        await VocabularyService.shared.syncAfterLogin()
-        await GamificationService.shared.syncAfterLogin()
+        async let v: () = VocabularyService.shared.syncAfterLogin()
+        async let g: () = GrammarService.shared.syncAfterLogin()
+        async let ga: () = GamificationService.shared.syncAfterLogin()
+        _ = await (v, g, ga)
     }
 
     func resetPassword(email: String) async throws {
@@ -60,7 +62,8 @@ final class AuthService {
     func deleteAccount() async {
         do {
             let session = try await client.auth.session
-            var request = URLRequest(url: URL(string: "\(SupabaseConfig.functionsBaseURL)/delete-account")!)
+            guard let url = URL(string: "\(SupabaseConfig.functionsBaseURL)/delete-account") else { return }
+            var request = URLRequest(url: url)
             request.httpMethod = "POST"
             request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -71,6 +74,7 @@ final class AuthService {
                 currentUser = nil
                 isLoggedIn = false
                 VocabularyService.shared.clearAfterLogout()
+                GrammarService.shared.clearAfterLogout()
                 GamificationService.shared.clearAfterLogout()
                 NotificationService.shared.cancelAll()
                 resetUserData()
@@ -89,6 +93,7 @@ final class AuthService {
         currentUser = nil
         isLoggedIn = false
         VocabularyService.shared.clearAfterLogout()
+        GrammarService.shared.clearAfterLogout()
         GamificationService.shared.clearAfterLogout()
         NotificationService.shared.cancelAll()
         resetUserData()
@@ -102,6 +107,7 @@ final class AuthService {
             currentUser = session.user
             isLoggedIn = true
             await VocabularyService.shared.syncAfterLogin()
+            await GrammarService.shared.syncAfterLogin()
             await GamificationService.shared.syncAfterLogin()
         } catch {
             print("Deep link error: \(error)")
@@ -160,6 +166,7 @@ final class AuthService {
             currentUser = session.user
             isLoggedIn = true
             await VocabularyService.shared.syncAfterLogin()
+            await GrammarService.shared.syncAfterLogin()
             await GamificationService.shared.syncAfterLogin()
         } catch {
             // No stored session

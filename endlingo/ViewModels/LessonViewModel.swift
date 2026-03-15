@@ -35,22 +35,29 @@ final class LessonViewModel {
         Self.kstFormatter.string(from: date)
     }
 
-    func dayLabel(for date: Date) -> String {
-        let cal = Self.kstCalendar
-        if cal.isDateInToday(date) { return "오늘" }
+    private static let dayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "ko_KR")
         f.timeZone = TimeZone(identifier: "Asia/Seoul")
         f.dateFormat = "M/d"
-        return f.string(from: date)
-    }
+        return f
+    }()
 
-    func weekdayLabel(for date: Date) -> String {
+    private static let weekdayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "ko_KR")
         f.timeZone = TimeZone(identifier: "Asia/Seoul")
         f.dateFormat = "E"
-        return f.string(from: date)
+        return f
+    }()
+
+    func dayLabel(for date: Date) -> String {
+        if Self.kstCalendar.isDateInToday(date) { return "오늘" }
+        return Self.dayFormatter.string(from: date)
+    }
+
+    func weekdayLabel(for date: Date) -> String {
+        Self.weekdayFormatter.string(from: date)
     }
 
     func selectDate(_ date: Date) {
@@ -83,6 +90,7 @@ final class LessonViewModel {
                 level: level,
                 environment: environment
             )
+            AnalyticsService.logLessonView(level: levelRaw, environment: envRaw, date: dateStr)
         } catch {
             if isToday {
                 errorMessage = "오늘의 레슨을 불러올 수 없습니다"

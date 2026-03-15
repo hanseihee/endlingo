@@ -7,21 +7,7 @@ final class VocabularyService {
 
     private(set) var words: [SavedWord] = []
 
-    private var baseURL: String { SupabaseConfig.restBaseURL }
-    private var apiKey: String { SupabaseConfig.anonKey }
-
     private let fileURL: URL
-    private let encoder: JSONEncoder = {
-        let e = JSONEncoder()
-        e.dateEncodingStrategy = .iso8601
-        return e
-    }()
-    private let decoder: JSONDecoder = {
-        let d = JSONDecoder()
-        d.dateDecodingStrategy = .iso8601
-        return d
-    }()
-
     private var auth: AuthService { AuthService.shared }
 
     private init() {
@@ -35,33 +21,34 @@ final class VocabularyService {
     func save(_ word: String, meaning: String?, sentence: String, lessonDate: String) {
         guard !isSaved(word) else { return }
 
-        if auth.isLoggedIn, let userId = auth.userId {
-            let entry = SavedWord(
-                id: UUID(), userId: userId,
-                word: word, meaning: meaning, sentence: sentence,
-                lessonDate: lessonDate, savedAt: Date()
-            )
-            words.insert(entry, at: 0)
-            Task { await remoteInsert(entry) }
-            GamificationService.shared.awardWordSaveXP()
+        let entry = SavedWord(
+            id: UUID(), userId: auth.isLoggedIn ? auth.userId : nil,
+            word: word, meaning: meaning, sentence: sentence,
+            lessonDate: lessonDate, savedAt: Date()
+        )
+        words.insert(entry, at: 0)
+
+        if auth.isLoggedIn {
+            Task {
+                guard let token = await auth.accessToken else { return }
+                await SupabaseAPI.insert(entry, table: "saved_words", token: token)
+            }
         } else {
-            let entry = SavedWord(
-                id: UUID(), userId: nil,
-                word: word, meaning: meaning, sentence: sentence,
-                lessonDate: lessonDate, savedAt: Date()
-            )
-            words.insert(entry, at: 0)
             persistLocal()
-            GamificationService.shared.awardWordSaveXP()
         }
+
+        GamificationService.shared.awardWordSaveXP()
+        AnalyticsService.logWordSave(word: word)
     }
 
     func remove(id: UUID) {
-        guard let entry = words.first(where: { $0.id == id }) else { return }
         words.removeAll { $0.id == id }
 
         if auth.isLoggedIn {
-            Task { await remoteDelete(id) }
+            Task {
+                guard let token = await auth.accessToken else { return }
+                await SupabaseAPI.delete("saved_words", filter: "id=eq.\(id.uuidString)", token: token)
+            }
         } else {
             persistLocal()
         }
@@ -73,9 +60,8 @@ final class VocabularyService {
 
     /// 로그인 시 호출: 로컬 단어를 서버에 업로드 후 서버 단어 로드
     func syncAfterLogin() async {
-        guard let userId = auth.userId else { return }
+        guard let token = await auth.accessToken, let userId = auth.userId else { return }
 
-        // 로컬에 저장된 게스트 단어를 서버에 업로드
         let localWords = loadLocalWords()
         for word in localWords {
             let entry = SavedWord(
@@ -84,83 +70,26 @@ final class VocabularyService {
                 sentence: word.sentence,
                 lessonDate: word.lessonDate, savedAt: word.savedAt
             )
-            await remoteInsert(entry)
+            await SupabaseAPI.insert(entry, table: "saved_words", token: token)
         }
 
-        // 로컬 파일 정리
-        if !localWords.isEmpty {
-            try? FileManager.default.removeItem(at: fileURL)
+        // 서버에서 전체 로드 성공 후에만 로컬 파일 삭제
+        let remote: [SavedWord] = await SupabaseAPI.fetch(
+            "saved_words", query: "select=*&order=saved_at.desc", token: token
+        )
+        if !remote.isEmpty || localWords.isEmpty {
+            words = remote
+            if !localWords.isEmpty {
+                try? FileManager.default.removeItem(at: fileURL)
+            }
         }
-
-        // 서버에서 전체 단어 로드
-        await fetchRemote()
     }
 
-    /// 기화
     func clearAfterLogout() {
         words = []
     }
 
-    // MARK: - Remote (Supabase)
-
-    private func fetchRemote() async {
-        guard let token = await auth.accessToken else { return }
-
-        let urlString = "\(baseURL)/saved_words?select=*&order=saved_at.desc"
-        guard let url = URL(string: urlString) else { return }
-        var request = URLRequest(url: url)
-        request.setValue(apiKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-
-        do {
-            let (data, _) = try await URLSession.shared.data(for: request)
-            words = try decoder.decode([SavedWord].self, from: data)
-        } catch {
-            print("Fetch words error: \(error)")
-        }
-    }
-
-    private func remoteInsert(_ entry: SavedWord) async {
-        guard let token = await auth.accessToken else { return }
-
-        let urlString = "\(baseURL)/saved_words"
-        guard let url = URL(string: urlString) else { return }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue(apiKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("resolution=ignore-duplicates", forHTTPHeaderField: "Prefer")
-        request.httpBody = try? encoder.encode(entry)
-
-        do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            if let http = response as? HTTPURLResponse, http.statusCode >= 400 {
-                print("Insert word error: \(http.statusCode)")
-            }
-        } catch {
-            print("Insert word error: \(error)")
-        }
-    }
-
-    private func remoteDelete(_ id: UUID) async {
-        guard let token = await auth.accessToken else { return }
-
-        let urlString = "\(baseURL)/saved_words?id=eq.\(id.uuidString)"
-        guard let url = URL(string: urlString) else { return }
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
-        request.setValue(apiKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-
-        do {
-            let (_, _) = try await URLSession.shared.data(for: request)
-        } catch {
-            print("Delete word error: \(error)")
-        }
-    }
-
-    // MARK: - Local Storage (게스트용)
+    // MARK: - Local Storage
 
     private func loadLocal() {
         words = loadLocalWords()
@@ -168,12 +97,12 @@ final class VocabularyService {
 
     private func loadLocalWords() -> [SavedWord] {
         guard let data = try? Data(contentsOf: fileURL),
-              let loaded = try? decoder.decode([SavedWord].self, from: data) else { return [] }
+              let loaded = try? SupabaseAPI.decoder.decode([SavedWord].self, from: data) else { return [] }
         return loaded
     }
 
     private func persistLocal() {
-        guard let data = try? encoder.encode(words) else { return }
+        guard let data = try? SupabaseAPI.encoder.encode(words) else { return }
         try? data.write(to: fileURL, options: .atomic)
     }
 }

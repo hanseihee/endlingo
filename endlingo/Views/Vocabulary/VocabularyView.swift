@@ -1,29 +1,54 @@
 import SwiftUI
 
+enum VocabularyTab: String, CaseIterable {
+    case words = "단어"
+    case grammar = "문법"
+}
+
 struct VocabularyView: View {
     @State private var vocabulary = VocabularyService.shared
+    @State private var grammarService = GrammarService.shared
+    @State private var selectedTab: VocabularyTab = .words
     @State private var showAddSheet = false
-    @State private var showQuiz = false
+    @State private var showWordQuiz = false
+    @State private var showGrammarQuiz = false
 
     var body: some View {
         NavigationStack {
-            Group {
-                if vocabulary.words.isEmpty {
-                    emptyView
-                } else {
-                    wordList
+            VStack(spacing: 0) {
+                // 세그먼트 탭
+                Picker("탭", selection: $selectedTab) {
+                    ForEach(VocabularyTab.allCases, id: \.rawValue) { tab in
+                        Text(tab.rawValue).tag(tab)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+
+                // 탭 콘텐츠
+                switch selectedTab {
+                case .words:
+                    wordContent
+                case .grammar:
+                    grammarContent
                 }
             }
-            .sheet(isPresented: $showQuiz) {
+            .sheet(isPresented: $showWordQuiz) {
                 QuizView()
+            }
+            .sheet(isPresented: $showGrammarQuiz) {
+                GrammarQuizView()
             }
             .navigationTitle("단어장")
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showAddSheet = true
-                    } label: {
-                        Image(systemName: "plus")
+                if selectedTab == .words {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            showAddSheet = true
+                        } label: {
+                            Image(systemName: "plus")
+                        }
                     }
                 }
             }
@@ -33,11 +58,22 @@ struct VocabularyView: View {
         }
     }
 
+    // MARK: - 단어 콘텐츠
+
+    @ViewBuilder
+    private var wordContent: some View {
+        if vocabulary.words.isEmpty {
+            wordEmptyView
+        } else {
+            wordList
+        }
+    }
+
     private var wordList: some View {
         List {
             // 퀴즈 버튼
             Button {
-                showQuiz = true
+                showWordQuiz = true
             } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "sparkles")
@@ -96,11 +132,11 @@ struct VocabularyView: View {
         }
     }
 
-    private var emptyView: some View {
+    private var wordEmptyView: some View {
         VStack(spacing: 16) {
             // 퀴즈 버튼
             Button {
-                showQuiz = true
+                showWordQuiz = true
             } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "sparkles")
@@ -145,6 +181,136 @@ struct VocabularyView: View {
             Text("레슨에서 단어를 탭하거나\n+ 버튼으로 직접 추가하세요")
                 .font(.caption)
                 .foregroundStyle(.orange)
+                .multilineTextAlignment(.center)
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - 문법 콘텐츠
+
+    @ViewBuilder
+    private var grammarContent: some View {
+        if grammarService.grammars.isEmpty {
+            grammarEmptyView
+        } else {
+            grammarList
+        }
+    }
+
+    private var grammarList: some View {
+        List {
+            // 문법 퀴즈 버튼
+            Button {
+                showGrammarQuiz = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "text.book.closed.fill")
+                        .font(.title3)
+                        .foregroundStyle(.purple)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("문법 퀴즈")
+                            .font(.callout.weight(.semibold))
+                            .foregroundStyle(.primary)
+                        Text("문법 실력을 테스트하세요")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+
+            ForEach(grammarService.grammars) { entry in
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(entry.pattern)
+                        .font(.headline)
+                        .foregroundStyle(.blue)
+
+                    Text(entry.explanation)
+                        .font(.subheadline)
+                        .foregroundStyle(.primary.opacity(0.8))
+
+                    if let example = entry.example, !example.isEmpty {
+                        Text("e.g. \(example)")
+                            .font(.caption)
+                            .italic()
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if !entry.sentence.isEmpty {
+                        Text(entry.sentence)
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(2)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            .onDelete { indexSet in
+                for index in indexSet {
+                    grammarService.remove(id: grammarService.grammars[index].id)
+                }
+            }
+        }
+    }
+
+    private var grammarEmptyView: some View {
+        VStack(spacing: 16) {
+            // 문법 퀴즈 버튼
+            Button {
+                showGrammarQuiz = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "text.book.closed.fill")
+                        .font(.title3)
+                        .foregroundStyle(.purple)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("문법 퀴즈")
+                            .font(.callout.weight(.semibold))
+                            .foregroundStyle(.primary)
+                        Text("문법 실력을 테스트하세요")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color(.secondarySystemGroupedBackground))
+                )
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+
+            Spacer()
+
+            Image(systemName: "text.book.closed")
+                .font(.system(size: 48))
+                .foregroundStyle(.secondary)
+
+            Text("저장한 문법이 없습니다")
+                .font(.body)
+                .foregroundStyle(.secondary)
+
+            Text("레슨의 문법 포인트에서\n북마크 버튼을 눌러 저장하세요")
+                .font(.caption)
+                .foregroundStyle(.purple)
                 .multilineTextAlignment(.center)
 
             Spacer()

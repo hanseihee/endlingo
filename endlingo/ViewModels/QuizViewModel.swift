@@ -95,6 +95,7 @@ final class QuizViewModel {
         isFinished = false
         correctCount = 0
         totalXPEarned = 0
+        AnalyticsService.logQuizStart(type: type.rawValue, source: source.rawValue)
     }
 
     func selectAnswer(_ index: Int) {
@@ -126,6 +127,12 @@ final class QuizViewModel {
 
         if currentIndex >= questions.count {
             isFinished = true
+            AnalyticsService.logQuizComplete(
+                type: questions.first?.quizType.rawValue ?? "",
+                correct: correctCount,
+                total: questions.count,
+                xp: totalXPEarned
+            )
         }
     }
 

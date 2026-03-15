@@ -7,7 +7,9 @@ struct ScenarioCardView: View {
     @State private var showTranslation = false
     @State private var selectedWord: String?
 
+    @State private var showPronunciation = false
     @State private var vocabulary = VocabularyService.shared
+    @State private var grammarService = GrammarService.shared
     @State private var speech = SpeechService.shared
 
     var body: some View {
@@ -52,6 +54,23 @@ struct ScenarioCardView: View {
                 SpeakButton(text: scenario.sentenceEn, id: "scenario-\(index)")
             }
 
+            // 따라 읽기 버튼
+            Button {
+                showPronunciation = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "mic.fill")
+                    Text("따라 읽기")
+                }
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
+                .background(
+                    Capsule().fill(Color.green)
+                )
+            }
+
             // 한국어 번역 토글
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -86,7 +105,19 @@ struct ScenarioCardView: View {
                     .foregroundStyle(.primary)
 
                 ForEach(scenario.grammar) { point in
-                    GrammarPointRow(point: point)
+                    GrammarPointRow(
+                        point: point,
+                        isSaved: grammarService.isSaved(point.pattern),
+                        onSave: {
+                            grammarService.save(
+                                pattern: point.pattern,
+                                explanation: point.explanation,
+                                example: point.example,
+                                sentence: scenario.sentenceEn,
+                                lessonDate: lessonDate
+                            )
+                        }
+                    )
                 }
             }
         }
@@ -97,6 +128,12 @@ struct ScenarioCardView: View {
         )
         .onDisappear {
             speech.stop()
+        }
+        .sheet(isPresented: $showPronunciation) {
+            PronunciationPracticeView(
+                sentence: scenario.sentenceEn,
+                scenarioTitle: scenario.titleEn
+            )
         }
         .sheet(isPresented: Binding(
             get: { selectedWord != nil },
@@ -140,8 +177,11 @@ private struct WordDetailSheet: View {
                 .padding(.top, 8)
 
             // 단어
-            Text(word)
-                .font(.title.bold())
+            HStack(spacing: 6) {
+                Text(word)
+                    .font(.title.bold())
+                SpeakButton(text: word, id: "word-\(word)", font: .title3)
+            }
 
             // 문장 컨텍스트
             Text(highlightedSentence)
@@ -217,23 +257,40 @@ private struct WordDetailSheet: View {
 
 private struct GrammarPointRow: View {
     let point: GrammarPoint
+    let isSaved: Bool
+    let onSave: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(point.pattern)
-                .font(.callout.weight(.semibold))
-                .foregroundStyle(.blue)
+        HStack(alignment: .top, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(point.pattern)
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.blue)
 
-            Text(point.explanation)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            if let example = point.example, !example.isEmpty {
-                Text("e.g. \(example)")
+                Text(point.explanation)
                     .font(.caption)
-                    .italic()
-                    .foregroundStyle(.primary.opacity(0.7))
+                    .foregroundStyle(.secondary)
+
+                if let example = point.example, !example.isEmpty {
+                    Text("e.g. \(example)")
+                        .font(.caption)
+                        .italic()
+                        .foregroundStyle(.primary.opacity(0.7))
+                }
             }
+
+            Spacer(minLength: 4)
+
+            Button {
+                onSave()
+            } label: {
+                Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+                    .font(.callout)
+                    .foregroundStyle(isSaved ? .orange : .secondary)
+            }
+            .buttonStyle(.plain)
+            .disabled(isSaved)
+            .padding(.top, 2)
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)

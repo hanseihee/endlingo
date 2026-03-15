@@ -1,11 +1,9 @@
 import SwiftUI
 
-struct QuizView: View {
+struct GrammarQuizView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var viewModel = QuizViewModel()
-    @State private var speech = SpeechService.shared
-    @State private var selectedType: QuizType = .enToKo
-    @State private var selectedSource: QuizWordSource = .builtin
+    @State private var viewModel = GrammarQuizViewModel()
+    @State private var selectedType: GrammarQuizType = .patternToExplanation
     @State private var showMasteredList = false
 
     var body: some View {
@@ -19,28 +17,16 @@ struct QuizView: View {
                     quizQuestion
                 }
             }
-            .navigationTitle("단어 퀴즈")
+            .navigationTitle("문법 퀴즈")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("닫기") {
-                        speech.stop()
-                        dismiss()
-                    }
+                    Button("닫기") { dismiss() }
                 }
             }
             .sheet(isPresented: $showMasteredList) {
-                MasteredWordsSheet(viewModel: viewModel)
+                MasteredGrammarSheet(viewModel: viewModel)
             }
-            .onDisappear {
-                speech.stop()
-            }
-        }
-    }
-
-    private func speakFirstQuestion() {
-        if let q = viewModel.questions.first, q.quizType == .enToKo {
-            speech.speak(q.wordText, id: "quiz-0")
         }
     }
 
@@ -50,59 +36,49 @@ struct QuizView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            Image(systemName: "sparkles")
+            Image(systemName: "text.book.closed.fill")
                 .font(.system(size: 56))
-                .foregroundStyle(.orange)
+                .foregroundStyle(.purple)
 
-            Text("단어 퀴즈")
+            Text("문법 퀴즈")
                 .font(.title2.bold())
 
-            // 단어 소스 선택
-            VStack(spacing: 12) {
-                Text("단어 범위")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.secondary)
-
-                Picker("범위", selection: $selectedSource) {
-                    ForEach(QuizWordSource.allCases, id: \.rawValue) { source in
-                        Text(source.rawValue).tag(source)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 24)
-            }
-
-            if !viewModel.canStartQuiz(source: selectedSource) {
-                Text("단어를 5개 이상 저장해야\n퀴즈를 시작할 수 있습니다")
+            if !viewModel.canStartQuiz() {
+                Text("문법을 4개 이상 저장해야\n퀴즈를 시작할 수 있습니다")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+
+                Text("현재 저장된 문법: \(GrammarService.shared.grammars.count)개")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
             } else {
-                // 퀴즈 유형 선택
                 VStack(spacing: 12) {
                     Text("퀴즈 유형")
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
 
                     Picker("유형", selection: $selectedType) {
-                        Text("영어 → 한국어").tag(QuizType.enToKo)
-                        Text("한국어 → 영어").tag(QuizType.koToEn)
+                        Text("패턴 → 설명").tag(GrammarQuizType.patternToExplanation)
+                        Text("설명 → 패턴").tag(GrammarQuizType.explanationToPattern)
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal, 24)
                 }
 
-                sourceDescription
+                Text("저장된 문법 \(viewModel.availableCount)개에서 출제됩니다")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
 
                 if viewModel.masteredCount > 0 {
-                    Text("외운 단어 \(viewModel.masteredCount)개 제외")
+                    Text("외운 문법 \(viewModel.masteredCount)개 제외")
                         .font(.caption)
                         .foregroundStyle(.green)
 
                     Button {
                         showMasteredList = true
                     } label: {
-                        Text("외운 단어 관리")
+                        Text("외운 문법 관리")
                             .font(.caption)
                             .foregroundStyle(.blue)
                     }
@@ -111,42 +87,22 @@ struct QuizView: View {
 
             Spacer()
 
-            if viewModel.canStartQuiz(source: selectedSource) {
+            if viewModel.canStartQuiz() {
                 Button {
-                    viewModel.generateQuiz(type: selectedType, source: selectedSource)
-                    speakFirstQuestion()
+                    viewModel.generateQuiz(type: selectedType)
                 } label: {
                     Text("시작하기")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color.orange)
+                        .background(Color.purple)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 24)
             }
         }
-    }
-
-    private var sourceDescription: some View {
-        Group {
-            switch selectedSource {
-            case .saved:
-                let count = VocabularyService.shared.words.filter { $0.meaning != nil }.count
-                Text("저장된 단어 \(count)개에서 출제됩니다")
-            case .builtin:
-                let count = BuiltInWordBank.shared.words.count
-                Text("필수 영단어 \(count)개에서 출제됩니다")
-            case .mixed:
-                let saved = VocabularyService.shared.words.filter { $0.meaning != nil }.count
-                let builtin = BuiltInWordBank.shared.words.count
-                Text("전체 \(saved + builtin)개 단어에서 출제됩니다")
-            }
-        }
-        .font(.caption)
-        .foregroundStyle(.tertiary)
     }
 
     // MARK: - 문제
@@ -163,42 +119,36 @@ struct QuizView: View {
 
                 Text("+\(viewModel.totalXPEarned) XP")
                     .font(.caption.bold())
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(.purple)
             }
             .padding(.horizontal, 24)
 
             ProgressView(value: viewModel.progress)
-                .tint(.orange)
+                .tint(.purple)
                 .padding(.horizontal, 24)
 
             Spacer()
 
             if let question = viewModel.currentQuestion {
-                // 질문
                 VStack(spacing: 8) {
-                    Text(question.quizType == .enToKo ? "이 단어의 뜻은?" : "이 뜻의 영어 단어는?")
+                    Text(question.quizType == .patternToExplanation
+                         ? "이 문법의 설명은?" : "이 설명에 해당하는 문법은?")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
 
-                    HStack(spacing: 8) {
-                        Text(question.quizType == .enToKo ? question.wordText : question.meaningText)
-                            .font(.title.bold())
-                            .multilineTextAlignment(.center)
+                    Text(question.quizType == .patternToExplanation
+                         ? question.pattern : question.explanation)
+                        .font(.title3.bold())
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
 
-                        if question.quizType == .enToKo {
-                            SpeakButton(
-                                text: question.wordText,
-                                id: "quiz-\(viewModel.currentIndex)",
-                                font: .body,
-                                color: .orange
-                            )
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                }
-                .onChange(of: viewModel.currentIndex) { _, _ in
-                    if let q = viewModel.currentQuestion, q.quizType == .enToKo {
-                        speech.speak(q.wordText, id: "quiz-\(viewModel.currentIndex)")
+                    if let example = question.example,
+                       !example.isEmpty,
+                       question.quizType == .patternToExplanation {
+                        Text("e.g. \(example)")
+                            .font(.caption)
+                            .italic()
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -207,7 +157,7 @@ struct QuizView: View {
                 // 선택지
                 VStack(spacing: 10) {
                     ForEach(0..<question.options.count, id: \.self) { index in
-                        OptionButton(
+                        GrammarOptionButton(
                             text: question.options[index],
                             index: index,
                             isSelected: viewModel.selectedAnswer == index,
@@ -220,19 +170,18 @@ struct QuizView: View {
                 }
                 .padding(.horizontal, 24)
 
-                // 외웠어요 버튼 + 다음 버튼
+                // 외웠어요 + 다음 버튼
                 if viewModel.isAnswered {
                     VStack(spacing: 8) {
-                        // 정답일 때 외웠어요 토글
                         if viewModel.selectedAnswer == question.correctIndex {
-                            let mastered = viewModel.isMastered(question.wordText)
+                            let mastered = viewModel.isMastered(question.pattern)
                             Button {
-                                viewModel.toggleMastered(question.wordText)
+                                viewModel.toggleMastered(question.pattern)
                             } label: {
                                 HStack(spacing: 6) {
                                     Image(systemName: mastered ? "checkmark.circle.fill" : "circle")
                                         .foregroundStyle(mastered ? .green : .secondary)
-                                    Text(mastered ? "외운 단어에서 해제" : "외웠어요")
+                                    Text(mastered ? "외운 문법에서 해제" : "외웠어요")
                                         .font(.callout.weight(.medium))
                                         .foregroundStyle(mastered ? .green : .secondary)
                                 }
@@ -248,7 +197,7 @@ struct QuizView: View {
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(Color.orange)
+                                .background(Color.purple)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
                     }
@@ -266,7 +215,6 @@ struct QuizView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            // 점수
             let total = viewModel.questions.count
             let correct = viewModel.correctCount
             let accuracy = total > 0 ? Int(Double(correct) / Double(total) * 100) : 0
@@ -280,9 +228,9 @@ struct QuizView: View {
 
             VStack(spacing: 8) {
                 HStack(spacing: 24) {
-                    SummaryItem(label: "정답", value: "\(correct)/\(total)")
-                    SummaryItem(label: "정답률", value: "\(accuracy)%")
-                    SummaryItem(label: "획득 XP", value: "+\(viewModel.totalXPEarned)")
+                    GrammarSummaryItem(label: "정답", value: "\(correct)/\(total)")
+                    GrammarSummaryItem(label: "정답률", value: "\(accuracy)%")
+                    GrammarSummaryItem(label: "획득 XP", value: "+\(viewModel.totalXPEarned)")
                 }
             }
             .padding(20)
@@ -296,15 +244,14 @@ struct QuizView: View {
 
             VStack(spacing: 10) {
                 Button {
-                    viewModel.generateQuiz(type: selectedType, source: selectedSource)
-                    speakFirstQuestion()
+                    viewModel.generateQuiz(type: selectedType)
                 } label: {
                     Text("다시 도전하기")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color.orange)
+                        .background(Color.purple)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
 
@@ -326,7 +273,7 @@ struct QuizView: View {
 
 // MARK: - Components
 
-private struct OptionButton: View {
+private struct GrammarOptionButton: View {
     let text: String
     let index: Int
     let isSelected: Bool
@@ -391,7 +338,7 @@ private struct OptionButton: View {
     }
 }
 
-private struct SummaryItem: View {
+private struct GrammarSummaryItem: View {
     let label: String
     let value: String
 
@@ -407,41 +354,41 @@ private struct SummaryItem: View {
     }
 }
 
-// MARK: - 외운 단어 관리
+// MARK: - 외운 문법 관리
 
-private struct MasteredWordsSheet: View {
-    @Bindable var viewModel: QuizViewModel
+private struct MasteredGrammarSheet: View {
+    @Bindable var viewModel: GrammarQuizViewModel
     @Environment(\.dismiss) private var dismiss
 
-    private var sortedWords: [String] {
-        viewModel.masteredWords.sorted()
+    private var sortedGrammar: [String] {
+        viewModel.masteredGrammar.sorted()
     }
 
     var body: some View {
         NavigationStack {
             Group {
-                if sortedWords.isEmpty {
+                if sortedGrammar.isEmpty {
                     VStack(spacing: 12) {
                         Spacer()
                         Image(systemName: "checkmark.circle")
                             .font(.system(size: 40))
                             .foregroundStyle(.tertiary)
-                        Text("외운 단어가 없습니다")
+                        Text("외운 문법이 없습니다")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                         Spacer()
                     }
                 } else {
                     List {
-                        ForEach(sortedWords, id: \.self) { word in
+                        ForEach(sortedGrammar, id: \.self) { pattern in
                             HStack {
-                                Text(word)
+                                Text(pattern)
                                     .font(.body)
 
                                 Spacer()
 
                                 Button {
-                                    viewModel.toggleMastered(word)
+                                    viewModel.toggleMastered(pattern)
                                 } label: {
                                     Image(systemName: "xmark.circle.fill")
                                         .foregroundStyle(.red.opacity(0.6))
@@ -452,7 +399,7 @@ private struct MasteredWordsSheet: View {
                     }
                 }
             }
-            .navigationTitle("외운 단어 (\(sortedWords.count))")
+            .navigationTitle("외운 문법 (\(sortedGrammar.count))")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

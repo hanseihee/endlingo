@@ -25,6 +25,10 @@ final class SpeechService {
             }
         }
 
+        // 오디오 세션을 재생 모드로 설정 (녹음 후 TTS 안 되는 문제 방지)
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+        try? AVAudioSession.sharedInstance().setActive(true)
+
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: accent)
         utterance.rate = 0.45

@@ -109,6 +109,17 @@ struct ProfileView: View {
                     }
                 }
 
+                // 앱 공유
+                Section {
+                    ShareLink(
+                        item: URL(string: "https://apps.apple.com/app/yeongeohaja/id0000000000")!,
+                        subject: Text("영어하자 - 매일 영어 문장 학습"),
+                        message: Text("매일 새로운 영어 문장으로 공부하는 앱이야! 같이 해보자 🦉")
+                    ) {
+                        Label("친구에게 앱 공유하기", systemImage: "square.and.arrow.up")
+                    }
+                }
+
                 // 앱 정보
                 Section("앱 정보") {
                     HStack {
@@ -157,6 +168,7 @@ private struct ProfileLoginView: View {
     @State private var isSignUp = false
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var isSuccessMessage = false
     @State private var showResetPassword = false
     @State private var resetEmail = ""
     @State private var resetSent = false
@@ -184,7 +196,7 @@ private struct ProfileLoginView: View {
                 Section {
                     Text(errorMessage)
                         .font(.caption)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(isSuccessMessage ? .green : .red)
                 }
             }
 
@@ -270,6 +282,7 @@ private struct ProfileLoginView: View {
                         if confirmed {
                             dismiss()
                         } else {
+                            isSuccessMessage = true
                             errorMessage = "확인 메일을 발송했습니다. 이메일의 링크를 클릭한 후 로그인해주세요."
                             isSignUp = false
                             isLoading = false
@@ -281,6 +294,7 @@ private struct ProfileLoginView: View {
                 }
             } catch {
                 await MainActor.run {
+                    isSuccessMessage = false
                     errorMessage = AuthService.parseAuthError(error)
                     isLoading = false
                 }

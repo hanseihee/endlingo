@@ -14,7 +14,7 @@ struct TappableTextView: View {
 
             if !cleaned.isEmpty,
                let encoded = cleaned.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-               let url = URL(string: "endlingo-word://\(encoded)") {
+               let url = URL(string: "yeongeohaja-word://\(encoded)") {
                 attr.link = url
             }
 
@@ -33,7 +33,7 @@ struct TappableTextView: View {
             .font(.title3.weight(.medium))
             .tint(.primary)
             .environment(\.openURL, OpenURLAction { url in
-                if url.scheme == "endlingo-word",
+                if url.scheme == "yeongeohaja-word",
                    let word = url.host?.removingPercentEncoding {
                     onWordTap(word)
                 }

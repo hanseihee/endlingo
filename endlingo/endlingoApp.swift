@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseCore
 
 @main
 struct endlingoApp: App {
@@ -8,11 +9,21 @@ struct endlingoApp: App {
 
     @State private var auth = AuthService.shared
 
+    init() {
+        FirebaseApp.configure()
+    }
+
     var body: some Scene {
         WindowGroup {
             Group {
                 if auth.isLoading {
-                    ProgressView()
+                    ZStack {
+                        Color(.systemBackground).ignoresSafeArea()
+                        Image("MainCharacter")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 200, height: 200)
+                    }
                 } else if hasCompletedOnboarding {
                     ContentView()
                 } else {
@@ -22,12 +33,11 @@ struct endlingoApp: App {
             .onOpenURL { url in
                 Task { await auth.handleDeepLink(url: url) }
             }
-            .task {
-                if hasCompletedOnboarding {
-                    NotificationService.shared.scheduleDailyNotification(
-                        hour: notificationHour, minute: notificationMinute
-                    )
-                }
+            .task(id: hasCompletedOnboarding) {
+                guard hasCompletedOnboarding else { return }
+                NotificationService.shared.scheduleDailyNotification(
+                    hour: notificationHour, minute: notificationMinute
+                )
             }
         }
     }

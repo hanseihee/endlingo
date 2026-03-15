@@ -17,6 +17,7 @@ final class GamificationService {
     enum XP {
         static let lessonView = 10
         static let wordSave = 5
+        static let grammarSave = 5
         static let quizCorrect = 3
     }
 
@@ -28,16 +29,8 @@ final class GamificationService {
 
     private var auth: AuthService { AuthService.shared }
 
-    private let encoder: JSONEncoder = {
-        let e = JSONEncoder()
-        e.dateEncodingStrategy = .iso8601
-        return e
-    }()
-    private let decoder: JSONDecoder = {
-        let d = JSONDecoder()
-        d.dateDecodingStrategy = .iso8601
-        return d
-    }()
+    private var encoder: JSONEncoder { SupabaseAPI.encoder }
+    private var decoder: JSONDecoder { SupabaseAPI.decoder }
 
     private let recordsFileURL: URL
     private let quizFileURL: URL
@@ -84,6 +77,25 @@ final class GamificationService {
     /// 단어 저장 시 XP 지급
     func awardWordSaveXP() {
         let xp = XP.wordSave * streakMultiplier
+        stats.totalXP += xp
+        stats.recalculateLevel()
+        persistStats()
+        checkBadges()
+    }
+
+    /// 따라 읽기 XP 지급
+    func awardPronunciationXP(score: Int) {
+        let base = score >= 90 ? 15 : score >= 70 ? 10 : 5
+        let xp = base * streakMultiplier
+        stats.totalXP += xp
+        stats.recalculateLevel()
+        persistStats()
+        checkBadges()
+    }
+
+    /// 문법 저장 시 XP 지급
+    func awardGrammarSaveXP() {
+        let xp = XP.grammarSave * streakMultiplier
         stats.totalXP += xp
         stats.recalculateLevel()
         persistStats()
@@ -350,11 +362,16 @@ final class GamificationService {
         stats.bestStreak = max(stats.bestStreak, streak)
         stats.totalLearningDays = Set(learningRecords.map { $0.date }).count
 
-        // XP 재계산
-        let recordXP = learningRecords.reduce(0) { $0 + $1.xpEarned }
-        let quizXP = quizResults.reduce(0) { $0 + $1.xpEarned }
-        let wordXP = VocabularyService.shared.words.count * XP.wordSave
-        stats.totalXP = recordXP + quizXP + wordXP
+        // XP: persistStats로 이미 정확한 값이 저장되어 있으므로 덮어쓰지 않음
+        // (streak multiplier, pronunciation XP 등이 각 award 메서드에서 정확히 반영됨)
+        // 최초 로드(stats.totalXP == 0)이고 기록이 있으면 기록 기반으로 최소 복원
+        if stats.totalXP == 0 && (!learningRecords.isEmpty || !quizResults.isEmpty) {
+            let recordXP = learningRecords.reduce(0) { $0 + $1.xpEarned }
+            let quizXP = quizResults.reduce(0) { $0 + $1.xpEarned }
+            let wordXP = VocabularyService.shared.words.count * XP.wordSave
+            let grammarXP = GrammarService.shared.grammars.count * XP.grammarSave
+            stats.totalXP = recordXP + quizXP + wordXP + grammarXP
+        }
 
         stats.totalQuizzes = quizResults.count
         stats.correctQuizzes = quizResults.filter { $0.isCorrect }.count
@@ -444,63 +461,16 @@ final class GamificationService {
     // MARK: - Remote (Supabase)
 
     private func remoteInsert<T: Encodable>(_ item: T, table: String) async {
-        guard let token = await auth.accessToken,
-              let url = URL(string: "\(SupabaseConfig.restBaseURL)/\(table)") else { return }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue(SupabaseConfig.anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("return=minimal, resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
-        request.httpBody = try? encoder.encode(item)
-
-        do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            if let http = response as? HTTPURLResponse, http.statusCode >= 400 {
-                print("Insert \(table) error: \(http.statusCode)")
-            }
-        } catch {
-            print("Insert \(table) error: \(error)")
-        }
+        guard let token = await auth.accessToken else { return }
+        await SupabaseAPI.insert(item, table: table, token: token, prefer: "return=minimal, resolution=merge-duplicates")
     }
 
     private func fetchRemote() async {
         guard let token = await auth.accessToken else { return }
 
-        async let records: [LearningRecord] = fetchTable("learning_records", token: token)
-        async let quiz: [QuizResult] = fetchTable("quiz_results", token: token)
-        async let badges: [EarnedBadge] = fetchTable("earned_badges", token: token)
-
-        learningRecords = await records
-        quizResults = await quiz
-        earnedBadges = await badges
-    }
-
-    private func fetchTable<T: Decodable>(_ table: String, token: String) async -> [T] {
-        guard let url = URL(string: "\(SupabaseConfig.restBaseURL)/\(table)?select=*&order=created_at.desc") else { return [] }
-
-        var request = URLRequest(url: url)
-        request.setValue(SupabaseConfig.anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            let http = response as? HTTPURLResponse
-            // 비정상 응답 또는 빈 데이터
-            guard let statusCode = http?.statusCode, statusCode == 200, !data.isEmpty else {
-                return []
-            }
-            // 에러 응답(dictionary)인 경우 배열이 아님 → 건너뛰기
-            if let first = data.first, first != UInt8(ascii: "[") {
-                return []
-            }
-            return try decoder.decode([T].self, from: data)
-        } catch {
-            print("Fetch \(table) error: \(error)")
-            return []
-        }
+        learningRecords = await SupabaseAPI.fetch("learning_records", query: "select=*&order=created_at.desc", token: token)
+        quizResults = await SupabaseAPI.fetch("quiz_results", query: "select=*&order=created_at.desc", token: token)
+        earnedBadges = await SupabaseAPI.fetch("earned_badges", query: "select=*&order=created_at.desc", token: token)
     }
 
     // MARK: - Local Storage

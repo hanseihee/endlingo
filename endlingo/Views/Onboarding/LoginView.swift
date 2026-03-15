@@ -6,9 +6,10 @@ struct LoginView: View {
 
     @State private var email = ""
     @State private var password = ""
-    @State private var isSignUp = false
+    @State private var isSignUp = true
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var isSuccessMessage = false
     @State private var showResetPassword = false
     @State private var resetEmail = ""
     @State private var resetSent = false
@@ -25,11 +26,12 @@ struct LoginView: View {
 
             // 앱 아이콘 & 타이틀
             VStack(spacing: 12) {
-                Image(systemName: "text.book.closed.fill")
-                    .font(.system(size: 64))
-                    .foregroundStyle(.blue)
+                Image("MainCharacter")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
 
-                Text("endlingo")
+                Text("영어하자")
                     .font(.largeTitle.bold())
 
                 Text("매일 새로운 영어 문장으로\n실력을 키워보세요")
@@ -62,7 +64,7 @@ struct LoginView: View {
                 if let errorMessage {
                     Text(errorMessage)
                         .font(.caption)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(isSuccessMessage ? .green : .red)
                         .multilineTextAlignment(.center)
                 }
 
@@ -96,8 +98,8 @@ struct LoginView: View {
                         }
                     } label: {
                         Text(isSignUp ? "이미 계정이 있으신가요? **로그인**" : "계정이 없으신가요? **회원가입**")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
+                            .font(.callout.weight(.medium))
+                            .foregroundStyle(.blue)
                     }
 
                     if !isSignUp {
@@ -185,6 +187,7 @@ struct LoginView: View {
                         if confirmed {
                             onLoginSuccess()
                         } else {
+                            isSuccessMessage = true
                             errorMessage = "확인 메일을 발송했습니다. 이메일의 링크를 클릭한 후 로그인해주세요."
                             isSignUp = false
                             isLoading = false
@@ -196,6 +199,7 @@ struct LoginView: View {
                 }
             } catch {
                 await MainActor.run {
+                    isSuccessMessage = false
                     errorMessage = AuthService.parseAuthError(error)
                     isLoading = false
                 }

@@ -48,21 +48,19 @@ struct OnboardingContainerView: View {
 
     private var bottomButtons: some View {
         HStack(spacing: 16) {
-            if viewModel.currentStep != .level {
-                Button {
-                    viewModel.back()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("이전")
-                    }
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            Button {
+                viewModel.back()
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.left")
+                    Text("이전")
                 }
+                .font(.body.weight(.medium))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(Color(.secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
             }
 
             Button {
