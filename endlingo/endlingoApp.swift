@@ -31,6 +31,8 @@ struct endlingoApp: App {
                 }
             }
             .onOpenURL { url in
+                // 위젯 딥링크는 Auth 핸들러로 보내지 않음
+                guard url.host != "lesson" else { return }
                 Task { await auth.handleDeepLink(url: url) }
             }
             .task(id: hasCompletedOnboarding) {

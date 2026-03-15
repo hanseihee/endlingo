@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		B50C39AE2F625C2A00A1597E /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = B50C39AD2F625C2A00A1597E /* Supabase */; };
+		B5A6F03F2F66FEB200B2B2D7 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5A6F03E2F66FEB200B2B2D7 /* WidgetKit.framework */; };
+		B5A6F0412F66FEB200B2B2D7 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5A6F0402F66FEB200B2B2D7 /* SwiftUI.framework */; };
+		B5A6F0522F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B5A6F03C2F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B5DB12922F65C4F000A0599A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = B5DB12912F65C4F000A0599A /* FirebaseAnalytics */; };
 /* End PBXBuildFile section */
 
@@ -26,12 +29,37 @@
 			remoteGlobalIDString = B558E0B82F623EEE00A126B5;
 			remoteInfo = endlingo;
 		};
+		B5A6F0502F66FEB200B2B2D7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B558E0B12F623EEE00A126B5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B5A6F03B2F66FEB200B2B2D7;
+			remoteInfo = YeongeohajaWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B5A6F0532F66FEB200B2B2D7 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B5A6F0522F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		B558E0B92F623EEE00A126B5 /* endlingo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = endlingo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B558E0C62F623EEF00A126B5 /* endlingoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = endlingoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B558E0D02F623EEF00A126B5 /* endlingoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = endlingoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B5A6F03C2F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = YeongeohajaWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B5A6F03E2F66FEB200B2B2D7 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		B5A6F0402F66FEB200B2B2D7 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		B5A6F0592F66FF8200B2B2D7 /* YeongeohajaWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = YeongeohajaWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -41,6 +69,13 @@
 				Info.plist,
 			);
 			target = B558E0B82F623EEE00A126B5 /* endlingo */;
+		};
+		B5A6F0572F66FEB200B2B2D7 /* Exceptions for "YeongeohajaWidget" folder in "YeongeohajaWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B5A6F03B2F66FEB200B2B2D7 /* YeongeohajaWidgetExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -61,6 +96,14 @@
 		B558E0D32F623EEF00A126B5 /* endlingoUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = endlingoUITests;
+			sourceTree = "<group>";
+		};
+		B5A6F0422F66FEB200B2B2D7 /* YeongeohajaWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B5A6F0572F66FEB200B2B2D7 /* Exceptions for "YeongeohajaWidget" folder in "YeongeohajaWidgetExtension" target */,
+			);
+			path = YeongeohajaWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -89,15 +132,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B5A6F0392F66FEB200B2B2D7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B5A6F0412F66FEB200B2B2D7 /* SwiftUI.framework in Frameworks */,
+				B5A6F03F2F66FEB200B2B2D7 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		B558E0B02F623EEE00A126B5 = {
 			isa = PBXGroup;
 			children = (
+				B5A6F0592F66FF8200B2B2D7 /* YeongeohajaWidgetExtension.entitlements */,
 				B558E0BB2F623EEE00A126B5 /* endlingo */,
 				B558E0C92F623EEF00A126B5 /* endlingoTests */,
 				B558E0D32F623EEF00A126B5 /* endlingoUITests */,
+				B5A6F0422F66FEB200B2B2D7 /* YeongeohajaWidget */,
+				B5A6F03D2F66FEB200B2B2D7 /* Frameworks */,
 				B558E0BA2F623EEE00A126B5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -108,8 +163,18 @@
 				B558E0B92F623EEE00A126B5 /* endlingo.app */,
 				B558E0C62F623EEF00A126B5 /* endlingoTests.xctest */,
 				B558E0D02F623EEF00A126B5 /* endlingoUITests.xctest */,
+				B5A6F03C2F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B5A6F03D2F66FEB200B2B2D7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B5A6F03E2F66FEB200B2B2D7 /* WidgetKit.framework */,
+				B5A6F0402F66FEB200B2B2D7 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -122,10 +187,12 @@
 				B558E0B52F623EEE00A126B5 /* Sources */,
 				B558E0B62F623EEE00A126B5 /* Frameworks */,
 				B558E0B72F623EEE00A126B5 /* Resources */,
+				B5A6F0532F66FEB200B2B2D7 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B5A6F0512F66FEB200B2B2D7 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				B558E0BB2F623EEE00A126B5 /* endlingo */,
@@ -185,6 +252,28 @@
 			productReference = B558E0D02F623EEF00A126B5 /* endlingoUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		B5A6F03B2F66FEB200B2B2D7 /* YeongeohajaWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B5A6F0562F66FEB200B2B2D7 /* Build configuration list for PBXNativeTarget "YeongeohajaWidgetExtension" */;
+			buildPhases = (
+				B5A6F0382F66FEB200B2B2D7 /* Sources */,
+				B5A6F0392F66FEB200B2B2D7 /* Frameworks */,
+				B5A6F03A2F66FEB200B2B2D7 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B5A6F0422F66FEB200B2B2D7 /* YeongeohajaWidget */,
+			);
+			name = YeongeohajaWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = YeongeohajaWidgetExtension;
+			productReference = B5A6F03C2F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -205,6 +294,9 @@
 					B558E0CF2F623EEF00A126B5 = {
 						CreatedOnToolsVersion = 26.3;
 						TestTargetID = B558E0B82F623EEE00A126B5;
+					};
+					B5A6F03B2F66FEB200B2B2D7 = {
+						CreatedOnToolsVersion = 26.3;
 					};
 				};
 			};
@@ -231,6 +323,7 @@
 				B558E0B82F623EEE00A126B5 /* endlingo */,
 				B558E0C52F623EEF00A126B5 /* endlingoTests */,
 				B558E0CF2F623EEF00A126B5 /* endlingoUITests */,
+				B5A6F03B2F66FEB200B2B2D7 /* YeongeohajaWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -251,6 +344,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B558E0CE2F623EEF00A126B5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B5A6F03A2F66FEB200B2B2D7 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -281,6 +381,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B5A6F0382F66FEB200B2B2D7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -293,6 +400,11 @@
 			isa = PBXTargetDependency;
 			target = B558E0B82F623EEE00A126B5 /* endlingo */;
 			targetProxy = B558E0D12F623EEF00A126B5 /* PBXContainerItemProxy */;
+		};
+		B5A6F0512F66FEB200B2B2D7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B5A6F03B2F66FEB200B2B2D7 /* YeongeohajaWidgetExtension */;
+			targetProxy = B5A6F0502F66FEB200B2B2D7 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -423,8 +535,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = endlingo/endlingo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = RT556U3WKT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -458,8 +571,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = endlingo/endlingo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = RT556U3WKT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -572,6 +686,70 @@
 			};
 			name = Release;
 		};
+		B5A6F0542F66FEB200B2B2D7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = YeongeohajaWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = RT556U3WKT;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = YeongeohajaWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = YeongeohajaWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.realmasse.yeongeohaja.YeongeohajaWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B5A6F0552F66FEB200B2B2D7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = YeongeohajaWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = RT556U3WKT;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = YeongeohajaWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = YeongeohajaWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.realmasse.yeongeohaja.YeongeohajaWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -607,6 +785,15 @@
 			buildConfigurations = (
 				B558E0E12F623EEF00A126B5 /* Debug */,
 				B558E0E22F623EEF00A126B5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B5A6F0562F66FEB200B2B2D7 /* Build configuration list for PBXNativeTarget "YeongeohajaWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B5A6F0542F66FEB200B2B2D7 /* Debug */,
+				B5A6F0552F66FEB200B2B2D7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

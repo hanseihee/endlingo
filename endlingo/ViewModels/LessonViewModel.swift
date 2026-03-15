@@ -91,6 +91,17 @@ final class LessonViewModel {
                 environment: environment
             )
             AnalyticsService.logLessonView(level: levelRaw, environment: envRaw, date: dateStr)
+
+            // 오늘 레슨이면 위젯 데이터 업데이트
+            if isToday, let firstScenario = lesson?.scenarios.first {
+                WidgetDataService.saveForWidget(
+                    sentenceEn: firstScenario.sentenceEn,
+                    sentenceKo: firstScenario.sentenceKo,
+                    level: levelRaw,
+                    environment: envRaw,
+                    date: dateStr
+                )
+            }
         } catch {
             if isToday {
                 errorMessage = String(localized: "오늘의 레슨을 불러올 수 없습니다")
