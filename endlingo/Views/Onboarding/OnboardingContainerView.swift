@@ -67,7 +67,7 @@ struct OnboardingContainerView: View {
                 viewModel.next()
             } label: {
                 HStack(spacing: 4) {
-                    Text(viewModel.currentStep == .time ? "완료" : "다음")
+                    Text(viewModel.currentStep == .time ? String(localized: "완료") : String(localized: "다음"))
                     Image(systemName: "chevron.right")
                 }
                 .font(.body.weight(.semibold))

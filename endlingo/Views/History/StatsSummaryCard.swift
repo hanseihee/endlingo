@@ -32,15 +32,15 @@ struct StatsSummaryCard: View {
 
             // 통계 그리드
             LazyVGrid(columns: [.init(), .init(), .init()], spacing: 12) {
-                StatItem(icon: "flame.fill", value: "\(stats.currentStreak)일", label: "연속 학습", color: .orange)
-                StatItem(icon: "trophy.fill", value: "\(stats.bestStreak)일", label: "최장 기록", color: .yellow)
-                StatItem(icon: "calendar", value: "\(stats.totalLearningDays)일", label: "총 학습일", color: .blue)
-                StatItem(icon: "character.book.closed.fill", value: "\(VocabularyService.shared.words.count)", label: "저장 단어", color: .green)
-                StatItem(icon: "checkmark.circle.fill", value: "\(stats.totalQuizzes)", label: "퀴즈 횟수", color: .purple)
+                StatItem(icon: "flame.fill", value: "\(stats.currentStreak)" + String(localized: "일"), label: String(localized: "연속 학습"), color: .orange)
+                StatItem(icon: "trophy.fill", value: "\(stats.bestStreak)" + String(localized: "일"), label: String(localized: "최장 기록"), color: .yellow)
+                StatItem(icon: "calendar", value: "\(stats.totalLearningDays)" + String(localized: "일"), label: String(localized: "총 학습일"), color: .blue)
+                StatItem(icon: "character.book.closed.fill", value: "\(VocabularyService.shared.words.count)", label: String(localized: "저장 단어"), color: .green)
+                StatItem(icon: "checkmark.circle.fill", value: "\(stats.totalQuizzes)", label: String(localized: "퀴즈 횟수"), color: .purple)
                 StatItem(
                     icon: "percent",
                     value: stats.totalQuizzes > 0 ? String(format: "%.0f%%", stats.quizAccuracy) : "-",
-                    label: "정답률",
+                    label: String(localized: "정답률"),
                     color: .mint
                 )
             }

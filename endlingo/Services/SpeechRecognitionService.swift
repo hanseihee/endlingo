@@ -70,13 +70,13 @@ final class SpeechRecognitionService {
 
     func startRecording(referenceText: String) async {
         guard let speechRecognizer, speechRecognizer.isAvailable else {
-            state = .error("음성 인식을 사용할 수 없습니다")
+            state = .error(String(localized: "음성 인식을 사용할 수 없습니다"))
             return
         }
 
         let permitted = await requestPermissions()
         guard permitted else {
-            state = .error("마이크와 음성 인식 권한이 필요합니다.\n설정 앱에서 권한을 허용해주세요.")
+            state = .error(String(localized: "마이크와 음성 인식 권한이 필요합니다.\n설정 앱에서 권한을 허용해주세요."))
             return
         }
 
@@ -139,7 +139,7 @@ final class SpeechRecognitionService {
                     if error != nil {
                         if self.state == .recording {
                             if self.bestTranscription.isEmpty {
-                                self.state = .error("음성을 인식하지 못했습니다.\n다시 시도해주세요.")
+                                self.state = .error(String(localized: "음성을 인식하지 못했습니다.\n다시 시도해주세요."))
                                 self.cleanupAudio()
                             } else {
                                 self.finishWithResult()
@@ -152,7 +152,7 @@ final class SpeechRecognitionService {
                 }
             }
         } catch {
-            state = .error("녹음을 시작할 수 없습니다")
+            state = .error(String(localized: "녹음을 시작할 수 없습니다"))
             cleanupAudio()
         }
     }
@@ -164,7 +164,7 @@ final class SpeechRecognitionService {
         audioFile = nil
 
         if bestTranscription.isEmpty {
-            state = .error("음성을 인식하지 못했습니다.\n다시 시도해주세요.")
+            state = .error(String(localized: "음성을 인식하지 못했습니다.\n다시 시도해주세요."))
             cleanupAudio()
         } else {
             state = .processing
@@ -241,7 +241,7 @@ final class SpeechRecognitionService {
         liveTranscription = finalText
 
         guard !finalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            state = .error("음성을 인식하지 못했습니다.\n다시 시도해주세요.")
+            state = .error(String(localized: "음성을 인식하지 못했습니다.\n다시 시도해주세요."))
             cleanupRecognition()
             return
         }

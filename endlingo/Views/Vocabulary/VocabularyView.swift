@@ -1,8 +1,14 @@
 import SwiftUI
 
-enum VocabularyTab: String, CaseIterable {
-    case words = "단어"
-    case grammar = "문법"
+enum VocabularyTab: CaseIterable {
+    case words, grammar
+
+    var title: String {
+        switch self {
+        case .words: return String(localized: "단어")
+        case .grammar: return String(localized: "문법")
+        }
+    }
 }
 
 struct VocabularyView: View {
@@ -18,8 +24,8 @@ struct VocabularyView: View {
             VStack(spacing: 0) {
                 // 세그먼트 탭
                 Picker("탭", selection: $selectedTab) {
-                    ForEach(VocabularyTab.allCases, id: \.rawValue) { tab in
-                        Text(tab.rawValue).tag(tab)
+                    ForEach(VocabularyTab.allCases, id: \.self) { tab in
+                        Text(tab.title).tag(tab)
                     }
                 }
                 .pickerStyle(.segmented)

@@ -5,7 +5,10 @@ struct LearningCalendarView: View {
     @State private var displayMonth: Date = Date()
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 7)
-    private let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
+    private let weekdays = [
+        String(localized: "일"), String(localized: "월"), String(localized: "화"),
+        String(localized: "수"), String(localized: "목"), String(localized: "금"), String(localized: "토")
+    ]
 
     private var calendar: Calendar {
         var cal = Calendar.current

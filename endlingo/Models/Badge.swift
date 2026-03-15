@@ -1,11 +1,17 @@
 import Foundation
 
 enum BadgeCategory: String, CaseIterable {
-    case learning = "학습"
-    case vocabulary = "단어"
-    case streak = "연속 학습"
-    case quiz = "퀴즈"
-    case level = "레벨"
+    case learning, vocabulary, streak, quiz, level
+
+    var title: String {
+        switch self {
+        case .learning:    return String(localized: "학습")
+        case .vocabulary:  return String(localized: "단어")
+        case .streak:      return String(localized: "연속 학습")
+        case .quiz:        return String(localized: "퀴즈")
+        case .level:       return String(localized: "레벨")
+        }
+    }
 }
 
 enum BadgeType: String, Codable, CaseIterable, Identifiable {
@@ -68,76 +74,71 @@ enum BadgeType: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        // 학습
-        case .firstStep: return "첫 걸음"
-        case .learning7: return "일주일 학습"
-        case .learning30: return "한 달 학습"
-        case .learning100: return "100일 학습"
-        case .learning365: return "1년 학습"
-        // 단어
-        case .word10: return "단어 입문"
-        case .word50: return "단어 수집가"
-        case .word100: return "단어 애호가"
-        case .word300: return "단어 전문가"
-        case .word500: return "단어 박사"
-        case .word1000: return "단어 마스터"
-        // 스트릭
-        case .streak3: return "3일 연속"
-        case .streak7: return "일주일 연속"
-        case .streak14: return "2주 연속"
-        case .streak30: return "한 달 연속"
-        case .streak60: return "두 달 연속"
-        case .streak100: return "100일 연속"
-        case .streak365: return "1년 연속"
-        // 퀴즈
-        case .quizFirst: return "첫 퀴즈"
-        case .quiz10: return "퀴즈 10회"
-        case .quiz50: return "퀴즈 50회"
-        case .quiz100: return "퀴즈 매니아"
-        case .quiz500: return "퀴즈 중독"
-        case .quizPerfect10: return "퍼펙트 게임"
-        case .quizAccuracy80: return "우등생"
-        case .quizAccuracy90: return "퀴즈 마스터"
-        // 레벨
-        case .level5: return "Lv.5 달성"
-        case .level10: return "Lv.10 달성"
-        case .level20: return "Lv.20 달성"
-        case .level50: return "Lv.50 달성"
+        case .firstStep: return String(localized: "첫 걸음")
+        case .learning7: return String(localized: "일주일 학습")
+        case .learning30: return String(localized: "한 달 학습")
+        case .learning100: return String(localized: "100일 학습")
+        case .learning365: return String(localized: "1년 학습")
+        case .word10: return String(localized: "단어 입문")
+        case .word50: return String(localized: "단어 수집가")
+        case .word100: return String(localized: "단어 애호가")
+        case .word300: return String(localized: "단어 전문가")
+        case .word500: return String(localized: "단어 박사")
+        case .word1000: return String(localized: "단어 마스터")
+        case .streak3: return String(localized: "3일 연속")
+        case .streak7: return String(localized: "일주일 연속")
+        case .streak14: return String(localized: "2주 연속")
+        case .streak30: return String(localized: "한 달 연속")
+        case .streak60: return String(localized: "두 달 연속")
+        case .streak100: return String(localized: "100일 연속")
+        case .streak365: return String(localized: "1년 연속")
+        case .quizFirst: return String(localized: "첫 퀴즈")
+        case .quiz10: return String(localized: "퀴즈 10회")
+        case .quiz50: return String(localized: "퀴즈 50회")
+        case .quiz100: return String(localized: "퀴즈 매니아")
+        case .quiz500: return String(localized: "퀴즈 중독")
+        case .quizPerfect10: return String(localized: "퍼펙트 게임")
+        case .quizAccuracy80: return String(localized: "우등생")
+        case .quizAccuracy90: return String(localized: "퀴즈 마스터")
+        case .level5: return String(localized: "Lv.5 달성")
+        case .level10: return String(localized: "Lv.10 달성")
+        case .level20: return String(localized: "Lv.20 달성")
+        case .level50: return String(localized: "Lv.50 달성")
         }
     }
 
     var description: String {
         switch self {
-        case .firstStep: return "첫 레슨을 완료했습니다"
-        case .learning7: return "총 7일 학습했습니다"
-        case .learning30: return "총 30일 학습했습니다"
-        case .learning100: return "총 100일 학습했습니다"
-        case .learning365: return "총 365일 학습했습니다"
-        case .word10: return "단어 10개를 저장했습니다"
-        case .word50: return "단어 50개를 저장했습니다"
-        case .word100: return "단어 100개를 저장했습니다"
-        case .word300: return "단어 300개를 저장했습니다"
-        case .word500: return "단어 500개를 저장했습니다"
-        case .word1000: return "단어 1,000개를 저장했습니다"
-        case .streak3: return "3일 연속 학습했습니다"
-        case .streak7: return "7일 연속 학습했습니다"
-        case .streak14: return "14일 연속 학습했습니다"
-        case .streak30: return "30일 연속 학습했습니다"
-        case .streak60: return "60일 연속 학습했습니다"
-        case .streak100: return "100일 연속 학습했습니다"
-        case .streak365: return "365일 연속 학습했습니다"
-        case .quizFirst: return "첫 퀴즈를 완료했습니다"
-        case .quiz10: return "퀴즈 10회를 완료했습니다"
-        case .quiz50: return "퀴즈 50회를 완료했습니다"
-        case .quiz100: return "퀴즈 100회를 완료했습니다"
-        case .quiz500: return "퀴즈 500회를 완료했습니다"
-        case .quizPerfect10: return "퀴즈 10문제 연속 정답"
-        case .quizAccuracy80: return "정답률 80% 이상 (50회 이상)"
-        case .quizAccuracy90: return "정답률 90% 이상 (50회 이상)"
-        case .level5: return "레벨 5에 도달했습니다"
-        case .level10: return "레벨 10에 도달했습니다"
-        case .level20: return "레벨 20에 도달했습니다"
-        case .level50: return "레벨 50에 도달했습니다"
+        case .firstStep: return String(localized: "첫 레슨을 완료했습니다")
+        case .learning7: return String(localized: "총 7일 학습했습니다")
+        case .learning30: return String(localized: "총 30일 학습했습니다")
+        case .learning100: return String(localized: "총 100일 학습했습니다")
+        case .learning365: return String(localized: "총 365일 학습했습니다")
+        case .word10: return String(localized: "단어 10개를 저장했습니다")
+        case .word50: return String(localized: "단어 50개를 저장했습니다")
+        case .word100: return String(localized: "단어 100개를 저장했습니다")
+        case .word300: return String(localized: "단어 300개를 저장했습니다")
+        case .word500: return String(localized: "단어 500개를 저장했습니다")
+        case .word1000: return String(localized: "단어 1,000개를 저장했습니다")
+        case .streak3: return String(localized: "3일 연속 학습했습니다")
+        case .streak7: return String(localized: "7일 연속 학습했습니다")
+        case .streak14: return String(localized: "14일 연속 학습했습니다")
+        case .streak30: return String(localized: "30일 연속 학습했습니다")
+        case .streak60: return String(localized: "60일 연속 학습했습니다")
+        case .streak100: return String(localized: "100일 연속 학습했습니다")
+        case .streak365: return String(localized: "365일 연속 학습했습니다")
+        case .quizFirst: return String(localized: "첫 퀴즈를 완료했습니다")
+        case .quiz10: return String(localized: "퀴즈 10회를 완료했습니다")
+        case .quiz50: return String(localized: "퀴즈 50회를 완료했습니다")
+        case .quiz100: return String(localized: "퀴즈 100회를 완료했습니다")
+        case .quiz500: return String(localized: "퀴즈 500회를 완료했습니다")
+        case .quizPerfect10: return String(localized: "퀴즈 10문제 연속 정답")
+        case .quizAccuracy80: return String(localized: "정답률 80% 이상 (50회 이상)")
+        case .quizAccuracy90: return String(localized: "정답률 90% 이상 (50회 이상)")
+        case .level5: return String(localized: "레벨 5에 도달했습니다")
+        case .level10: return String(localized: "레벨 10에 도달했습니다")
+        case .level20: return String(localized: "레벨 20에 도달했습니다")
+        case .level50: return String(localized: "레벨 50에 도달했습니다")
         }
     }
 

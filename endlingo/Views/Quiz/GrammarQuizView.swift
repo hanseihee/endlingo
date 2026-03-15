@@ -132,7 +132,7 @@ struct GrammarQuizView: View {
             if let question = viewModel.currentQuestion {
                 VStack(spacing: 8) {
                     Text(question.quizType == .patternToExplanation
-                         ? "이 문법의 설명은?" : "이 설명에 해당하는 문법은?")
+                         ? String(localized: "이 문법의 설명은?") : String(localized: "이 설명에 해당하는 문법은?"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
 
@@ -181,7 +181,7 @@ struct GrammarQuizView: View {
                                 HStack(spacing: 6) {
                                     Image(systemName: mastered ? "checkmark.circle.fill" : "circle")
                                         .foregroundStyle(mastered ? .green : .secondary)
-                                    Text(mastered ? "외운 문법에서 해제" : "외웠어요")
+                                    Text(mastered ? String(localized: "외운 문법에서 해제") : String(localized: "외웠어요"))
                                         .font(.callout.weight(.medium))
                                         .foregroundStyle(mastered ? .green : .secondary)
                                 }
@@ -192,7 +192,7 @@ struct GrammarQuizView: View {
                         Button {
                             viewModel.nextQuestion()
                         } label: {
-                            Text(viewModel.currentIndex + 1 >= viewModel.questions.count ? "결과 보기" : "다음 문제")
+                            Text(viewModel.currentIndex + 1 >= viewModel.questions.count ? String(localized: "결과 보기") : String(localized: "다음 문제"))
                                 .font(.body.weight(.semibold))
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
@@ -223,14 +223,14 @@ struct GrammarQuizView: View {
                 .font(.system(size: 56))
                 .foregroundStyle(accuracy >= 80 ? .yellow : .green)
 
-            Text(accuracy >= 80 ? "훌륭합니다!" : "수고했습니다!")
+            Text(accuracy >= 80 ? String(localized: "훌륭합니다!") : String(localized: "수고했습니다!"))
                 .font(.title2.bold())
 
             VStack(spacing: 8) {
                 HStack(spacing: 24) {
-                    GrammarSummaryItem(label: "정답", value: "\(correct)/\(total)")
-                    GrammarSummaryItem(label: "정답률", value: "\(accuracy)%")
-                    GrammarSummaryItem(label: "획득 XP", value: "+\(viewModel.totalXPEarned)")
+                    GrammarSummaryItem(label: String(localized: "정답"), value: "\(correct)/\(total)")
+                    GrammarSummaryItem(label: String(localized: "정답률"), value: "\(accuracy)%")
+                    GrammarSummaryItem(label: String(localized: "획득 XP"), value: "+\(viewModel.totalXPEarned)")
                 }
             }
             .padding(20)

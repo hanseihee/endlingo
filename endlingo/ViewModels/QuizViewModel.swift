@@ -5,10 +5,16 @@ enum QuizType: String {
     case koToEn = "ko_to_en"
 }
 
-enum QuizWordSource: String, CaseIterable {
-    case saved = "저장한 단어"
-    case builtin = "필수 영단어"
-    case mixed = "전체"
+enum QuizWordSource: Hashable, CaseIterable {
+    case saved, builtin, mixed
+
+    var title: String {
+        switch self {
+        case .saved: return String(localized: "저장한 단어")
+        case .builtin: return String(localized: "필수 영단어")
+        case .mixed: return String(localized: "전체")
+        }
+    }
 }
 
 struct QuizQuestion {
@@ -95,7 +101,7 @@ final class QuizViewModel {
         isFinished = false
         correctCount = 0
         totalXPEarned = 0
-        AnalyticsService.logQuizStart(type: type.rawValue, source: source.rawValue)
+        AnalyticsService.logQuizStart(type: type.rawValue, source: source.title)
     }
 
     func selectAnswer(_ index: Int) {

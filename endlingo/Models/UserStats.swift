@@ -24,11 +24,11 @@ struct UserStats: Codable, Equatable {
 
     var levelTitle: String {
         switch userLevel {
-        case 1...5: return "초보 학습자"
-        case 6...10: return "열정 학습자"
-        case 11...20: return "숙련 학습자"
-        case 21...50: return "영어 달인"
-        default: return "마스터"
+        case 1...5: return String(localized: "초보 학습자")
+        case 6...10: return String(localized: "열정 학습자")
+        case 11...20: return String(localized: "숙련 학습자")
+        case 21...50: return String(localized: "영어 달인")
+        default: return String(localized: "마스터")
         }
     }
 

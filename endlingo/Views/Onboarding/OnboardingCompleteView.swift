@@ -25,15 +25,15 @@ struct OnboardingCompleteView: View {
             // Summary
             VStack(spacing: 12) {
                 if let level = viewModel.selectedLevel {
-                    SummaryRow(icon: level.emoji, label: "레벨", value: level.title)
+                    SummaryRow(icon: level.emoji, label: String(localized: "레벨"), value: level.title)
                 }
                 if let env = viewModel.selectedEnvironment {
-                    SummaryRow(icon: env.emoji, label: "환경", value: env.title)
+                    SummaryRow(icon: env.emoji, label: String(localized: "환경"), value: env.title)
                 }
                 SummaryRow(
                     icon: "⏰",
-                    label: "알림",
-                    value: String(format: "매일 %d:%02d", viewModel.selectedHour, viewModel.selectedMinute)
+                    label: String(localized: "알림"),
+                    value: String(format: String(localized: "매일 %d:%02d"), viewModel.selectedHour, viewModel.selectedMinute)
                 )
             }
             .padding(20)

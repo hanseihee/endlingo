@@ -36,7 +36,7 @@ struct BadgesView: View {
 
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            Text(category.rawValue)
+                            Text(category.title)
                                 .font(.headline)
 
                             let catEarned = badges.filter { earnedSet.contains($0.rawValue) }.count

@@ -79,7 +79,7 @@ struct ScenarioCardView: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: showTranslation ? "eye.slash" : "eye")
-                    Text(showTranslation ? "번역 숨기기" : "번역 보기")
+                    Text(showTranslation ? String(localized: "번역 숨기기") : String(localized: "번역 보기"))
                 }
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.blue)

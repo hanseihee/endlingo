@@ -48,9 +48,9 @@ struct TimePickerView: View {
                         .foregroundStyle(.secondary)
 
                     HStack(spacing: 10) {
-                        TimeChip(label: "아침 7시", hour: 7, minute: 0, viewModel: viewModel)
-                        TimeChip(label: "점심 12시", hour: 12, minute: 0, viewModel: viewModel)
-                        TimeChip(label: "저녁 9시", hour: 21, minute: 0, viewModel: viewModel)
+                        TimeChip(label: String(localized: "아침 7시"), hour: 7, minute: 0, viewModel: viewModel)
+                        TimeChip(label: String(localized: "점심 12시"), hour: 12, minute: 0, viewModel: viewModel)
+                        TimeChip(label: String(localized: "저녁 9시"), hour: 21, minute: 0, viewModel: viewModel)
                     }
                 }
             }

@@ -212,7 +212,7 @@ final class GamificationService {
         for r in learningRecords where r.createdAt >= cutoff {
             items.append(ActivityItem(
                 icon: "book.fill", color: .blue,
-                text: "레슨 완료", xp: r.xpEarned, date: r.createdAt
+                text: String(localized: "레슨 완료"), xp: r.xpEarned, date: r.createdAt
             ))
         }
 
@@ -225,7 +225,7 @@ final class GamificationService {
             let date = results.first?.createdAt ?? Date()
             items.append(ActivityItem(
                 icon: "brain.head.profile.fill", color: .purple,
-                text: "퀴즈 \(correct)/\(total) 정답", xp: xp, date: date
+                text: String(localized: "퀴즈 \(correct)/\(total) 정답"), xp: xp, date: date
             ))
         }
 
@@ -236,7 +236,7 @@ final class GamificationService {
             let date = words.first?.savedAt ?? Date()
             items.append(ActivityItem(
                 icon: "bookmark.fill", color: .green,
-                text: "단어 \(words.count)개 저장", xp: xp, date: date
+                text: String(localized: "단어 \(words.count)개 저장"), xp: xp, date: date
             ))
         }
 

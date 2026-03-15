@@ -13,10 +13,13 @@ final class BuiltInWordBank {
     }
 
     private func loadWords() {
-        guard let url = Bundle.main.url(forResource: "builtin_words", withExtension: "json"),
+        let lang = Locale.current.language.languageCode?.identifier ?? "ko"
+        let filename = lang == "ja" ? "builtin_words_ja" : "builtin_words"
+
+        guard let url = Bundle.main.url(forResource: filename, withExtension: "json"),
               let data = try? Data(contentsOf: url),
               let decoded = try? JSONDecoder().decode([BuiltInWord].self, from: data) else {
-            print("Failed to load builtin_words.json")
+            print("Failed to load \(filename).json")
             return
         }
         words = decoded

@@ -39,7 +39,11 @@ final class DictionaryService {
 
     private init() {}
 
-    /// Google Translate API로 영단어의 한국어 뜻 목록을 조회
+    private var targetLanguage: String {
+        Locale.current.language.languageCode?.identifier == "ja" ? "ja" : "ko"
+    }
+
+    /// Google Translate API로 영단어의 뜻 목록을 조회 (기기 언어에 따라 한국어/일본어)
     func lookup(_ word: String) async -> [WordMeaning] {
         let cleaned = word.trimmingCharacters(in: .punctuationCharacters)
             .trimmingCharacters(in: .whitespaces)
@@ -47,7 +51,7 @@ final class DictionaryService {
 
         guard !cleaned.isEmpty,
               let encoded = cleaned.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&dt=bd&q=\(encoded)")
+              let url = URL(string: "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=\(targetLanguage)&dt=t&dt=bd&q=\(encoded)")
         else { return [] }
 
         do {
@@ -113,14 +117,14 @@ final class DictionaryService {
 
     private func posLabel(_ pos: String) -> String {
         switch pos {
-        case "noun": return "명"
-        case "verb": return "동"
-        case "adjective": return "형"
-        case "adverb": return "부"
-        case "preposition": return "전"
-        case "conjunction": return "접"
-        case "pronoun": return "대"
-        case "interjection": return "감"
+        case "noun": return String(localized: "명")
+        case "verb": return String(localized: "동")
+        case "adjective": return String(localized: "형")
+        case "adverb": return String(localized: "부")
+        case "preposition": return String(localized: "전")
+        case "conjunction": return String(localized: "접")
+        case "pronoun": return String(localized: "대")
+        case "interjection": return String(localized: "감")
         default: return pos
         }
     }

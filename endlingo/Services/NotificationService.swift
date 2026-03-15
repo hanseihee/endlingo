@@ -30,13 +30,8 @@ final class NotificationService {
         center.removePendingNotificationRequests(withIdentifiers: [notificationID])
 
         let content = UNMutableNotificationContent()
-        if isKorean {
-            content.title = "오늘의 영어 레슨"
-            content.body = "새로운 문장이 준비되었어요. 지금 학습을 시작해보세요!"
-        } else {
-            content.title = "Today's English Lesson"
-            content.body = "A new lesson is ready. Start learning now!"
-        }
+        content.title = String(localized: "오늘의 영어 레슨")
+        content.body = String(localized: "새로운 문장이 준비되었어요. 지금 학습을 시작해보세요!")
         content.sound = .default
 
         var dateComponents = DateComponents()

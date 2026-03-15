@@ -144,17 +144,17 @@ final class AuthService {
     static func parseAuthError(_ error: Error) -> String {
         let message = error.localizedDescription.lowercased()
         if message.contains("email not confirmed") || message.contains("email_not_confirmed") {
-            return "이메일 인증이 완료되지 않았습니다. 메일함을 확인해주세요."
+            return String(localized: "이메일 인증이 완료되지 않았습니다. 메일함을 확인해주세요.")
         } else if message.contains("invalid login") || message.contains("invalid_credentials") {
-            return "이메일 또는 비밀번호가 올바르지 않습니다"
+            return String(localized: "이메일 또는 비밀번호가 올바르지 않습니다")
         } else if message.contains("already registered") || message.contains("already been registered") {
-            return "이미 등록된 이메일입니다. 로그인해주세요"
+            return String(localized: "이미 등록된 이메일입니다. 로그인해주세요")
         } else if message.contains("email") && message.contains("valid") {
-            return "올바른 이메일 형식을 입력해주세요"
+            return String(localized: "올바른 이메일 형식을 입력해주세요")
         } else if message.contains("password") {
-            return "비밀번호는 6자 이상이어야 합니다"
+            return String(localized: "비밀번호는 6자 이상이어야 합니다")
         }
-        return "오류가 발생했습니다. 다시 시도해주세요"
+        return String(localized: "오류가 발생했습니다. 다시 시도해주세요")
     }
 
     // MARK: - Session

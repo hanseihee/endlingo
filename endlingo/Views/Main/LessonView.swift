@@ -21,7 +21,7 @@ struct LessonView: View {
                 }
                 .frame(maxHeight: .infinity)
             }
-            .navigationTitle(viewModel.isToday ? "오늘의 레슨" : "지난 레슨")
+            .navigationTitle(viewModel.isToday ? String(localized: "오늘의 레슨") : String(localized: "지난 레슨"))
         }
         .task {
             await viewModel.loadTodayLesson()
@@ -109,6 +109,7 @@ struct LessonView: View {
         }
         .scrollIndicators(.hidden)
         .refreshable {
+            LessonService.shared.clearCache()
             await viewModel.loadLesson()
         }
     }

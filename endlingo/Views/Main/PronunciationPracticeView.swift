@@ -115,7 +115,7 @@ struct PronunciationPracticeView: View {
                     .foregroundStyle(.secondary)
 
                 Text(recognition.liveTranscription.isEmpty
-                     ? "듣고 있어요..."
+                     ? String(localized: "듣고 있어요...")
                      : recognition.liveTranscription)
                     .font(.body)
                     .foregroundStyle(recognition.liveTranscription.isEmpty ? .secondary : .primary)
@@ -237,9 +237,9 @@ struct PronunciationPracticeView: View {
 
                 // 범례
                 HStack(spacing: 16) {
-                    legendItem(color: .green, text: "정확")
-                    legendItem(color: .orange, text: "유사")
-                    legendItem(color: .red, text: "틀림")
+                    legendItem(color: .green, text: String(localized: "정확"))
+                    legendItem(color: .orange, text: String(localized: "유사"))
+                    legendItem(color: .red, text: String(localized: "틀림"))
                 }
                 .font(.caption2)
                 .frame(maxWidth: .infinity)

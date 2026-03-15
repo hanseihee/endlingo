@@ -30,28 +30,28 @@ struct WeekComparisonCard: View {
             }
 
             ComparisonRow(
-                label: "학습일",
-                thisValue: "\(thisWeek.learningDays)일",
-                lastValue: "\(lastWeek.learningDays)일",
+                label: String(localized: "학습일"),
+                thisValue: "\(thisWeek.learningDays)" + String(localized: "일"),
+                lastValue: "\(lastWeek.learningDays)" + String(localized: "일"),
                 diff: thisWeek.learningDays - lastWeek.learningDays
             )
 
             ComparisonRow(
-                label: "획득 XP",
+                label: String(localized: "획득 XP"),
                 thisValue: "\(thisWeek.totalXP)",
                 lastValue: "\(lastWeek.totalXP)",
                 diff: thisWeek.totalXP - lastWeek.totalXP
             )
 
             ComparisonRow(
-                label: "퀴즈",
-                thisValue: "\(thisWeek.quizCount)회",
-                lastValue: "\(lastWeek.quizCount)회",
+                label: String(localized: "퀴즈"),
+                thisValue: "\(thisWeek.quizCount)" + String(localized: "회"),
+                lastValue: "\(lastWeek.quizCount)" + String(localized: "회"),
                 diff: thisWeek.quizCount - lastWeek.quizCount
             )
 
             ComparisonRow(
-                label: "정답률",
+                label: String(localized: "정답률"),
                 thisValue: thisWeek.quizCount > 0 ? String(format: "%.0f%%", thisWeek.quizAccuracy) : "-",
                 lastValue: lastWeek.quizCount > 0 ? String(format: "%.0f%%", lastWeek.quizAccuracy) : "-",
                 diff: thisWeek.quizCount > 0 && lastWeek.quizCount > 0
@@ -59,9 +59,9 @@ struct WeekComparisonCard: View {
             )
 
             ComparisonRow(
-                label: "저장 단어",
-                thisValue: "\(thisWeek.wordsSaved)개",
-                lastValue: "\(lastWeek.wordsSaved)개",
+                label: String(localized: "저장 단어"),
+                thisValue: "\(thisWeek.wordsSaved)" + String(localized: "개"),
+                lastValue: "\(lastWeek.wordsSaved)" + String(localized: "개"),
                 diff: thisWeek.wordsSaved - lastWeek.wordsSaved
             )
         }

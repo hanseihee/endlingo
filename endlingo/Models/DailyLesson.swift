@@ -5,12 +5,13 @@ struct DailyLesson: Codable, Identifiable {
     let date: String
     let level: String
     let environment: String
+    let language: String?
     let themeKo: String
     let themeEn: String
     let scenarios: [Scenario]
 
     enum CodingKeys: String, CodingKey {
-        case id, date, level, environment, scenarios
+        case id, date, level, environment, language, scenarios
         case themeKo = "theme_ko"
         case themeEn = "theme_en"
     }

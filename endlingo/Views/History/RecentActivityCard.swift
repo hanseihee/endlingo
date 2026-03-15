@@ -84,8 +84,8 @@ struct RecentActivityCard: View {
     }
 
     private func displayDate(_ dateString: String) -> String {
-        if dateString == todayString { return "오늘" }
-        if dateString == yesterdayString { return "어제" }
+        if dateString == todayString { return String(localized: "오늘") }
+        if dateString == yesterdayString { return String(localized: "어제") }
 
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
@@ -93,8 +93,8 @@ struct RecentActivityCard: View {
         guard let date = f.date(from: dateString) else { return dateString }
 
         let display = DateFormatter()
-        display.dateFormat = "M월 d일 (E)"
-        display.locale = Locale(identifier: "ko_KR")
+        display.dateStyle = .medium
+        display.locale = Locale.current
         display.timeZone = TimeZone(identifier: "Asia/Seoul")
         return display.string(from: date)
     }

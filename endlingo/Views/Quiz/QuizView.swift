@@ -64,8 +64,8 @@ struct QuizView: View {
                     .foregroundStyle(.secondary)
 
                 Picker("범위", selection: $selectedSource) {
-                    ForEach(QuizWordSource.allCases, id: \.rawValue) { source in
-                        Text(source.rawValue).tag(source)
+                    ForEach(QuizWordSource.allCases, id: \.self) { source in
+                        Text(source.title).tag(source)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -176,7 +176,7 @@ struct QuizView: View {
             if let question = viewModel.currentQuestion {
                 // 질문
                 VStack(spacing: 8) {
-                    Text(question.quizType == .enToKo ? "이 단어의 뜻은?" : "이 뜻의 영어 단어는?")
+                    Text(question.quizType == .enToKo ? String(localized: "이 단어의 뜻은?") : String(localized: "이 뜻의 영어 단어는?"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
 
@@ -232,7 +232,7 @@ struct QuizView: View {
                                 HStack(spacing: 6) {
                                     Image(systemName: mastered ? "checkmark.circle.fill" : "circle")
                                         .foregroundStyle(mastered ? .green : .secondary)
-                                    Text(mastered ? "외운 단어에서 해제" : "외웠어요")
+                                    Text(mastered ? String(localized: "외운 단어에서 해제") : String(localized: "외웠어요"))
                                         .font(.callout.weight(.medium))
                                         .foregroundStyle(mastered ? .green : .secondary)
                                 }
@@ -243,7 +243,7 @@ struct QuizView: View {
                         Button {
                             viewModel.nextQuestion()
                         } label: {
-                            Text(viewModel.currentIndex + 1 >= viewModel.questions.count ? "결과 보기" : "다음 문제")
+                            Text(viewModel.currentIndex + 1 >= viewModel.questions.count ? String(localized: "결과 보기") : String(localized: "다음 문제"))
                                 .font(.body.weight(.semibold))
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
@@ -275,14 +275,14 @@ struct QuizView: View {
                 .font(.system(size: 56))
                 .foregroundStyle(accuracy >= 80 ? .yellow : .green)
 
-            Text(accuracy >= 80 ? "훌륭합니다!" : "수고했습니다!")
+            Text(accuracy >= 80 ? String(localized: "훌륭합니다!") : String(localized: "수고했습니다!"))
                 .font(.title2.bold())
 
             VStack(spacing: 8) {
                 HStack(spacing: 24) {
-                    SummaryItem(label: "정답", value: "\(correct)/\(total)")
-                    SummaryItem(label: "정답률", value: "\(accuracy)%")
-                    SummaryItem(label: "획득 XP", value: "+\(viewModel.totalXPEarned)")
+                    SummaryItem(label: String(localized: "정답"), value: "\(correct)/\(total)")
+                    SummaryItem(label: String(localized: "정답률"), value: "\(accuracy)%")
+                    SummaryItem(label: String(localized: "획득 XP"), value: "+\(viewModel.totalXPEarned)")
                 }
             }
             .padding(20)

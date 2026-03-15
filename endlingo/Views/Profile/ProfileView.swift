@@ -209,7 +209,7 @@ private struct ProfileLoginView: View {
                         if isLoading {
                             ProgressView()
                         } else {
-                            Text(isSignUp ? "회원가입" : "로그인")
+                            Text(isSignUp ? String(localized: "회원가입") : String(localized: "로그인"))
                                 .font(.body.weight(.semibold))
                         }
                         Spacer()
@@ -225,7 +225,7 @@ private struct ProfileLoginView: View {
                         errorMessage = nil
                     }
                 } label: {
-                    Text(isSignUp ? "이미 계정이 있으신가요? 로그인" : "계정이 없으신가요? 회원가입")
+                    Text(isSignUp ? String(localized: "이미 계정이 있으신가요? 로그인") : String(localized: "계정이 없으신가요? 회원가입"))
                         .font(.callout)
                         .frame(maxWidth: .infinity)
                 }
@@ -243,7 +243,7 @@ private struct ProfileLoginView: View {
                 }
             }
         }
-        .navigationTitle(isSignUp ? "회원가입" : "로그인")
+        .navigationTitle(isSignUp ? String(localized: "회원가입") : String(localized: "로그인"))
         .navigationBarTitleDisplayMode(.inline)
         .alert("비밀번호 재설정", isPresented: $showResetPassword) {
             TextField("이메일", text: $resetEmail)
@@ -283,7 +283,7 @@ private struct ProfileLoginView: View {
                             dismiss()
                         } else {
                             isSuccessMessage = true
-                            errorMessage = "확인 메일을 발송했습니다. 이메일의 링크를 클릭한 후 로그인해주세요."
+                            errorMessage = String(localized: "확인 메일을 발송했습니다. 이메일의 링크를 클릭한 후 로그인해주세요.")
                             isSignUp = false
                             isLoading = false
                         }

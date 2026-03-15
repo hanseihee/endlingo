@@ -49,10 +49,10 @@ struct PronunciationResult {
 
         var message: String {
             switch self {
-            case .excellent: return "완벽해요!"
-            case .good: return "잘했어요!"
-            case .fair: return "좋은 시도예요!"
-            case .needsPractice: return "다시 도전해보세요!"
+            case .excellent: return String(localized: "완벽해요!")
+            case .good: return String(localized: "잘했어요!")
+            case .fair: return String(localized: "좋은 시도예요!")
+            case .needsPractice: return String(localized: "다시 도전해보세요!")
             }
         }
 

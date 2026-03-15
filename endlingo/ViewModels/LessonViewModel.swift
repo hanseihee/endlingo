@@ -37,7 +37,7 @@ final class LessonViewModel {
 
     private static let dayFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = Locale.current
         f.timeZone = TimeZone(identifier: "Asia/Seoul")
         f.dateFormat = "M/d"
         return f
@@ -45,14 +45,14 @@ final class LessonViewModel {
 
     private static let weekdayFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "ko_KR")
+        f.locale = Locale.current
         f.timeZone = TimeZone(identifier: "Asia/Seoul")
         f.dateFormat = "E"
         return f
     }()
 
     func dayLabel(for date: Date) -> String {
-        if Self.kstCalendar.isDateInToday(date) { return "오늘" }
+        if Self.kstCalendar.isDateInToday(date) { return String(localized: "오늘") }
         return Self.dayFormatter.string(from: date)
     }
 
@@ -75,7 +75,7 @@ final class LessonViewModel {
               let envRaw = UserDefaults.standard.string(forKey: "selectedEnvironment"),
               let level = EnglishLevel(rawValue: levelRaw),
               let environment = LearningEnvironment(rawValue: envRaw) else {
-            errorMessage = "설정을 먼저 완료해주세요"
+            errorMessage = String(localized: "설정을 먼저 완료해주세요")
             return
         }
 
@@ -93,9 +93,9 @@ final class LessonViewModel {
             AnalyticsService.logLessonView(level: levelRaw, environment: envRaw, date: dateStr)
         } catch {
             if isToday {
-                errorMessage = "오늘의 레슨을 불러올 수 없습니다"
+                errorMessage = String(localized: "오늘의 레슨을 불러올 수 없습니다")
             } else {
-                errorMessage = "해당 날짜의 레슨이 없습니다"
+                errorMessage = String(localized: "해당 날짜의 레슨이 없습니다")
             }
         }
 
