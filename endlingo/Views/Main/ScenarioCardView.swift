@@ -39,50 +39,53 @@ struct ScenarioCardView: View {
                 .padding(.horizontal, 4)
 
             // 영어 문장 (탭 가능)
-            ZStack(alignment: .topTrailing) {
-                TappableTextView(text: scenario.sentenceEn) { word in
-                    selectedWord = word
+            TappableTextView(
+                text: scenario.sentenceEn,
+                highlightRange: speech.isSpeaking(id: "scenario-\(index)") ? speech.currentWordRange : nil
+            ) { word in
+                selectedWord = word
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.blue.opacity(0.06))
+            )
+
+            // 따라 읽기 + 듣기 버튼
+            HStack {
+                Button {
+                    showPronunciation = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "mic.fill")
+                        Text("따라 읽기")
+                    }
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(
+                        Capsule().fill(Color.green)
+                    )
                 }
-                .padding(16)
-                .padding(.trailing, 28)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.blue.opacity(0.06))
-                )
+
+                Spacer()
+
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showTranslation.toggle()
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: showTranslation ? "eye.slash" : "eye")
+                        Text(showTranslation ? String(localized: "번역 숨기기") : String(localized: "번역 보기"))
+                    }
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.blue)
+                }
 
                 SpeakButton(text: scenario.sentenceEn, id: "scenario-\(index)")
-            }
-
-            // 따라 읽기 버튼
-            Button {
-                showPronunciation = true
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "mic.fill")
-                    Text("따라 읽기")
-                }
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background(
-                    Capsule().fill(Color.green)
-                )
-            }
-
-            // 한국어 번역 토글
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    showTranslation.toggle()
-                }
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: showTranslation ? "eye.slash" : "eye")
-                    Text(showTranslation ? String(localized: "번역 숨기기") : String(localized: "번역 보기"))
-                }
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.blue)
             }
 
             if showTranslation {

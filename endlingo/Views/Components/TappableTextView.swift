@@ -2,15 +2,25 @@ import SwiftUI
 
 struct TappableTextView: View {
     let text: String
+    var highlightRange: NSRange? = nil
     let onWordTap: (String) -> Void
 
     private var attributedText: AttributedString {
         let words = text.components(separatedBy: " ")
         var result = AttributedString()
+        var charIndex = 0
 
         for (index, word) in words.enumerated() {
             let cleaned = word.trimmingCharacters(in: .punctuationCharacters)
             var attr = AttributedString(word)
+
+            // 현재 읽고 있는 단어 하이라이트
+            if let range = highlightRange {
+                let wordRange = NSRange(location: charIndex, length: word.count)
+                if NSIntersectionRange(wordRange, range).length > 0 {
+                    attr.backgroundColor = .yellow.opacity(0.4)
+                }
+            }
 
             if !cleaned.isEmpty,
                let encoded = cleaned.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
@@ -19,9 +29,11 @@ struct TappableTextView: View {
             }
 
             result.append(attr)
+            charIndex += word.count
 
             if index < words.count - 1 {
                 result.append(AttributedString(" "))
+                charIndex += 1
             }
         }
 

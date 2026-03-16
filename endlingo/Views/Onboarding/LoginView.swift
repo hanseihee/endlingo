@@ -6,7 +6,7 @@ struct LoginView: View {
 
     @State private var email = ""
     @State private var password = ""
-    @State private var isSignUp = true
+    @State private var isSignUp = !UserDefaults.standard.bool(forKey: "hasAccount")
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var isSuccessMessage = false

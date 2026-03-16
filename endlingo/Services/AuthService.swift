@@ -40,6 +40,7 @@ final class AuthService {
         if response.session != nil {
             currentUser = response.user
             isLoggedIn = true
+            UserDefaults.standard.set(true, forKey: "hasAccount")
             return true
         }
         return false
@@ -49,6 +50,7 @@ final class AuthService {
         let session = try await client.auth.signIn(email: email, password: password)
         currentUser = session.user
         isLoggedIn = true
+        UserDefaults.standard.set(true, forKey: "hasAccount")
         async let v: () = VocabularyService.shared.syncAfterLogin()
         async let g: () = GrammarService.shared.syncAfterLogin()
         async let ga: () = GamificationService.shared.syncAfterLogin()
@@ -73,6 +75,7 @@ final class AuthService {
                 try? await client.auth.signOut()
                 currentUser = nil
                 isLoggedIn = false
+                UserDefaults.standard.removeObject(forKey: "hasAccount")
                 VocabularyService.shared.clearAfterLogout()
                 GrammarService.shared.clearAfterLogout()
                 GamificationService.shared.clearAfterLogout()
