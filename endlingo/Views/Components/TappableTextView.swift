@@ -18,7 +18,7 @@ struct TappableTextView: View {
             if let range = highlightRange {
                 let wordRange = NSRange(location: charIndex, length: word.count)
                 if NSIntersectionRange(wordRange, range).length > 0 {
-                    attr.backgroundColor = .yellow.opacity(0.4)
+                    attr.backgroundColor = .teal.opacity(0.3)
                 }
             }
 
