@@ -67,11 +67,52 @@ struct WidgetContentView: View {
     @Environment(\.widgetFamily) var family
 
     var body: some View {
-        Text(entry.lesson.sentenceEn)
-            .font(family == .systemSmall ? .callout.weight(.medium) : .body.weight(.medium))
-            .lineLimit(family == .systemSmall ? 5 : 3)
-            .minimumScaleFactor(0.8)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 0) {
+            // 상단: 로고 + 앱 이름
+            HStack(spacing: 6) {
+                Image("WidgetLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 22, height: 22)
+                    .clipShape(RoundedRectangle(cornerRadius: 5))
+
+                Text("영어하자")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                if !entry.lesson.level.isEmpty {
+                    Text(entry.lesson.level)
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.teal)
+                        .clipShape(Capsule())
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            // 영어 문장
+            Text(entry.lesson.sentenceEn)
+                .font(family == .systemSmall ? .callout.weight(.medium) : .body.weight(.medium))
+                .lineLimit(family == .systemSmall ? 4 : 2)
+                .minimumScaleFactor(0.8)
+
+            // 한국어 번역 (미디엄에서만)
+            if family == .systemMedium, !entry.lesson.sentenceKo.isEmpty {
+                Text(entry.lesson.sentenceKo)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .padding(.top, 4)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 }
 
