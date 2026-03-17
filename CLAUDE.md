@@ -57,6 +57,12 @@ Uses XCStrings format (`Localizable.xcstrings`). Three languages: Korean (source
 
 Built-in word banks are locale-aware: `builtin_words.json` (Korean meanings) and `builtin_words_ja.json` (Japanese meanings).
 
+### Rules
+- **UI 문자열을 추가하거나 변경할 때 반드시 한국어와 일본어 번역을 함께 제공해야 한다.**
+- 하드코딩 한국어 금지 — 반드시 `String(localized:)` 또는 SwiftUI `Text("...")` (LocalizedStringKey) 사용
+- 새 키를 추가하면 `Localizable.xcstrings`에 `"ja"` 번역을 즉시 추가할 것
+- 위젯(`YeongeohajaWidget`)은 별도 xcstrings가 없으므로 로케일 분기(`Locale.current.language.languageCode`)로 처리
+
 ## Supabase Backend
 
 - **daily_lessons** table: UNIQUE(date, level, environment), scenarios as JSONB
