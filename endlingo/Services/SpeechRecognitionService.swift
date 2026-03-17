@@ -43,6 +43,8 @@ final class SpeechRecognitionService {
 
     /// 한 단어 인식 후 자동 종료를 위한 타이머
     private var autoStopTask: Task<Void, Never>?
+    /// 자동 종료 모드 (발음 퀴즈: true, 따라 읽기: false)
+    private var autoStopEnabled = false
 
     // 녹음 파일 저장/재생
     private var recordingFileURL: URL?
@@ -71,7 +73,7 @@ final class SpeechRecognitionService {
 
     // MARK: - Recording
 
-    func startRecording(referenceText: String) async {
+    func startRecording(referenceText: String, autoStop: Bool = false) async {
         guard let speechRecognizer, speechRecognizer.isAvailable else {
             state = .error(String(localized: "음성 인식을 사용할 수 없습니다"))
             return
@@ -86,6 +88,7 @@ final class SpeechRecognitionService {
         cleanupAudio()
 
         self.referenceText = referenceText
+        self.autoStopEnabled = autoStop
         liveTranscription = ""
         bestTranscription = ""
         result = nil
@@ -137,8 +140,8 @@ final class SpeechRecognitionService {
                         if taskResult.isFinal {
                             self.autoStopTask?.cancel()
                             self.finishWithResult()
-                        } else if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            // 단어가 인식되면 0.5초 후 자동 종료
+                        } else if self.autoStopEnabled && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            // 발음 퀴즈: 단어가 인식되면 0.5초 후 자동 종료
                             self.autoStopTask?.cancel()
                             self.autoStopTask = Task {
                                 try? await Task.sleep(for: .milliseconds(500))

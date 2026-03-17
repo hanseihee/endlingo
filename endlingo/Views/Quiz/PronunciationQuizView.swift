@@ -463,7 +463,7 @@ struct PronunciationQuizView: View {
     private func startListening() {
         guard let question = viewModel.currentQuestion else { return }
         Task {
-            await recognition.startRecording(referenceText: question.word)
+            await recognition.startRecording(referenceText: question.word, autoStop: true)
         }
     }
 
