@@ -127,8 +127,10 @@ final class GrammarQuizViewModel {
     // MARK: - Private
 
     private func makeQuestion(item: SavedGrammar, type: GrammarQuizType, allItems: [SavedGrammar]) -> GrammarQuizQuestion {
-        let distractors = allItems
-            .filter { $0.pattern != item.pattern }
+        let candidates = allItems.filter { $0.pattern != item.pattern }
+        let itemLang = Self.detectLanguage(item.explanation)
+        let sameLang = candidates.filter { Self.detectLanguage($0.explanation) == itemLang }
+        let distractors = (sameLang.count >= 3 ? sameLang : candidates)
             .shuffled()
             .prefix(3)
 
@@ -153,5 +155,20 @@ final class GrammarQuizViewModel {
             options: options,
             correctIndex: correctIndex
         )
+    }
+
+    /// 텍스트의 언어를 한글/일본어/기타로 판별
+    private static func detectLanguage(_ text: String) -> String {
+        for scalar in text.unicodeScalars {
+            // 한글 음절 또는 자모
+            if (0xAC00...0xD7AF).contains(scalar.value) || (0x1100...0x11FF).contains(scalar.value) {
+                return "ko"
+            }
+            // 히라가나 또는 가타카나
+            if (0x3040...0x309F).contains(scalar.value) || (0x30A0...0x30FF).contains(scalar.value) {
+                return "ja"
+            }
+        }
+        return "other"
     }
 }

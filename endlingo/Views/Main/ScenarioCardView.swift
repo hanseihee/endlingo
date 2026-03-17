@@ -8,7 +8,9 @@ struct ScenarioCardView: View {
     @State private var selectedWord: String?
 
     @State private var showPronunciation = false
+    @State private var pronunciationScore: Int?
     @State private var vocabulary = VocabularyService.shared
+
     @State private var grammarService = GrammarService.shared
     @State private var speech = SpeechService.shared
 
@@ -70,6 +72,25 @@ struct ScenarioCardView: View {
                     )
                 }
 
+                if let score = pronunciationScore {
+                    Button {
+                        showPronunciation = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle.fill")
+                            Text("\(score)점")
+                        }
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(pronunciationGradeColor(score))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(
+                            Capsule()
+                                .fill(pronunciationGradeColor(score).opacity(0.12))
+                        )
+                    }
+                }
+
                 Spacer()
 
                 Button {
@@ -129,13 +150,20 @@ struct ScenarioCardView: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
+        .onAppear {
+            pronunciationScore = PronunciationScoreStore.load(date: lessonDate, index: index)
+        }
         .onDisappear {
             speech.stop()
         }
         .sheet(isPresented: $showPronunciation) {
             PronunciationPracticeView(
                 sentence: scenario.sentenceEn,
-                scenarioTitle: scenario.titleEn
+                scenarioTitle: scenario.titleEn,
+                onScore: { score in
+                    pronunciationScore = score
+                    PronunciationScoreStore.save(score: score, date: lessonDate, index: index)
+                }
             )
         }
         .sheet(isPresented: Binding(
@@ -149,6 +177,15 @@ struct ScenarioCardView: View {
                     lessonDate: lessonDate
                 )
             }
+        }
+    }
+
+    private func pronunciationGradeColor(_ score: Int) -> Color {
+        switch score {
+        case 90...100: return .green
+        case 70..<90: return .blue
+        case 50..<70: return .orange
+        default: return .red
         }
     }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 struct PronunciationPracticeView: View {
     let sentence: String
     let scenarioTitle: String
+    var onScore: ((Int) -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @State private var recognition = SpeechRecognitionService.shared
@@ -181,6 +182,7 @@ struct PronunciationPracticeView: View {
             VStack(spacing: 8) {
                 Text(result.grade.emoji)
                     .font(.system(size: 48))
+                    .onAppear { onScore?(result.score) }
 
                 Text(result.grade.message)
                     .font(.title3.bold())

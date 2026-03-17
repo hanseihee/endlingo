@@ -41,6 +41,9 @@ final class SpeechRecognitionService {
     /// partial result 중 가장 긴 텍스트를 보존
     private var bestTranscription = ""
 
+    /// 한 단어 인식 후 자동 종료를 위한 타이머
+    private var autoStopTask: Task<Void, Never>?
+
     // 녹음 파일 저장/재생
     private var recordingFileURL: URL?
     private var audioFile: AVAudioFile?
@@ -132,7 +135,16 @@ final class SpeechRecognitionService {
                         }
 
                         if taskResult.isFinal {
+                            self.autoStopTask?.cancel()
                             self.finishWithResult()
+                        } else if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            // 단어가 인식되면 0.5초 후 자동 종료
+                            self.autoStopTask?.cancel()
+                            self.autoStopTask = Task {
+                                try? await Task.sleep(for: .milliseconds(500))
+                                guard !Task.isCancelled, self.state == .recording else { return }
+                                self.stopRecording()
+                            }
                         }
                     }
 
@@ -216,6 +228,8 @@ final class SpeechRecognitionService {
     // MARK: - Reset
 
     func reset() {
+        autoStopTask?.cancel()
+        autoStopTask = nil
         stopPlayback()
         cleanupAudio()
         if let url = recordingFileURL {
