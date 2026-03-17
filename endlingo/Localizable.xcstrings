@@ -1146,6 +1146,46 @@
         }
       }
     },
+    "권한" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "権限"
+          }
+        }
+      }
+    },
+    "마이크와 음성 인식 권한이 필요합니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マイクと音声認識の権限が必要です"
+          }
+        }
+      }
+    },
+    "설정에서 권한을 허용해주세요" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定で権限を許可してください"
+          }
+        }
+      }
+    },
+    "설정으로 이동" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定を開く"
+          }
+        }
+      }
+    },
     "마이크와 음성 인식 권한이 필요합니다.\n설정 앱에서 권한을 허용해주세요." : {
       "localizations" : {
         "ja" : {

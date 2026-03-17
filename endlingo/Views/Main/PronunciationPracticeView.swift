@@ -301,16 +301,20 @@ struct PronunciationPracticeView: View {
         VStack(spacing: 20) {
             Spacer().frame(height: 20)
 
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 36))
-                .foregroundStyle(.orange)
+            if message.contains(String(localized: "권한")) {
+                PermissionGuideView()
+            } else {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.system(size: 36))
+                    .foregroundStyle(.orange)
 
-            Text(message)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+                Text(message)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
 
-            micButton
+                micButton
+            }
         }
     }
 

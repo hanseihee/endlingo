@@ -208,18 +208,22 @@ struct PronunciationQuizView: View {
                     .foregroundStyle(.secondary)
 
             case .error(let msg):
-                Text(msg)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                if msg.contains(String(localized: "권한")) {
+                    PermissionGuideView()
+                } else {
+                    Text(msg)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
 
-                Button {
-                    autoStartRecording()
-                } label: {
-                    Label("다시 시도", systemImage: "arrow.counterclockwise")
-                        .font(.callout.weight(.medium))
-                        .foregroundStyle(.teal)
+                    Button {
+                        autoStartRecording()
+                    } label: {
+                        Label("다시 시도", systemImage: "arrow.counterclockwise")
+                            .font(.callout.weight(.medium))
+                            .foregroundStyle(.teal)
+                    }
                 }
 
             case .recording:
