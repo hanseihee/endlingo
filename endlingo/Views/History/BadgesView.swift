@@ -93,7 +93,7 @@ private struct BadgeCard: View {
 
     private var badgeColor: Color {
         switch badge.category {
-        case .learning: return .blue
+        case .learning: return .teal
         case .vocabulary: return .green
         case .streak: return .orange
         case .quiz: return .purple

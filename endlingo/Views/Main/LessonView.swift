@@ -55,7 +55,7 @@ struct LessonView: View {
                             .frame(width: 48, height: 48)
                             .background(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .fill(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
+                                    .fill(isSelected ? Color.accentColor : Color(.tertiarySystemGroupedBackground))
                             )
                         }
                         .buttonStyle(.plain)
@@ -142,7 +142,7 @@ struct LessonView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 10)
-                    .background(Color.blue)
+                    .background(Color.accentColor)
                     .clipShape(Capsule())
             }
         }
@@ -155,10 +155,10 @@ private struct LevelBadge: View {
     var body: some View {
         Text(level)
             .font(.caption.bold())
-            .foregroundStyle(.blue)
+            .foregroundStyle(Color.accentColor)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(Color.blue.opacity(0.12))
+            .background(Color.accentColor.opacity(0.12))
             .clipShape(Capsule())
     }
 }

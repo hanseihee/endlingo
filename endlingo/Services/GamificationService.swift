@@ -211,7 +211,7 @@ final class GamificationService {
         // 레슨
         for r in learningRecords where r.createdAt >= cutoff {
             items.append(ActivityItem(
-                icon: "book.fill", color: .blue,
+                icon: "book.fill", color: .teal,
                 text: String(localized: "레슨 완료"), xp: r.xpEarned, date: r.createdAt
             ))
         }

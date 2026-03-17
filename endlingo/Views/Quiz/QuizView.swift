@@ -104,7 +104,7 @@ struct QuizView: View {
                     } label: {
                         Text("외운 단어 관리")
                             .font(.caption)
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(Color.accentColor)
                     }
                 }
             }

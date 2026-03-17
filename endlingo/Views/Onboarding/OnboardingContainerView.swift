@@ -9,7 +9,7 @@ struct OnboardingContainerView: View {
             // Progress bar (로그인 화면에서는 숨김)
             if viewModel.currentStep != .login {
                 ProgressView(value: viewModel.progress)
-                    .tint(.blue)
+                    .tint(Color.accentColor)
                     .padding(.horizontal, 24)
                     .padding(.top, 8)
                     .animation(.easeInOut(duration: 0.3), value: viewModel.progress)
@@ -74,7 +74,7 @@ struct OnboardingContainerView: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
-                .background(viewModel.canProceed ? Color.blue : Color.gray.opacity(0.4))
+                .background(viewModel.canProceed ? Color.accentColor : Color.gray.opacity(0.4))
                 .clipShape(RoundedRectangle(cornerRadius: 14))
             }
             .disabled(!viewModel.canProceed)

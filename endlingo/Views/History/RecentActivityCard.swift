@@ -68,7 +68,7 @@ struct RecentActivityCard: View {
                                 if item.xp > 0 {
                                     Text("+\(item.xp) XP")
                                         .font(.caption.bold())
-                                        .foregroundStyle(.blue)
+                                        .foregroundStyle(Color.accentColor)
                                 }
                             }
                         }

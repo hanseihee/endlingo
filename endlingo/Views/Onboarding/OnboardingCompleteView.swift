@@ -51,7 +51,7 @@ struct OnboardingCompleteView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(Color.blue)
+                    .background(Color.accentColor)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
             }
             .padding(.bottom, 16)

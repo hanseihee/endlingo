@@ -28,7 +28,7 @@ struct ContentView: View {
                 ProfileView()
             }
         }
-        .tint(.blue)
+        .tint(Color.accentColor)
     }
 }
 

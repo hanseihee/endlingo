@@ -22,7 +22,7 @@ struct StatsSummaryCard: View {
                         .font(.headline)
 
                     ProgressView(value: stats.xpProgress)
-                        .tint(.blue)
+                        .tint(Color.accentColor)
 
                     Text("\(stats.totalXP) / \(stats.xpForNextLevel) XP")
                         .font(.caption)
@@ -34,7 +34,7 @@ struct StatsSummaryCard: View {
             LazyVGrid(columns: [.init(), .init(), .init()], spacing: 12) {
                 StatItem(icon: "flame.fill", value: "\(stats.currentStreak)" + String(localized: "일"), label: String(localized: "연속 학습"), color: .orange)
                 StatItem(icon: "trophy.fill", value: "\(stats.bestStreak)" + String(localized: "일"), label: String(localized: "최장 기록"), color: .yellow)
-                StatItem(icon: "calendar", value: "\(stats.totalLearningDays)" + String(localized: "일"), label: String(localized: "총 학습일"), color: .blue)
+                StatItem(icon: "calendar", value: "\(stats.totalLearningDays)" + String(localized: "일"), label: String(localized: "총 학습일"), color: .teal)
                 StatItem(icon: "character.book.closed.fill", value: "\(VocabularyService.shared.words.count)", label: String(localized: "저장 단어"), color: .green)
                 StatItem(icon: "checkmark.circle.fill", value: "\(stats.totalQuizzes)", label: String(localized: "퀴즈 횟수"), color: .purple)
                 StatItem(
@@ -55,7 +55,7 @@ struct StatsSummaryCard: View {
     private var levelGradient: LinearGradient {
         switch stats.userLevel {
         case 1...5:
-            return LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing)
+            return LinearGradient(colors: [Color.accentColor, .teal], startPoint: .topLeading, endPoint: .bottomTrailing)
         case 6...10:
             return LinearGradient(colors: [.green, .mint], startPoint: .topLeading, endPoint: .bottomTrailing)
         case 11...20:

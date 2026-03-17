@@ -80,7 +80,7 @@ struct GrammarQuizView: View {
                     } label: {
                         Text("외운 문법 관리")
                             .font(.caption)
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(Color.accentColor)
                     }
                 }
             }

@@ -19,7 +19,7 @@ struct WeekComparisonCard: View {
             HStack(spacing: 0) {
                 Text("이번 주")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(Color.accentColor)
                     .frame(maxWidth: .infinity)
                 Text("")
                     .frame(width: 80)

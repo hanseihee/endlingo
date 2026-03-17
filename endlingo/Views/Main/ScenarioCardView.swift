@@ -22,7 +22,7 @@ struct ScenarioCardView: View {
                     .font(.caption.bold())
                     .foregroundStyle(.white)
                     .frame(width: 24, height: 24)
-                    .background(Color.blue)
+                    .background(Color.accentColor)
                     .clipShape(Circle())
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -51,7 +51,7 @@ struct ScenarioCardView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.blue.opacity(0.06))
+                    .fill(Color.accentColor.opacity(0.06))
             )
 
             // 따라 읽기 + 듣기 버튼
@@ -103,7 +103,7 @@ struct ScenarioCardView: View {
                         Text(showTranslation ? String(localized: "번역 숨기기") : String(localized: "번역 보기"))
                     }
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(Color.accentColor)
                 }
 
                 SpeakButton(text: scenario.sentenceEn, id: "scenario-\(index)")
@@ -183,7 +183,7 @@ struct ScenarioCardView: View {
     private func pronunciationGradeColor(_ score: Int) -> Color {
         switch score {
         case 90...100: return .green
-        case 70..<90: return .blue
+        case 70..<90: return .teal
         case 50..<70: return .orange
         default: return .red
         }
@@ -263,7 +263,7 @@ private struct WordDetailSheet: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(selected.isEmpty ? Color.gray.opacity(0.4) : Color.blue)
+                        .background(selected.isEmpty ? Color.gray.opacity(0.4) : Color.accentColor)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .disabled(selected.isEmpty)
@@ -305,7 +305,7 @@ private struct GrammarPointRow: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(point.pattern)
                     .font(.callout.weight(.semibold))
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(Color.accentColor)
 
                 Text(point.explanation)
                     .font(.caption)

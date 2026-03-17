@@ -47,7 +47,7 @@ struct PronunciationPracticeView: View {
                                 .frame(maxWidth: .infinity)
                                 .background(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.blue.opacity(0.08))
+                                        .fill(Color.accentColor.opacity(0.08))
                                 )
 
                             SpeakButton(text: sentence, id: "practice-sentence")
@@ -255,7 +255,7 @@ struct PronunciationPracticeView: View {
                         .foregroundStyle(.yellow)
                     Text("+\(xp) XP")
                         .font(.callout.bold())
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Color.accentColor)
                 }
                 .onAppear {
                     awardXP(result.score)
@@ -269,12 +269,12 @@ struct PronunciationPracticeView: View {
                 } label: {
                     Label("다시 도전", systemImage: "arrow.counterclockwise")
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Color.accentColor)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.blue.opacity(0.1))
+                                .fill(Color.accentColor.opacity(0.1))
                         )
                 }
 
@@ -288,7 +288,7 @@ struct PronunciationPracticeView: View {
                         .padding(.vertical, 14)
                         .background(
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.blue)
+                                .fill(Color.accentColor)
                         )
                 }
             }
@@ -324,10 +324,10 @@ struct PronunciationPracticeView: View {
         } label: {
             ZStack {
                 Circle()
-                    .fill(Color.blue.opacity(0.15))
+                    .fill(Color.accentColor.opacity(0.15))
                     .frame(width: 88, height: 88)
                 Circle()
-                    .fill(Color.blue)
+                    .fill(Color.accentColor)
                     .frame(width: 64, height: 64)
                 Image(systemName: "mic.fill")
                     .font(.title)

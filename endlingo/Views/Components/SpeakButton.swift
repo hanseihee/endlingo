@@ -4,7 +4,7 @@ struct SpeakButton: View {
     let text: String
     let id: String
     var font: Font = .caption
-    var color: Color = .blue
+    var color: Color = .teal
 
     @State private var speech = SpeechService.shared
 

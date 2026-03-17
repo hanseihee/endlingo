@@ -84,7 +84,7 @@ struct LoginView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(isFormValid ? Color.blue : Color.gray.opacity(0.4))
+                    .background(isFormValid ? Color.accentColor : Color.gray.opacity(0.4))
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .disabled(!isFormValid || isLoading)
@@ -99,7 +99,7 @@ struct LoginView: View {
                     } label: {
                         Text(isSignUp ? String(localized: "이미 계정이 있으신가요? **로그인**") : String(localized: "계정이 없으신가요? **회원가입**"))
                             .font(.callout.weight(.medium))
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(Color.accentColor)
                     }
 
                     if !isSignUp {
@@ -111,7 +111,7 @@ struct LoginView: View {
                         } label: {
                             Text("비밀번호 찾기")
                                 .font(.callout)
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(Color.accentColor)
                         }
                     }
                 }

@@ -21,7 +21,7 @@ struct TimePickerView: View {
                 VStack(spacing: 16) {
                     Image(systemName: "bell.badge")
                         .font(.system(size: 48))
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Color.accentColor)
                         .padding(.bottom, 8)
 
                     DatePicker(
@@ -84,7 +84,7 @@ private struct TimeChip: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
                 .background(
-                    isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground)
+                    isSelected ? Color.accentColor : Color(.tertiarySystemGroupedBackground)
                 )
                 .clipShape(Capsule())
         }

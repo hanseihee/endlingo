@@ -22,7 +22,7 @@ struct MeaningSelectionGrid: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(Color.blue.opacity(0.7))
+                                .background(Color.accentColor.opacity(0.7))
                                 .clipShape(RoundedRectangle(cornerRadius: 4))
                         }
                         VStack(alignment: .leading, spacing: 2) {
@@ -38,17 +38,17 @@ struct MeaningSelectionGrid: View {
                         }
                         Spacer()
                         Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(isOn ? .blue : .secondary)
+                            .foregroundStyle(isOn ? Color.accentColor : .secondary)
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
-                            .fill(isOn ? Color.blue.opacity(0.08) : Color(.tertiarySystemGroupedBackground))
+                            .fill(isOn ? Color.accentColor.opacity(0.08) : Color(.tertiarySystemGroupedBackground))
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
-                            .stroke(isOn ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 1)
+                            .stroke(isOn ? Color.accentColor.opacity(0.3) : Color.clear, lineWidth: 1)
                     )
                 }
                 .buttonStyle(.plain)

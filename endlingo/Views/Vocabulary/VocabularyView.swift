@@ -218,7 +218,7 @@ struct VocabularyView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(entry.pattern)
                         .font(.headline)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Color.accentColor)
 
                     Text(entry.explanation)
                         .font(.subheadline)
@@ -384,7 +384,7 @@ private struct AddWordSheet: View {
                             }
                         }
                         .frame(width: 48, height: 48)
-                        .background(canSearch ? Color.blue : Color.gray.opacity(0.4))
+                        .background(canSearch ? Color.accentColor : Color.gray.opacity(0.4))
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
@@ -425,7 +425,7 @@ private struct AddWordSheet: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(selected.isEmpty ? Color.gray.opacity(0.4) : Color.blue)
+                            .background(selected.isEmpty ? Color.gray.opacity(0.4) : Color.accentColor)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .disabled(selected.isEmpty)

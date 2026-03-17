@@ -50,7 +50,7 @@ private struct EnvironmentCard: View {
                     .frame(width: 44, height: 44)
                     .background(
                         isSelected
-                            ? Color.blue.opacity(0.15)
+                            ? Color.accentColor.opacity(0.15)
                             : Color(.tertiarySystemGroupedBackground)
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -69,7 +69,7 @@ private struct EnvironmentCard: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title3)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Color.accentColor)
                         .transition(.scale.combined(with: .opacity))
                 }
             }
@@ -80,7 +80,7 @@ private struct EnvironmentCard: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)

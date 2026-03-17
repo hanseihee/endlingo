@@ -100,7 +100,7 @@ struct ProfileView: View {
                             ProfileLoginView()
                         } label: {
                             Label("이메일로 로그인", systemImage: "envelope.fill")
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(Color.accentColor)
                         }
 
                         Text("게스트 모드")

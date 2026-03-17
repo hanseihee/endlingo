@@ -151,20 +151,20 @@ private struct DayCellView: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(isToday ? Color.blue : Color.clear, lineWidth: 2)
+                    .stroke(isToday ? Color.accentColor : Color.clear, lineWidth: 2)
             )
     }
 
     private var foregroundColor: Color {
         if isToday && xp == 0 {
-            return .blue
+            return .teal
         }
         return xp > 0 ? .white : .primary
     }
 
     private var cellColor: Color {
         if isToday && xp == 0 {
-            return Color.blue.opacity(0.1)
+            return Color.accentColor.opacity(0.1)
         }
         switch xp {
         case 0: return Color(.systemGray6)
