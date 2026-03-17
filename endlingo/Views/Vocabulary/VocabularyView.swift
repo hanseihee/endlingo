@@ -86,7 +86,7 @@ struct VocabularyView: View {
                 showWordQuiz = true
             } label: {
                 quizRow(icon: "sparkles", color: .orange,
-                        title: "단어 퀴즈", subtitle: "영단어 실력을 테스트하세요")
+                        title: String(localized: "단어 퀴즈"), subtitle: String(localized: "영단어 실력을 테스트하세요"))
             }
             .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 6, trailing: 16))
 
@@ -94,7 +94,7 @@ struct VocabularyView: View {
                 showPronunciationQuiz = true
             } label: {
                 quizRow(icon: "waveform.and.mic", color: .teal,
-                        title: "발음 퀴즈", subtitle: "단어를 소리 내어 읽어보세요")
+                        title: String(localized: "발음 퀴즈"), subtitle: String(localized: "단어를 소리 내어 읽어보세요"))
             }
             .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 12, trailing: 16))
 
@@ -139,7 +139,7 @@ struct VocabularyView: View {
                 showWordQuiz = true
             } label: {
                 quizCardRow(icon: "sparkles", color: .orange,
-                            title: "단어 퀴즈", subtitle: "영단어 실력을 테스트하세요")
+                            title: String(localized: "단어 퀴즈"), subtitle: String(localized: "영단어 실력을 테스트하세요"))
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 16)
@@ -149,7 +149,7 @@ struct VocabularyView: View {
                 showPronunciationQuiz = true
             } label: {
                 quizCardRow(icon: "waveform.and.mic", color: .teal,
-                            title: "발음 퀴즈", subtitle: "단어를 소리 내어 읽어보세요")
+                            title: String(localized: "발음 퀴즈"), subtitle: String(localized: "단어를 소리 내어 읽어보세요"))
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 16)

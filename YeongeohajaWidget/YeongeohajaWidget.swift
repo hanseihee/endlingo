@@ -13,7 +13,7 @@ struct WidgetLessonData {
 
     static let placeholder = WidgetLessonData(
         sentenceEn: "Open the app to start learning!",
-        sentenceKo: "앱을 열어서 학습을 시작하세요",
+        sentenceKo: "",
         level: "",
         environment: ""
     )
@@ -66,6 +66,11 @@ struct WidgetContentView: View {
     let entry: LessonEntry
     @Environment(\.widgetFamily) var family
 
+    private static var appName: String {
+        let lang = Locale.current.language.languageCode?.identifier ?? "ko"
+        return lang == "ja" ? "英語しよ" : "영어하자"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // 상단: 로고 + 앱 이름
@@ -76,7 +81,7 @@ struct WidgetContentView: View {
                     .frame(width: 22, height: 22)
                     .clipShape(RoundedRectangle(cornerRadius: 5))
 
-                Text("영어하자")
+                Text(Self.appName)
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
 
@@ -129,8 +134,14 @@ struct YeongeohajaWidget: Widget {
                 }
                 .widgetURL(URL(string: "yeongeohaja://lesson"))
         }
-        .configurationDisplayName("영어하자")
-        .description("매일 새로운 영어 문장을 확인하세요")
+        .configurationDisplayName({
+            let lang = Locale.current.language.languageCode?.identifier ?? "ko"
+            return lang == "ja" ? "英語しよ" : "영어하자"
+        }())
+        .description({
+            let lang = Locale.current.language.languageCode?.identifier ?? "ko"
+            return lang == "ja" ? "毎日新しい英文をチェックしましょう" : "매일 새로운 영어 문장을 확인하세요"
+        }())
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

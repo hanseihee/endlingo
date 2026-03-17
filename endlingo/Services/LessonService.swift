@@ -42,15 +42,9 @@ final class LessonService {
             return cached
         }
 
-        // 해당 언어로 조회
+        // 해당 언어로 조회 (fallback 없음)
         let query = "select=*&date=eq.\(date)&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&language=eq.\(lang)&limit=1"
-        var lessons: [DailyLesson] = await SupabaseAPI.fetch("daily_lessons", query: query)
-
-        // fallback: 해당 언어 없으면 한국어로
-        if lessons.isEmpty && lang != "ko" {
-            let fallbackQuery = "select=*&date=eq.\(date)&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&language=eq.ko&limit=1"
-            lessons = await SupabaseAPI.fetch("daily_lessons", query: fallbackQuery)
-        }
+        let lessons: [DailyLesson] = await SupabaseAPI.fetch("daily_lessons", query: query)
 
         guard let lesson = lessons.first else {
             throw LessonError.notFound
