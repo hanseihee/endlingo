@@ -14,6 +14,12 @@ struct ProfileView: View {
     @State private var showChangePassword = false
     @State private var notificationTime = Date()
 
+    private var appVersion: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        return "\(version) (\(build))"
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -132,7 +138,7 @@ struct ProfileView: View {
                     HStack {
                         Text("버전")
                         Spacer()
-                        Text("1.0.0")
+                        Text(appVersion)
                             .foregroundStyle(.secondary)
                     }
                 }
