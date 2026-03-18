@@ -33,17 +33,27 @@ final class AuthService {
 
     // MARK: - Email Auth
 
-    /// 회원가입. 이메일 확인이 필요하면 false, 즉시 로그인되면 true 반환
+    enum SignUpResult {
+        case loggedIn        // 즉시 로그인 성공
+        case confirmEmail    // 확인 메일 발송됨
+        case alreadyExists   // 이미 등록된 이메일
+    }
+
+    /// 회원가입
     @discardableResult
-    func signUp(email: String, password: String) async throws -> Bool {
+    func signUp(email: String, password: String) async throws -> SignUpResult {
         let response = try await client.auth.signUp(email: email, password: password)
         if response.session != nil {
             currentUser = response.user
             isLoggedIn = true
             UserDefaults.standard.set(true, forKey: "hasAccount")
-            return true
+            return .loggedIn
         }
-        return false
+        // identities가 빈 배열이면 이미 등록된 이메일
+        if response.user.identities?.isEmpty == true {
+            return .alreadyExists
+        }
+        return .confirmEmail
     }
 
     func signIn(email: String, password: String) async throws {
@@ -59,6 +69,29 @@ final class AuthService {
 
     func resetPassword(email: String) async throws {
         try await client.auth.resetPasswordForEmail(email)
+    }
+
+    /// 비밀번호 변경: 현재 비밀번호 확인 후 새 비밀번호로 업데이트
+    func changePassword(currentPassword: String, newPassword: String) async throws {
+        // 현재 비밀번호 확인 (재로그인)
+        guard let email = currentUser?.email else {
+            throw ChangePasswordError.notLoggedIn
+        }
+        _ = try await client.auth.signIn(email: email, password: currentPassword)
+
+        // 새 비밀번호로 업데이트
+        _ = try await client.auth.update(user: UserAttributes(password: newPassword))
+    }
+
+    enum ChangePasswordError: LocalizedError {
+        case notLoggedIn
+
+        var errorDescription: String? {
+            switch self {
+            case .notLoggedIn:
+                return String(localized: "로그인 상태가 아닙니다")
+            }
+        }
     }
 
     func deleteAccount() async {

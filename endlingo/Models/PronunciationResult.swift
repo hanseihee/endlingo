@@ -149,7 +149,7 @@ enum PronunciationScorer {
         return 0
     }
 
-    /// 텍스트 정규화: 소문자 → 축약형 확장 → 구두점 제거 → 단어 분리
+    /// 텍스트 정규화: 소문자 → 축약형 확장 → 구두점 제거 → 숫자→영어 → 단어 분리
     private static func normalize(_ text: String) -> [String] {
         var s = text.lowercased()
 
@@ -168,8 +168,93 @@ enum PronunciationScorer {
             .map { String($0) }
             .joined()
 
-        return cleaned.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+        // 단어 분리 후 숫자를 영어로 변환
+        return cleaned.components(separatedBy: .whitespaces)
+            .filter { !$0.isEmpty }
+            .flatMap { numberToWords($0) }
     }
+
+    /// 숫자 토큰을 영어 단어로 변환. 숫자가 아니면 그대로 반환.
+    /// "7" → ["seven"], "15" → ["fifteen"], "123" → ["one", "hundred", "twenty", "three"]
+    /// 서수 표현도 처리: "1st" → ["first"], "3rd" → ["third"]
+    private static func numberToWords(_ token: String) -> [String] {
+        // 서수 표현 처리 (1st, 2nd, 3rd, 4th, ...)
+        if let ordinal = parseOrdinal(token) {
+            return [ordinal]
+        }
+
+        guard let num = Int(token), num >= 0, num <= 9999 else {
+            return [token]
+        }
+
+        if let simple = numberWordMap[num] {
+            return simple.components(separatedBy: " ")
+        }
+
+        var parts: [String] = []
+        var n = num
+
+        if n >= 1000 {
+            let thousands = n / 1000
+            if let w = numberWordMap[thousands] {
+                parts.append(w)
+            }
+            parts.append("thousand")
+            n %= 1000
+            if n == 0 { return parts }
+        }
+
+        if n >= 100 {
+            let hundreds = n / 100
+            if let w = numberWordMap[hundreds] {
+                parts.append(w)
+            }
+            parts.append("hundred")
+            n %= 100
+            if n == 0 { return parts }
+        }
+
+        if let w = numberWordMap[n] {
+            parts.append(contentsOf: w.components(separatedBy: " "))
+        } else {
+            let tens = (n / 10) * 10
+            let ones = n % 10
+            if let t = numberWordMap[tens] { parts.append(t) }
+            if ones > 0, let o = numberWordMap[ones] { parts.append(o) }
+        }
+
+        return parts
+    }
+
+    /// "1st" → "first", "22nd" → nil (단순 서수만 처리)
+    private static func parseOrdinal(_ token: String) -> String? {
+        let suffixes = ["st", "nd", "rd", "th"]
+        for suffix in suffixes {
+            if token.hasSuffix(suffix), let num = Int(token.dropLast(suffix.count)) {
+                if let word = ordinalWordMap[num] { return word }
+            }
+        }
+        return nil
+    }
+
+    private static let numberWordMap: [Int: String] = [
+        0: "zero", 1: "one", 2: "two", 3: "three", 4: "four",
+        5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine",
+        10: "ten", 11: "eleven", 12: "twelve", 13: "thirteen",
+        14: "fourteen", 15: "fifteen", 16: "sixteen", 17: "seventeen",
+        18: "eighteen", 19: "nineteen", 20: "twenty", 30: "thirty",
+        40: "forty", 50: "fifty", 60: "sixty", 70: "seventy",
+        80: "eighty", 90: "ninety",
+    ]
+
+    private static let ordinalWordMap: [Int: String] = [
+        1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth",
+        6: "sixth", 7: "seventh", 8: "eighth", 9: "ninth", 10: "tenth",
+        11: "eleventh", 12: "twelfth", 13: "thirteenth", 14: "fourteenth",
+        15: "fifteenth", 16: "sixteenth", 17: "seventeenth", 18: "eighteenth",
+        19: "nineteenth", 20: "twentieth", 21: "twenty first", 30: "thirtieth",
+        31: "thirty first",
+    ]
 
     private static func levenshtein(_ s1: String, _ s2: String) -> Int {
         let m = s1.count, n = s2.count

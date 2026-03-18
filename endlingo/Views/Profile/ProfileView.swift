@@ -11,6 +11,7 @@ struct ProfileView: View {
     @State private var gamification = GamificationService.shared
     @State private var showLogoutConfirm = false
     @State private var showDeleteConfirm = false
+    @State private var showChangePassword = false
     @State private var notificationTime = Date()
 
     var body: some View {
@@ -84,6 +85,12 @@ struct ProfileView: View {
                                 .lineLimit(1)
                         }
 
+                        NavigationLink {
+                            ChangePasswordView()
+                        } label: {
+                            Label("비밀번호 변경", systemImage: "lock.rotation")
+                        }
+
                         Button(role: .destructive) {
                             showLogoutConfirm = true
                         } label: {
@@ -112,7 +119,7 @@ struct ProfileView: View {
                 // 앱 공유
                 Section {
                     ShareLink(
-                        item: URL(string: "https://apps.apple.com/app/yeongeohaja/id0000000000")!,
+                        item: URL(string: "https://apps.apple.com/app/id6760590621")!,
                         subject: Text("영어하자 - 매일 영어 문장 학습"),
                         message: Text("매일 새로운 영어 문장으로 공부하는 앱이야! 같이 해보자 🦉")
                     ) {
@@ -277,13 +284,19 @@ private struct ProfileLoginView: View {
         Task {
             do {
                 if isSignUp {
-                    let confirmed = try await auth.signUp(email: trimmedEmail, password: password)
+                    let result = try await auth.signUp(email: trimmedEmail, password: password)
                     await MainActor.run {
-                        if confirmed {
+                        switch result {
+                        case .loggedIn:
                             dismiss()
-                        } else {
+                        case .confirmEmail:
                             isSuccessMessage = true
                             errorMessage = String(localized: "확인 메일을 발송했습니다. 이메일의 링크를 클릭한 후 로그인해주세요.")
+                            isSignUp = false
+                            isLoading = false
+                        case .alreadyExists:
+                            isSuccessMessage = false
+                            errorMessage = String(localized: "이미 등록된 이메일입니다. 로그인해주세요")
                             isSignUp = false
                             isLoading = false
                         }
@@ -297,6 +310,115 @@ private struct ProfileLoginView: View {
                     isSuccessMessage = false
                     errorMessage = AuthService.parseAuthError(error)
                     isLoading = false
+                }
+            }
+        }
+    }
+}
+
+// MARK: - 비밀번호 변경
+
+private struct ChangePasswordView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var currentPassword = ""
+    @State private var newPassword = ""
+    @State private var confirmPassword = ""
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+    @State private var isSuccess = false
+
+    @State private var auth = AuthService.shared
+
+    private var isFormValid: Bool {
+        currentPassword.count >= 6
+        && newPassword.count >= 6
+        && newPassword == confirmPassword
+    }
+
+    private var mismatch: Bool {
+        !confirmPassword.isEmpty && newPassword != confirmPassword
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                SecureField("현재 비밀번호", text: $currentPassword)
+                    .textContentType(.password)
+            }
+
+            Section {
+                SecureField("새 비밀번호 (6자 이상)", text: $newPassword)
+                    .textContentType(.newPassword)
+
+                SecureField("새 비밀번호 확인", text: $confirmPassword)
+                    .textContentType(.newPassword)
+
+                if mismatch {
+                    Text("새 비밀번호가 일치하지 않습니다")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            }
+
+            if let errorMessage {
+                Section {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            }
+
+            Section {
+                Button {
+                    changePassword()
+                } label: {
+                    HStack {
+                        Spacer()
+                        if isLoading {
+                            ProgressView()
+                        } else {
+                            Text("비밀번호 변경")
+                                .font(.body.weight(.semibold))
+                        }
+                        Spacer()
+                    }
+                }
+                .disabled(!isFormValid || isLoading)
+            }
+        }
+        .navigationTitle("비밀번호 변경")
+        .navigationBarTitleDisplayMode(.inline)
+        .alert("비밀번호 변경 완료", isPresented: $isSuccess) {
+            Button("확인") { dismiss() }
+        } message: {
+            Text("비밀번호가 성공적으로 변경되었습니다")
+        }
+    }
+
+    private func changePassword() {
+        isLoading = true
+        errorMessage = nil
+
+        Task {
+            do {
+                try await auth.changePassword(
+                    currentPassword: currentPassword,
+                    newPassword: newPassword
+                )
+                await MainActor.run {
+                    isLoading = false
+                    isSuccess = true
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    let msg = "\(error)".lowercased()
+                    if msg.contains("invalid login") || msg.contains("invalid_credentials") {
+                        errorMessage = String(localized: "현재 비밀번호가 올바르지 않습니다")
+                    } else {
+                        errorMessage = AuthService.parseAuthError(error)
+                    }
                 }
             }
         }
