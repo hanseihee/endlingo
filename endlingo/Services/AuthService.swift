@@ -1,4 +1,7 @@
 import Foundation
+import AuthenticationServices
+import CryptoKit
+import GoogleSignIn
 import Supabase
 import Auth
 
@@ -12,6 +15,23 @@ final class AuthService {
     private(set) var currentUser: User?
     private(set) var isLoggedIn = false
     private(set) var isLoading = true
+
+    // MARK: - 마지막 로그인 방법
+
+    enum LoginMethod: String {
+        case email, apple, google
+    }
+
+    /// 마지막 로그인 방법 (로그아웃 후에도 유지)
+    static var lastLoginMethod: LoginMethod? {
+        get {
+            guard let raw = UserDefaults.standard.string(forKey: "lastLoginMethod") else { return nil }
+            return LoginMethod(rawValue: raw)
+        }
+        set {
+            UserDefaults.standard.set(newValue?.rawValue, forKey: "lastLoginMethod")
+        }
+    }
 
     var isGuest: Bool {
         !isLoggedIn && UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
@@ -47,6 +67,7 @@ final class AuthService {
             currentUser = response.user
             isLoggedIn = true
             UserDefaults.standard.set(true, forKey: "hasAccount")
+            Self.lastLoginMethod = .email
             return .loggedIn
         }
         // identities가 빈 배열이면 이미 등록된 이메일
@@ -61,6 +82,7 @@ final class AuthService {
         currentUser = session.user
         isLoggedIn = true
         UserDefaults.standard.set(true, forKey: "hasAccount")
+        Self.lastLoginMethod = .email
         async let v: () = VocabularyService.shared.syncAfterLogin()
         async let g: () = GrammarService.shared.syncAfterLogin()
         async let ga: () = GamificationService.shared.syncAfterLogin()
@@ -133,6 +155,96 @@ final class AuthService {
         GamificationService.shared.clearAfterLogout()
         NotificationService.shared.cancelAll()
         resetUserData()
+    }
+
+    // MARK: - Apple Sign In
+
+    /// Apple 로그인용 nonce (CSRF 방지)
+    private(set) var currentNonce: String?
+
+    /// 랜덤 nonce 생성
+    func generateNonce() -> String {
+        let nonce = randomNonceString()
+        currentNonce = nonce
+        return nonce
+    }
+
+    /// Apple ID Token으로 Supabase 로그인
+    func signInWithApple(idToken: String, nonce: String) async throws {
+        let session = try await client.auth.signInWithIdToken(
+            credentials: .init(provider: .apple, idToken: idToken, nonce: nonce)
+        )
+        currentUser = session.user
+        isLoggedIn = true
+        UserDefaults.standard.set(true, forKey: "hasAccount")
+        Self.lastLoginMethod = .apple
+        async let v: () = VocabularyService.shared.syncAfterLogin()
+        async let g: () = GrammarService.shared.syncAfterLogin()
+        async let ga: () = GamificationService.shared.syncAfterLogin()
+        _ = await (v, g, ga)
+    }
+
+    /// SHA256 해시 (Apple Sign In 요구사항)
+    static func sha256(_ input: String) -> String {
+        let data = Data(input.utf8)
+        let hash = SHA256.hash(data: data)
+        return hash.map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        var randomBytes = [UInt8](repeating: 0, count: length)
+        let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
+        precondition(errorCode == errSecSuccess)
+        let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        return String(randomBytes.map { charset[Int($0) % charset.count] })
+    }
+
+    // MARK: - Google Sign In
+
+    /// Google 로그인 (GoogleSignIn SDK → Supabase ID Token)
+    func signInWithGoogle() async throws {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootViewController = windowScene.windows.first?.rootViewController
+        else {
+            throw GoogleSignInError.noRootViewController
+        }
+
+        let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+        guard let idToken = result.user.idToken?.tokenString else {
+            throw GoogleSignInError.noIdToken
+        }
+
+        let session = try await client.auth.signInWithIdToken(
+            credentials: .init(provider: .google, idToken: idToken)
+        )
+        currentUser = session.user
+        isLoggedIn = true
+        UserDefaults.standard.set(true, forKey: "hasAccount")
+        Self.lastLoginMethod = .google
+        async let v: () = VocabularyService.shared.syncAfterLogin()
+        async let g: () = GrammarService.shared.syncAfterLogin()
+        async let ga: () = GamificationService.shared.syncAfterLogin()
+        _ = await (v, g, ga)
+    }
+
+    /// Google Sign In URL 처리
+    func handleGoogleSignInURL(_ url: URL) -> Bool {
+        GIDSignIn.sharedInstance.handle(url)
+    }
+
+    enum GoogleSignInError: LocalizedError {
+        case noRootViewController
+        case noIdToken
+
+        var errorDescription: String? {
+            switch self {
+            case .noRootViewController:
+                return String(localized: "화면을 찾을 수 없습니다")
+            case .noIdToken:
+                return String(localized: "Google 로그인 정보를 가져올 수 없습니다")
+            }
+        }
     }
 
     // MARK: - Deep Link
