@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영어하자 - 매일 새로운 영어 문장으로 공부하기</title>
+    <meta name="description" content="매일 AI가 생성하는 새로운 영어 문장으로 공부하는 iOS 앱. 6단계 레벨, 5가지 환경별 맞춤 레슨.">
+    <meta property="og:title" content="영어하자 - 매일 영어 문장 학습">
+    <meta property="og:description" content="매일 새로운 영어 문장으로 공부하는 iOS 앱">
+    <meta property="og:image" content="https://hanseihee.github.io/endlingo/appicon.png">
+    <meta property="og:url" content="https://hanseihee.github.io/endlingo/">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" type="image/png" href="appicon.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --border: #222;
+            --text: #f5f5f5;
+            --text-secondary: #888;
+            --accent: #4A90D9;
+            --accent-glow: rgba(74, 144, 217, 0.15);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 24px;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .app-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--accent), #7BB3E0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            color: var(--text-secondary);
+            max-width: 480px;
+            margin-bottom: 40px;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 32px;
+            background: var(--text);
+            color: var(--bg);
+            text-decoration: none;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 255, 255, 0.1);
+        }
+
+        .download-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Features */
+        .features {
+            padding: 80px 24px;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-weight: 700;
+            margin-bottom: 48px;
+            letter-spacing: -0.01em;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            transition: border-color 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: #333;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 16px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Levels */
+        .levels {
+            padding: 80px 24px;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .levels h2 {
+            text-align: center;
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-weight: 700;
+            margin-bottom: 48px;
+        }
+
+        .level-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .level-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .level-badge {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent);
+            background: var(--accent-glow);
+            padding: 4px 12px;
+            border-radius: 8px;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .level-item span:last-child {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        /* Character section */
+        .character-section {
+            padding: 80px 24px;
+            text-align: center;
+        }
+
+        .character-img {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            margin-bottom: 24px;
+            filter: drop-shadow(0 4px 24px rgba(74, 144, 217, 0.2));
+        }
+
+        .character-section p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 400px;
+            margin: 0 auto 32px;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 24px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text);
+        }
+
+        footer .copy {
+            font-size: 0.8rem;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hero -->
+    <section class="hero">
+        <img src="appicon.png" alt="영어하자 앱 아이콘" class="app-icon">
+        <h1>매일 새로운 영어,<br><span>영어하자</span></h1>
+        <p>AI가 매일 생성하는 실전 영어 문장으로<br>나만의 환경에 맞춰 공부하세요.</p>
+        <a href="https://apps.apple.com/app/id6760590621" class="download-btn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+            App Store에서 다운로드
+        </a>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+        <h2>왜 영어하자인가요?</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📝</div>
+                <h3>매일 새로운 레슨</h3>
+                <p>AI가 매일 자동으로 생성하는 실전 영어 문장. 매일 새로운 주제와 시나리오로 공부합니다.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>6단계 맞춤 레벨</h3>
+                <p>A1 입문부터 C2 고급까지, 내 실력에 딱 맞는 난이도의 문장을 학습합니다.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌍</div>
+                <h3>5가지 학습 환경</h3>
+                <p>학교, 직장, 여행, 일상, 비즈니스 — 내가 실제로 쓸 상황의 영어를 배웁니다.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🗣️</div>
+                <h3>발음 연습</h3>
+                <p>음성 인식으로 발음을 체크하고, 원어민 TTS로 정확한 발음을 들어봅니다.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📖</div>
+                <h3>단어장 & 문법 노트</h3>
+                <p>모르는 단어는 탭 한 번으로 저장. 문법 포인트도 북마크해서 복습합니다.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏆</div>
+                <h3>게이미피케이션</h3>
+                <p>XP, 연속 학습 스트릭, 배지 시스템으로 매일 공부하는 습관을 만듭니다.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Levels -->
+    <section class="levels">
+        <h2>나에게 맞는 레벨 찾기</h2>
+        <div class="level-list">
+            <div class="level-item">
+                <div class="level-badge">A1</div>
+                <span>입문 — 기초 인사, 간단한 자기소개</span>
+            </div>
+            <div class="level-item">
+                <div class="level-badge">A2</div>
+                <span>초급 — 일상 대화, 간단한 요청</span>
+            </div>
+            <div class="level-item">
+                <div class="level-badge">B1</div>
+                <span>중급 — 의견 표현, 경험 이야기</span>
+            </div>
+            <div class="level-item">
+                <div class="level-badge">B2</div>
+                <span>중상급 — 토론, 업무 커뮤니케이션</span>
+            </div>
+            <div class="level-item">
+                <div class="level-badge">C1</div>
+                <span>고급 — 복잡한 주제, 뉴앙스 표현</span>
+            </div>
+            <div class="level-item">
+                <div class="level-badge">C2</div>
+                <span>최고급 — 원어민 수준 표현</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Character CTA -->
+    <section class="character-section">
+        <img src="character.png" alt="영어하자 캐릭터" class="character-img">
+        <p>지금 시작해서 매일 영어 실력을 키워보세요!</p>
+        <a href="https://apps.apple.com/app/id6760590621" class="download-btn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+            무료 다운로드
+        </a>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-links">
+            <a href="https://apps.apple.com/app/id6760590621">App Store</a>
+            <a href="privacy.html">개인정보 처리방침</a>
+            <a href="mailto:realmasse@gmail.com">문의</a>
+        </div>
+        <p class="copy">&copy; 2026 seihee han. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
