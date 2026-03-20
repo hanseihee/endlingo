@@ -26,6 +26,10 @@ struct HistoryView: View {
                 .padding(.vertical, 8)
             }
             .scrollIndicators(.hidden)
+            .safeAreaInset(edge: .bottom) {
+                BannerAdView()
+                    .padding(.bottom, 4)
+            }
             .navigationTitle("기록")
             .background(Color(.systemGroupedBackground))
             .overlay {

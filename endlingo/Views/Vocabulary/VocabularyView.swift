@@ -40,6 +40,9 @@ struct VocabularyView: View {
                 case .grammar:
                     grammarContent
                 }
+
+                BannerAdView()
+                    .padding(.bottom, 4)
             }
             .sheet(isPresented: $showWordQuiz) {
                 QuizView()

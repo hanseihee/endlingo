@@ -2,6 +2,7 @@ import SwiftUI
 import FirebaseCore
 import FirebaseAnalytics
 import GoogleSignIn
+import GoogleMobileAds
 
 @main
 struct endlingoApp: App {
@@ -18,6 +19,8 @@ struct endlingoApp: App {
         GIDSignIn.sharedInstance.configuration = GIDConfiguration(
             clientID: "65805250161-0ckmm3qdli8pkj7h5sge7jplvi9dfvqg.apps.googleusercontent.com"
         )
+        // Google Mobile Ads 초기화
+        MobileAds.shared.start(completionHandler: nil)
     }
 
     var body: some Scene {

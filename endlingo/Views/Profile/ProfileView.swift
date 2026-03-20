@@ -149,6 +149,10 @@ struct ProfileView: View {
                 }
 
             }
+            .safeAreaInset(edge: .bottom) {
+                BannerAdView()
+                    .padding(.bottom, 4)
+            }
             .navigationTitle("프로필")
             .onAppear {
                 var comps = DateComponents()

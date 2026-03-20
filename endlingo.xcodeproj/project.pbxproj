@@ -13,6 +13,7 @@
 		B5A6F0522F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B5A6F03C2F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B5DB12922F65C4F000A0599A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = B5DB12912F65C4F000A0599A /* FirebaseAnalytics */; };
 		B5F5E4852F6D799C0075D91A /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = B5F5E4842F6D799C0075D91A /* GoogleSignIn */; };
+		B5F5E66D2F6D847E0075D91A /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = B5F5E66C2F6D847E0075D91A /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -114,6 +115,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B5F5E66D2F6D847E0075D91A /* GoogleMobileAds in Frameworks */,
 				B5DB12922F65C4F000A0599A /* FirebaseAnalytics in Frameworks */,
 				B50C39AE2F625C2A00A1597E /* Supabase in Frameworks */,
 				B5F5E4852F6D799C0075D91A /* GoogleSignIn in Frameworks */,
@@ -204,6 +206,7 @@
 				B50C39AD2F625C2A00A1597E /* Supabase */,
 				B5DB12912F65C4F000A0599A /* FirebaseAnalytics */,
 				B5F5E4842F6D799C0075D91A /* GoogleSignIn */,
+				B5F5E66C2F6D847E0075D91A /* GoogleMobileAds */,
 			);
 			productName = endlingo;
 			productReference = B558E0B92F623EEE00A126B5 /* endlingo.app */;
@@ -318,6 +321,7 @@
 				B50C39AC2F625C2A00A1597E /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				B5DB12902F65C4F000A0599A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				B5F5E4832F6D799C0075D91A /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				B5F5E66B2F6D847E0075D91A /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B558E0BA2F623EEE00A126B5 /* Products */;
@@ -541,7 +545,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = endlingo/endlingo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = RT556U3WKT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -559,7 +563,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.realmasse.yeongeohaja;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -579,7 +583,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = endlingo/endlingo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = RT556U3WKT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -597,7 +601,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.realmasse.yeongeohaja;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -701,7 +705,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = YeongeohajaWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = RT556U3WKT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = YeongeohajaWidget/Info.plist;
@@ -713,7 +717,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.realmasse.yeongeohaja.YeongeohajaWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -733,7 +737,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = YeongeohajaWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = RT556U3WKT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = YeongeohajaWidget/Info.plist;
@@ -745,7 +749,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.realmasse.yeongeohaja.YeongeohajaWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -833,6 +837,14 @@
 				minimumVersion = 9.1.0;
 			};
 		};
+		B5F5E66B2F6D847E0075D91A /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -850,6 +862,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B5F5E4832F6D799C0075D91A /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignIn;
+		};
+		B5F5E66C2F6D847E0075D91A /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B5F5E66B2F6D847E0075D91A /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

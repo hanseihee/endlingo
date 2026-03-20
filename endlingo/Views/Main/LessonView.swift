@@ -20,6 +20,9 @@ struct LessonView: View {
                     }
                 }
                 .frame(maxHeight: .infinity)
+
+                BannerAdView()
+                    .padding(.bottom, 4)
             }
             .navigationTitle(viewModel.isToday ? String(localized: "오늘의 레슨") : String(localized: "지난 레슨"))
         }
