@@ -1,4 +1,5 @@
 import SwiftUI
+import AuthenticationServices
 
 // MARK: - Navigation 목적지
 
@@ -12,6 +13,9 @@ private enum AuthDestination: Hashable {
 struct LoginView: View {
     let onLoginSuccess: () -> Void
     let onGuestLogin: () -> Void
+
+    @State private var auth = AuthService.shared
+    @State private var socialLoginError: String?
 
     var body: some View {
         NavigationStack {
@@ -60,6 +64,11 @@ struct LoginView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                     }
+                    .overlay(alignment: .trailing) {
+                        if AuthService.lastLoginMethod == .email {
+                            LastUsedBadge()
+                        }
+                    }
 
                     // 구분선
                     HStack {
@@ -70,6 +79,30 @@ struct LoginView: View {
                         Rectangle().fill(Color(.separator)).frame(height: 0.5)
                     }
                     .padding(.vertical, 4)
+
+                    // 소셜 로그인
+                    AppleSignInButton(onSuccess: onLoginSuccess, onError: { socialLoginError = $0 })
+                        .frame(height: 52)
+                        .overlay(alignment: .trailing) {
+                            if AuthService.lastLoginMethod == .apple {
+                                LastUsedBadge()
+                            }
+                        }
+
+                    GoogleSignInButton(onSuccess: onLoginSuccess, onError: { socialLoginError = $0 })
+                        .frame(height: 52)
+                        .overlay(alignment: .trailing) {
+                            if AuthService.lastLoginMethod == .google {
+                                LastUsedBadge()
+                            }
+                        }
+
+                    if let socialLoginError {
+                        Text(socialLoginError)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                            .multilineTextAlignment(.center)
+                    }
 
                     // 게스트 진입
                     Button {
@@ -286,5 +319,126 @@ private struct AuthFormView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - 마지막 로그인 방법 배지
+
+struct LastUsedBadge: View {
+    var body: some View {
+        Text("최근 사용")
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(Color.accentColor)
+            .clipShape(Capsule())
+            .offset(x: 0, y: -30)
+    }
+}
+
+// MARK: - Google Sign In 버튼 (재사용 컴포넌트)
+
+struct GoogleSignInButton: View {
+    let onSuccess: () -> Void
+    let onError: (String) -> Void
+
+    @State private var auth = AuthService.shared
+    @State private var isLoading = false
+
+    var body: some View {
+        Button {
+            guard !isLoading else { return }
+            isLoading = true
+            Task {
+                do {
+                    try await auth.signInWithGoogle()
+                    await MainActor.run {
+                        isLoading = false
+                        onSuccess()
+                    }
+                } catch {
+                    await MainActor.run {
+                        isLoading = false
+                        // 사용자가 취소한 경우 에러 표시하지 않음
+                        if (error as NSError).code == -5 { return } // GIDSignInError.canceled
+                        onError(AuthService.parseAuthError(error))
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 8) {
+                if isLoading {
+                    ProgressView()
+                        .tint(.primary)
+                } else {
+                    Image("GoogleLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
+                    Text("Google로 로그인")
+                        .font(.body.weight(.medium))
+                }
+            }
+            .foregroundStyle(.primary)
+            .frame(maxWidth: .infinity)
+            .frame(height: 52)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color(.separator), lineWidth: 0.5)
+            )
+        }
+        .disabled(isLoading)
+    }
+}
+
+// MARK: - Apple Sign In 버튼 (재사용 컴포넌트)
+
+struct AppleSignInButton: View {
+    let onSuccess: () -> Void
+    let onError: (String) -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var auth = AuthService.shared
+
+    var body: some View {
+        SignInWithAppleButton(.signIn) { request in
+            let nonce = auth.generateNonce()
+            request.requestedScopes = [.email, .fullName]
+            request.nonce = AuthService.sha256(nonce)
+        } onCompletion: { result in
+            switch result {
+            case .success(let authorization):
+                guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                      let identityTokenData = credential.identityToken,
+                      let idToken = String(data: identityTokenData, encoding: .utf8)
+                else {
+                    onError(String(localized: "Apple 로그인 정보를 가져올 수 없습니다"))
+                    return
+                }
+                guard let nonce = auth.currentNonce else {
+                    onError(String(localized: "인증 요청이 만료되었습니다. 다시 시도해주세요"))
+                    return
+                }
+                Task {
+                    do {
+                        try await auth.signInWithApple(idToken: idToken, nonce: nonce)
+                        await MainActor.run { onSuccess() }
+                    } catch {
+                        await MainActor.run {
+                            onError(AuthService.parseAuthError(error))
+                        }
+                    }
+                }
+            case .failure(let error):
+                // 사용자가 취소한 경우 에러 표시하지 않음
+                if (error as? ASAuthorizationError)?.code == .canceled { return }
+                onError(String(localized: "Apple 로그인에 실패했습니다"))
+            }
+        }
+        .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }

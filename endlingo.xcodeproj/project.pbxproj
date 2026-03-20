@@ -12,6 +12,7 @@
 		B5A6F0412F66FEB200B2B2D7 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5A6F0402F66FEB200B2B2D7 /* SwiftUI.framework */; };
 		B5A6F0522F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B5A6F03C2F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B5DB12922F65C4F000A0599A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = B5DB12912F65C4F000A0599A /* FirebaseAnalytics */; };
+		B5F5E4852F6D799C0075D91A /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = B5F5E4842F6D799C0075D91A /* GoogleSignIn */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -115,6 +116,7 @@
 			files = (
 				B5DB12922F65C4F000A0599A /* FirebaseAnalytics in Frameworks */,
 				B50C39AE2F625C2A00A1597E /* Supabase in Frameworks */,
+				B5F5E4852F6D799C0075D91A /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -201,6 +203,7 @@
 			packageProductDependencies = (
 				B50C39AD2F625C2A00A1597E /* Supabase */,
 				B5DB12912F65C4F000A0599A /* FirebaseAnalytics */,
+				B5F5E4842F6D799C0075D91A /* GoogleSignIn */,
 			);
 			productName = endlingo;
 			productReference = B558E0B92F623EEE00A126B5 /* endlingo.app */;
@@ -314,6 +317,7 @@
 			packageReferences = (
 				B50C39AC2F625C2A00A1597E /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				B5DB12902F65C4F000A0599A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				B5F5E4832F6D799C0075D91A /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B558E0BA2F623EEE00A126B5 /* Products */;
@@ -543,6 +547,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = endlingo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "영어하자";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = NO;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "영어 문장을 따라 읽고 발음을 확인하기 위해 마이크 접근이 필요합니다.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "따라 읽기 기능에서 음성을 텍스트로 변환하기 위해 음성 인식이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -579,6 +585,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = endlingo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "영어하자";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = NO;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "영어 문장을 따라 읽고 발음을 확인하기 위해 마이크 접근이 필요합니다.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "따라 읽기 기능에서 음성을 텍스트로 변환하기 위해 음성 인식이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -817,6 +825,14 @@
 				minimumVersion = 12.10.0;
 			};
 		};
+		B5F5E4832F6D799C0075D91A /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -829,6 +845,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B5DB12902F65C4F000A0599A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAnalytics;
+		};
+		B5F5E4842F6D799C0075D91A /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B5F5E4832F6D799C0075D91A /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

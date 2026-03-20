@@ -1,4 +1,5 @@
 import SwiftUI
+import AuthenticationServices
 
 struct ProfileView: View {
     @AppStorage("selectedLevel") private var selectedLevel: String = ""
@@ -122,7 +123,7 @@ struct ProfileView: View {
                     }
                 }
 
-                // 앱 공유
+                // 앱 공유 & 리뷰
                 Section {
                     ShareLink(
                         item: URL(string: "https://apps.apple.com/app/id6760590621")!,
@@ -130,6 +131,10 @@ struct ProfileView: View {
                         message: Text("매일 새로운 영어 문장으로 공부하는 앱이야! 같이 해보자 🦉")
                     ) {
                         Label("친구에게 앱 공유하기", systemImage: "square.and.arrow.up")
+                    }
+
+                    Link(destination: URL(string: "https://apps.apple.com/app/id6760590621?action=write-review")!) {
+                        Label("앱 리뷰 남기기", systemImage: "star.bubble")
                     }
                 }
 
@@ -185,6 +190,7 @@ private struct ProfileLoginView: View {
     @State private var showResetPassword = false
     @State private var resetEmail = ""
     @State private var resetSent = false
+    @State private var socialLoginError: String?
 
     @State private var auth = AuthService.shared
 
@@ -254,6 +260,24 @@ private struct ProfileLoginView: View {
                             .frame(maxWidth: .infinity)
                     }
                 }
+            }
+
+            Section {
+                AppleSignInButton(onSuccess: { dismiss() }, onError: { socialLoginError = $0 })
+                    .frame(height: 44)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+
+                GoogleSignInButton(onSuccess: { dismiss() }, onError: { socialLoginError = $0 })
+                    .frame(height: 44)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+
+                if let socialLoginError {
+                    Text(socialLoginError)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            } header: {
+                Text("간편 로그인")
             }
         }
         .navigationTitle(isSignUp ? String(localized: "회원가입") : String(localized: "로그인"))
