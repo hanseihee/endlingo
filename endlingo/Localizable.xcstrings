@@ -3370,12 +3370,6 @@
             "state": "translated",
             "value": "Apple ログイン情報を取得できません"
           }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unable to retrieve Apple sign-in information"
-          }
         }
       }
     },
@@ -3385,12 +3379,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "認証リクエストの有効期限が切れました。もう一度お試しください"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Authentication request expired. Please try again"
           }
         }
       }
@@ -3402,12 +3390,6 @@
             "state": "translated",
             "value": "Apple ログインに失敗しました"
           }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple sign-in failed"
-          }
         }
       }
     },
@@ -3417,12 +3399,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "簡単ログイン"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quick sign in"
           }
         }
       }
@@ -3434,12 +3410,6 @@
             "state": "translated",
             "value": "画面が見つかりません"
           }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unable to find screen"
-          }
         }
       }
     },
@@ -3449,12 +3419,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Google ログイン情報を取得できません"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unable to retrieve Google sign-in information"
           }
         }
       }
@@ -3466,12 +3430,6 @@
             "state": "translated",
             "value": "Googleでログイン"
           }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign in with Google"
-          }
         }
       }
     },
@@ -3482,12 +3440,6 @@
             "state": "translated",
             "value": "前回使用"
           }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Last used"
-          }
         }
       }
     },
@@ -3497,12 +3449,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "アプリレビューを書く"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Write a review"
           }
         }
       }
