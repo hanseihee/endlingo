@@ -64,7 +64,7 @@ struct LoginView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                     }
-                    .overlay(alignment: .trailing) {
+                    .overlay(alignment: .leading) {
                         if AuthService.lastLoginMethod == .email {
                             LastUsedBadge()
                         }
