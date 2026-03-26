@@ -71,16 +71,35 @@ struct PronunciationResult {
 
 enum PronunciationScorer {
     static func score(reference: String, spoken: String) -> PronunciationResult {
-        let refWords = normalize(reference)
         let spokenWords = normalize(spoken)
 
+        // 표준 숫자 변환 (405 → "four hundred five")
+        let refStandard = normalize(reference)
+        // 자릿수별 변환 (405 → "four zero five")
+        let refDigits = normalizeDigitByDigit(reference)
+
+        let result1 = computeResult(refWords: refStandard, spokenWords: spokenWords, spokenText: spoken)
+
+        // 자릿수별 변환이 다른 경우만 2차 채점
+        if refDigits != refStandard {
+            let result2 = computeResult(refWords: refDigits, spokenWords: spokenWords, spokenText: spoken)
+            if result2.score > result1.score {
+                return result2
+            }
+        }
+
+        return result1
+    }
+
+    /// LCS DP 기반 채점 (공통 로직)
+    private static func computeResult(refWords: [String], spokenWords: [String], spokenText: String) -> PronunciationResult {
         guard !refWords.isEmpty else {
-            return PronunciationResult(score: 0, wordResults: [], spokenWordResults: [], spokenText: spoken)
+            return PronunciationResult(score: 0, wordResults: [], spokenWordResults: [], spokenText: spokenText)
         }
 
         guard !spokenWords.isEmpty else {
             let missed = refWords.map { PronunciationResult.WordResult(word: $0, status: .wrong) }
-            return PronunciationResult(score: 0, wordResults: missed, spokenWordResults: [], spokenText: spoken)
+            return PronunciationResult(score: 0, wordResults: missed, spokenWordResults: [], spokenText: spokenText)
         }
 
         let m = refWords.count
@@ -136,7 +155,7 @@ enum PronunciationScorer {
             score: finalScore,
             wordResults: wordResults,
             spokenWordResults: spokenWordResults,
-            spokenText: spoken
+            spokenText: spokenText
         )
     }
 
@@ -169,9 +188,61 @@ enum PronunciationScorer {
             .joined()
 
         // 단어 분리 후 숫자를 영어로 변환
-        return cleaned.components(separatedBy: .whitespaces)
+        let words = cleaned.components(separatedBy: .whitespaces)
             .filter { !$0.isEmpty }
             .flatMap { numberToWords($0) }
+
+        // "oh"/"o"를 "zero"로 매핑 (숫자 읽기에서 0을 oh로 발음하는 경우)
+        return words.map { $0 == "oh" || $0 == "o" ? "zero" : $0 }
+    }
+
+    /// 숫자를 자릿수별 단어로 변환하는 정규화 (405 → "four zero five")
+    /// 음성인식이 숫자를 자릿수별로 읽는 경우를 처리
+    private static func normalizeDigitByDigit(_ text: String) -> [String] {
+        var s = text.lowercased()
+
+        s = s.replacingOccurrences(of: "\u{2019}", with: "'")
+        s = s.replacingOccurrences(of: "\u{2018}", with: "'")
+
+        for (contraction, expansion) in contractions {
+            s = s.replacingOccurrences(of: contraction, with: expansion)
+        }
+
+        let cleaned = s.unicodeScalars
+            .filter { !CharacterSet.punctuationCharacters.contains($0) }
+            .map { String($0) }
+            .joined()
+
+        let words = cleaned.components(separatedBy: .whitespaces)
+            .filter { !$0.isEmpty }
+            .flatMap { numberToDigitWords($0) }
+
+        return words.map { $0 == "oh" || $0 == "o" ? "zero" : $0 }
+    }
+
+    /// 숫자를 개별 자릿수 단어로 변환: "405" → ["four", "zero", "five"]
+    private static func numberToDigitWords(_ token: String) -> [String] {
+        // 서수는 기존 방식 유지
+        if let ordinal = parseOrdinal(token) {
+            return [ordinal]
+        }
+
+        guard token.allSatisfy({ $0.isNumber }), !token.isEmpty else {
+            return [token]
+        }
+
+        // 1자리 숫자는 기존 방식과 동일
+        if token.count == 1 {
+            return numberToWords(token)
+        }
+
+        // 2자리 이상 숫자 → 자릿수별 단어로 분해
+        return token.map { char -> String in
+            if let digit = Int(String(char)), let word = numberWordMap[digit] {
+                return word
+            }
+            return String(char)
+        }
     }
 
     /// 숫자 토큰을 영어 단어로 변환. 숫자가 아니면 그대로 반환.
