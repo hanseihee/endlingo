@@ -2,6 +2,9 @@ import SwiftUI
 
 struct LessonView: View {
     @State private var viewModel = LessonViewModel()
+    @Environment(\.scenePhase) private var scenePhase
+    /// 마지막으로 레슨을 로드한 KST 날짜 문자열
+    @State private var lastLoadedDate: String?
 
     var body: some View {
         NavigationStack {
@@ -28,8 +31,21 @@ struct LessonView: View {
         }
         .task {
             await viewModel.loadTodayLesson()
+            lastLoadedDate = viewModel.dateString(for: Date())
             if viewModel.isToday, let lesson = viewModel.lesson {
                 recordLesson(lesson)
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                let today = viewModel.dateString(for: Date())
+                if lastLoadedDate != today {
+                    lastLoadedDate = today
+                    LessonService.shared.clearCache()
+                    Task {
+                        await viewModel.loadTodayLesson()
+                    }
+                }
             }
         }
     }
@@ -113,7 +129,7 @@ struct LessonView: View {
         .scrollIndicators(.hidden)
         .refreshable {
             LessonService.shared.clearCache()
-            await viewModel.loadLesson()
+            await viewModel.loadTodayLesson()
         }
     }
 
