@@ -304,9 +304,10 @@ struct PronunciationPracticeView: View {
             if message.contains(String(localized: "권한")) {
                 PermissionGuideView()
             } else {
-                Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 36))
-                    .foregroundStyle(.orange)
+                Image("doodle-warning")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 48, height: 48)
 
                 Text(message)
                     .font(.callout)

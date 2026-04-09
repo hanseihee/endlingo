@@ -110,9 +110,10 @@ struct VocabularyView: View {
         VStack(spacing: 16) {
             Spacer()
 
-            Image(systemName: "character.book.closed.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
+            Image("doodle-open-book")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 64, height: 64)
 
             Text("저장한 단어가 없습니다")
                 .font(.body)
@@ -179,9 +180,10 @@ struct VocabularyView: View {
         VStack(spacing: 16) {
             Spacer()
 
-            Image(systemName: "text.book.closed")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
+            Image("doodle-notebook")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 64, height: 64)
 
             Text("저장한 문법이 없습니다")
                 .font(.body)

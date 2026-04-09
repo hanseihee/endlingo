@@ -19,9 +19,10 @@ struct TimePickerView: View {
 
                 // Time picker
                 VStack(spacing: 16) {
-                    Image(systemName: "bell.badge")
-                        .font(.system(size: 48))
-                        .foregroundStyle(Color.accentColor)
+                    Image("doodle-bell")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 64, height: 64)
                         .padding(.bottom, 8)
 
                     DatePicker(

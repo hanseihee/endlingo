@@ -63,9 +63,10 @@ struct SentenceArrangeQuizView: View {
 
     private func errorView(_ message: String) -> some View {
         VStack(spacing: 16) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 40))
-                .foregroundStyle(.secondary)
+            Image("doodle-warning")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 56, height: 56)
 
             Text(message)
                 .font(.callout)

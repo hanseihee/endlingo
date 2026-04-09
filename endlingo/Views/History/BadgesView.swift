@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BadgesView: View {
     @State private var gamification = GamificationService.shared
+    @State private var selectedBadge: BadgeType?
 
     private let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
 
@@ -50,6 +51,7 @@ struct BadgesView: View {
                             ForEach(badges) { badge in
                                 let isEarned = earnedSet.contains(badge.rawValue)
                                 BadgeCard(badge: badge, isEarned: isEarned)
+                                    .onTapGesture { selectedBadge = badge }
                             }
                         }
                     }
@@ -60,6 +62,52 @@ struct BadgesView: View {
         .navigationTitle("배지")
         .navigationBarTitleDisplayMode(.inline)
         .background(Color(.systemGroupedBackground))
+        .sheet(item: $selectedBadge) { badge in
+            BadgeDetailSheet(
+                badge: badge,
+                isEarned: earnedSet.contains(badge.rawValue),
+                earnedDate: gamification.earnedBadges.first(where: { $0.badgeType == badge.rawValue })?.earnedAt
+            )
+            .presentationDetents([.medium])
+        }
+    }
+}
+
+// MARK: - 배지 상세 시트
+
+private struct BadgeDetailSheet: View {
+    let badge: BadgeType
+    let isEarned: Bool
+    let earnedDate: Date?
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: badge.icon)
+                .font(.system(size: 48))
+                .foregroundStyle(isEarned ? badge.category.color : .gray.opacity(0.4))
+                .padding(.top, 24)
+
+            Text(badge.title)
+                .font(.title2.bold())
+
+            Text(badge.description)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+
+            if isEarned, let date = earnedDate {
+                Label(date.formatted(date: .abbreviated, time: .omitted), systemImage: "checkmark.circle.fill")
+                    .font(.callout)
+                    .foregroundStyle(.green)
+            } else {
+                Label(String(localized: "아직 획득하지 못했습니다"), systemImage: "lock.fill")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+        }
     }
 }
 
@@ -71,7 +119,7 @@ private struct BadgeCard: View {
         VStack(spacing: 6) {
             Image(systemName: badge.icon)
                 .font(.system(size: 28))
-                .foregroundStyle(isEarned ? badgeColor : .gray.opacity(0.3))
+                .foregroundStyle(isEarned ? badge.category.color : .gray.opacity(0.3))
 
             Text(badge.title)
                 .font(.caption2.bold())
@@ -87,17 +135,8 @@ private struct BadgeCard: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(isEarned ? badgeColor.opacity(0.3) : Color.clear, lineWidth: 1.5)
+                .stroke(isEarned ? badge.category.color.opacity(0.3) : Color.clear, lineWidth: 1.5)
         )
     }
 
-    private var badgeColor: Color {
-        switch badge.category {
-        case .learning: return .teal
-        case .vocabulary: return .green
-        case .streak: return .orange
-        case .quiz: return .purple
-        case .level: return .mint
-        }
-    }
 }

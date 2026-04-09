@@ -8,6 +8,27 @@ struct UserStats: Codable, Equatable {
     var totalLearningDays: Int = 0
     var totalQuizzes: Int = 0
     var correctQuizzes: Int = 0
+    var pronunciationCount: Int = 0
+    var pronunciationCorrect: Int = 0
+    var sentenceArrangeCount: Int = 0
+    var sentenceArrangeCorrect: Int = 0
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        totalXP = try container.decodeIfPresent(Int.self, forKey: .totalXP) ?? 0
+        userLevel = try container.decodeIfPresent(Int.self, forKey: .userLevel) ?? 1
+        currentStreak = try container.decodeIfPresent(Int.self, forKey: .currentStreak) ?? 0
+        bestStreak = try container.decodeIfPresent(Int.self, forKey: .bestStreak) ?? 0
+        totalLearningDays = try container.decodeIfPresent(Int.self, forKey: .totalLearningDays) ?? 0
+        totalQuizzes = try container.decodeIfPresent(Int.self, forKey: .totalQuizzes) ?? 0
+        correctQuizzes = try container.decodeIfPresent(Int.self, forKey: .correctQuizzes) ?? 0
+        pronunciationCount = try container.decodeIfPresent(Int.self, forKey: .pronunciationCount) ?? 0
+        pronunciationCorrect = try container.decodeIfPresent(Int.self, forKey: .pronunciationCorrect) ?? 0
+        sentenceArrangeCount = try container.decodeIfPresent(Int.self, forKey: .sentenceArrangeCount) ?? 0
+        sentenceArrangeCorrect = try container.decodeIfPresent(Int.self, forKey: .sentenceArrangeCorrect) ?? 0
+    }
 
     var quizAccuracy: Double {
         totalQuizzes > 0 ? Double(correctQuizzes) / Double(totalQuizzes) * 100.0 : 0

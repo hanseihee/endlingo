@@ -30,9 +30,10 @@ struct ProfileView: View {
                         BadgesView()
                     } label: {
                         HStack(spacing: 12) {
-                            Image(systemName: "trophy.fill")
-                                .font(.title3)
-                                .foregroundStyle(.yellow)
+                            Image("doodle-trophy")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 28, height: 28)
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("배지")

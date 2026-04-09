@@ -85,8 +85,8 @@ final class AuthService {
         Self.lastLoginMethod = .email
         async let v: () = VocabularyService.shared.syncAfterLogin()
         async let g: () = GrammarService.shared.syncAfterLogin()
-        async let ga: () = GamificationService.shared.syncAfterLogin()
-        _ = await (v, g, ga)
+        _ = await (v, g)
+        await GamificationService.shared.syncAfterLogin()
     }
 
     func resetPassword(email: String) async throws {
@@ -180,8 +180,8 @@ final class AuthService {
         Self.lastLoginMethod = .apple
         async let v: () = VocabularyService.shared.syncAfterLogin()
         async let g: () = GrammarService.shared.syncAfterLogin()
-        async let ga: () = GamificationService.shared.syncAfterLogin()
-        _ = await (v, g, ga)
+        _ = await (v, g)
+        await GamificationService.shared.syncAfterLogin()
     }
 
     /// SHA256 해시 (Apple Sign In 요구사항)
@@ -224,8 +224,8 @@ final class AuthService {
         Self.lastLoginMethod = .google
         async let v: () = VocabularyService.shared.syncAfterLogin()
         async let g: () = GrammarService.shared.syncAfterLogin()
-        async let ga: () = GamificationService.shared.syncAfterLogin()
-        _ = await (v, g, ga)
+        _ = await (v, g)
+        await GamificationService.shared.syncAfterLogin()
     }
 
     /// Google Sign In URL 처리
@@ -254,8 +254,9 @@ final class AuthService {
             let session = try await client.auth.session(from: url)
             currentUser = session.user
             isLoggedIn = true
-            await VocabularyService.shared.syncAfterLogin()
-            await GrammarService.shared.syncAfterLogin()
+            async let v: () = VocabularyService.shared.syncAfterLogin()
+            async let g: () = GrammarService.shared.syncAfterLogin()
+            _ = await (v, g)
             await GamificationService.shared.syncAfterLogin()
         } catch {
             print("Deep link error: \(error)")
@@ -323,8 +324,9 @@ final class AuthService {
             let session = try await client.auth.session
             currentUser = session.user
             isLoggedIn = true
-            await VocabularyService.shared.syncAfterLogin()
-            await GrammarService.shared.syncAfterLogin()
+            async let v: () = VocabularyService.shared.syncAfterLogin()
+            async let g: () = GrammarService.shared.syncAfterLogin()
+            _ = await (v, g)
             await GamificationService.shared.syncAfterLogin()
         } catch {
             // No stored session

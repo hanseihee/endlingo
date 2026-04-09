@@ -123,6 +123,17 @@ final class GamificationService {
         stats.totalXP += xp
         stats.totalQuizzes += 1
         if isCorrect { stats.correctQuizzes += 1 }
+
+        switch quizType {
+        case "pronunciation":
+            stats.pronunciationCount += 1
+            if isCorrect { stats.pronunciationCorrect += 1 }
+        case "sentence_arrange":
+            stats.sentenceArrangeCount += 1
+            if isCorrect { stats.sentenceArrangeCorrect += 1 }
+        default: break
+        }
+
         stats.recalculateLevel()
         persistStats()
         checkBadges()
@@ -313,6 +324,7 @@ final class GamificationService {
         // 서버에서 전체 로드
         await fetchRemote()
         recalculateStats()
+        checkBadges()
     }
 
     func clearAfterLogout() {
@@ -375,6 +387,15 @@ final class GamificationService {
 
         stats.totalQuizzes = quizResults.count
         stats.correctQuizzes = quizResults.filter { $0.isCorrect }.count
+
+        let pronunciationResults = quizResults.filter { $0.quizType == "pronunciation" }
+        stats.pronunciationCount = pronunciationResults.count
+        stats.pronunciationCorrect = pronunciationResults.filter(\.isCorrect).count
+
+        let sentenceResults = quizResults.filter { $0.quizType == "sentence_arrange" }
+        stats.sentenceArrangeCount = sentenceResults.count
+        stats.sentenceArrangeCorrect = sentenceResults.filter(\.isCorrect).count
+
         stats.recalculateLevel()
 
         persistStats()
@@ -385,6 +406,7 @@ final class GamificationService {
     private func checkBadges() {
         let earned = Set(earnedBadges.map { $0.badgeType })
         let wordCount = VocabularyService.shared.words.count
+        let grammarCount = GrammarService.shared.grammars.count
         let days = stats.totalLearningDays
         let streak = stats.bestStreak
         let quizzes = stats.totalQuizzes
@@ -422,11 +444,29 @@ final class GamificationService {
             (.quizPerfect10, hasConsecutiveCorrect(10)),
             (.quizAccuracy80, accuracy >= 80 && quizzes >= 50),
             (.quizAccuracy90, accuracy >= 90 && quizzes >= 50),
-            // 레벨
+            // 문법
+            (.grammarFirst, grammarCount >= 1),
+            (.grammar10, grammarCount >= 10),
+            (.grammar30, grammarCount >= 30),
+            (.grammar50, grammarCount >= 50),
+            // 발음
+            (.pronunciationFirst, stats.pronunciationCount >= 1),
+            (.pronunciation10, stats.pronunciationCount >= 10),
+            (.pronunciation50, stats.pronunciationCount >= 50),
+            (.pronunciation100, stats.pronunciationCount >= 100),
+            // 문장 배열
+            (.sentenceFirst, stats.sentenceArrangeCount >= 1),
+            (.sentence10, stats.sentenceArrangeCount >= 10),
+            (.sentence50, stats.sentenceArrangeCount >= 50),
+            // 레벨 & XP
             (.level5, level >= 5),
             (.level10, level >= 10),
             (.level20, level >= 20),
             (.level50, level >= 50),
+            (.xp1000, stats.totalXP >= 1000),
+            (.xp5000, stats.totalXP >= 5000),
+            (.xp10000, stats.totalXP >= 10000),
+            (.xp50000, stats.totalXP >= 50000),
         ]
 
         for (badge, unlocked) in checks {

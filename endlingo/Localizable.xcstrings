@@ -3552,6 +3552,276 @@
           }
         }
       }
+    },
+    "첫 문법" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初めての文法"
+          }
+        }
+      }
+    },
+    "문법 수집가" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文法コレクター"
+          }
+        }
+      }
+    },
+    "문법 전문가" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文法エキスパート"
+          }
+        }
+      }
+    },
+    "문법 박사" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文法博士"
+          }
+        }
+      }
+    },
+    "문법을 처음 저장했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初めて文法を保存しました"
+          }
+        }
+      }
+    },
+    "문법 10개를 저장했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文法を10個保存しました"
+          }
+        }
+      }
+    },
+    "문법 30개를 저장했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文法を30個保存しました"
+          }
+        }
+      }
+    },
+    "문법 50개를 저장했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文法を50個保存しました"
+          }
+        }
+      }
+    },
+    "첫 발음" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初めての発音"
+          }
+        }
+      }
+    },
+    "발음 연습생" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "発音練習生"
+          }
+        }
+      }
+    },
+    "발음 달인" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "発音の達人"
+          }
+        }
+      }
+    },
+    "발음 마스터" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "発音マスター"
+          }
+        }
+      }
+    },
+    "첫 발음 퀴즈를 완료했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初めての発音クイズを完了しました"
+          }
+        }
+      }
+    },
+    "발음 퀴즈 10회를 완료했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "発音クイズ10回を完了しました"
+          }
+        }
+      }
+    },
+    "발음 퀴즈 50회를 완료했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "発音クイズ50回を完了しました"
+          }
+        }
+      }
+    },
+    "발음 퀴즈 100회를 완료했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "発音クイズ100回を完了しました"
+          }
+        }
+      }
+    },
+    "첫 문장 배열" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初めての文章並べ替え"
+          }
+        }
+      }
+    },
+    "문장 조립가" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文章組み立て屋"
+          }
+        }
+      }
+    },
+    "문장 건축가" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文章アーキテクト"
+          }
+        }
+      }
+    },
+    "첫 문장 배열을 완료했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初めての文章並べ替えを完了しました"
+          }
+        }
+      }
+    },
+    "문장 배열 10회를 완료했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文章並べ替え10回を完了しました"
+          }
+        }
+      }
+    },
+    "문장 배열 50회를 완료했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文章並べ替え50回を完了しました"
+          }
+        }
+      }
+    },
+    "총 1,000 XP를 획득했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合計1,000 XPを獲得しました"
+          }
+        }
+      }
+    },
+    "총 5,000 XP를 획득했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合計5,000 XPを獲得しました"
+          }
+        }
+      }
+    },
+    "총 10,000 XP를 획득했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合計10,000 XPを獲得しました"
+          }
+        }
+      }
+    },
+    "총 50,000 XP를 획득했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合計50,000 XPを獲得しました"
+          }
+        }
+      }
+    },
+    "아직 획득하지 못했습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ獲得していません"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

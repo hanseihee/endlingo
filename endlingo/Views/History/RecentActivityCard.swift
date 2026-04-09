@@ -32,9 +32,10 @@ struct RecentActivityCard: View {
                 HStack {
                     Spacer()
                     VStack(spacing: 8) {
-                        Image(systemName: "tray")
-                            .font(.title2)
-                            .foregroundStyle(.tertiary)
+                        Image("doodle-empty-box")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 36, height: 36)
                         Text("최근 7일간 활동이 없습니다")
                             .font(.caption)
                             .foregroundStyle(.tertiary)
