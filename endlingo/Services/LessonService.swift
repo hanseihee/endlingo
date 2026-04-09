@@ -25,6 +25,14 @@ final class LessonService {
         cachedLanguage = nil
     }
 
+    /// 문장 배열 퀴즈용: 여러 레슨에서 문장 풀을 가져옴
+    func fetchSentencePool(level: EnglishLevel, environment: LearningEnvironment) async -> [Scenario] {
+        let lang = currentLanguage
+        let query = "select=*&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&language=eq.\(lang)&order=date.desc&limit=10"
+        let lessons: [DailyLesson] = await SupabaseAPI.fetch("daily_lessons", query: query)
+        return lessons.flatMap { $0.scenarios }
+    }
+
     func fetchLesson(date: String, level: EnglishLevel, environment: LearningEnvironment) async throws -> DailyLesson {
         let today = SupabaseConfig.todayDateString
         let lang = currentLanguage

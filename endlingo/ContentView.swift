@@ -20,11 +20,15 @@ struct ContentView: View {
                 VocabularyView()
             }
 
-            Tab("기록", systemImage: "calendar", value: 2) {
+            Tab("퀴즈", systemImage: "questionmark.bubble.fill", value: 2) {
+                QuizTabView()
+            }
+
+            Tab("기록", systemImage: "calendar", value: 3) {
                 HistoryView()
             }
 
-            Tab("프로필", systemImage: "person.fill", value: 3) {
+            Tab("프로필", systemImage: "person.fill", value: 4) {
                 ProfileView()
             }
         }

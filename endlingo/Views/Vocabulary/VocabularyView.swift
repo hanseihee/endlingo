@@ -16,9 +16,6 @@ struct VocabularyView: View {
     @State private var grammarService = GrammarService.shared
     @State private var selectedTab: VocabularyTab = .words
     @State private var showAddSheet = false
-    @State private var showWordQuiz = false
-    @State private var showGrammarQuiz = false
-    @State private var showPronunciationQuiz = false
 
     var body: some View {
         NavigationStack {
@@ -43,15 +40,6 @@ struct VocabularyView: View {
 
                 BannerAdView()
                     .padding(.bottom, 4)
-            }
-            .sheet(isPresented: $showWordQuiz) {
-                QuizView()
-            }
-            .sheet(isPresented: $showGrammarQuiz) {
-                GrammarQuizView()
-            }
-            .sheet(isPresented: $showPronunciationQuiz) {
-                PronunciationQuizView()
             }
             .navigationTitle("단어장")
             .toolbar {
@@ -84,23 +72,6 @@ struct VocabularyView: View {
 
     private var wordList: some View {
         List {
-            // 퀴즈 버튼
-            Button {
-                showWordQuiz = true
-            } label: {
-                quizRow(icon: "sparkles", color: .orange,
-                        title: String(localized: "단어 퀴즈"), subtitle: String(localized: "영단어 실력을 테스트하세요"))
-            }
-            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 6, trailing: 16))
-
-            Button {
-                showPronunciationQuiz = true
-            } label: {
-                quizRow(icon: "waveform.and.mic", color: .teal,
-                        title: String(localized: "발음 퀴즈"), subtitle: String(localized: "단어를 소리 내어 읽어보세요"))
-            }
-            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 12, trailing: 16))
-
             ForEach(vocabulary.words) { entry in
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 6) {
@@ -137,26 +108,6 @@ struct VocabularyView: View {
 
     private var wordEmptyView: some View {
         VStack(spacing: 16) {
-            // 퀴즈 버튼
-            Button {
-                showWordQuiz = true
-            } label: {
-                quizCardRow(icon: "sparkles", color: .orange,
-                            title: String(localized: "단어 퀴즈"), subtitle: String(localized: "영단어 실력을 테스트하세요"))
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-
-            Button {
-                showPronunciationQuiz = true
-            } label: {
-                quizCardRow(icon: "waveform.and.mic", color: .teal,
-                            title: String(localized: "발음 퀴즈"), subtitle: String(localized: "단어를 소리 내어 읽어보세요"))
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 16)
-
             Spacer()
 
             Image(systemName: "character.book.closed.fill")
@@ -190,33 +141,6 @@ struct VocabularyView: View {
 
     private var grammarList: some View {
         List {
-            // 문법 퀴즈 버튼
-            Button {
-                showGrammarQuiz = true
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "text.book.closed.fill")
-                        .font(.title3)
-                        .foregroundStyle(.purple)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("문법 퀴즈")
-                            .font(.callout.weight(.semibold))
-                            .foregroundStyle(.primary)
-                        Text("문법 실력을 테스트하세요")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
-
             ForEach(grammarService.grammars) { entry in
                 VStack(alignment: .leading, spacing: 6) {
                     Text(entry.pattern)
@@ -253,40 +177,6 @@ struct VocabularyView: View {
 
     private var grammarEmptyView: some View {
         VStack(spacing: 16) {
-            // 문법 퀴즈 버튼
-            Button {
-                showGrammarQuiz = true
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "text.book.closed.fill")
-                        .font(.title3)
-                        .foregroundStyle(.purple)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("문법 퀴즈")
-                            .font(.callout.weight(.semibold))
-                            .foregroundStyle(.primary)
-                        Text("문법 실력을 테스트하세요")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(Color(.secondarySystemGroupedBackground))
-                )
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-
             Spacer()
 
             Image(systemName: "text.book.closed")
@@ -307,39 +197,6 @@ struct VocabularyView: View {
         .frame(maxWidth: .infinity)
     }
 
-    // MARK: - 퀴즈 행 헬퍼
-
-    private func quizRow(icon: String, color: Color, title: String, subtitle: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(color)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.callout.weight(.semibold))
-                    .foregroundStyle(.primary)
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-        }
-    }
-
-    private func quizCardRow(icon: String, color: Color, title: String, subtitle: String) -> some View {
-        quizRow(icon: icon, color: color, title: title, subtitle: subtitle)
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color(.secondarySystemGroupedBackground))
-            )
-    }
 }
 
 // MARK: - 단어 추가 시트
