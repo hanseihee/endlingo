@@ -274,6 +274,7 @@ async function generateLesson(
   language: string,
 ): Promise<Record<string, unknown> | null> {
   const prompt = buildPrompt(level, environment, date, language);
+  const cfg = PROMPT_CONFIG[language] || PROMPT_CONFIG["ko"];
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -284,10 +285,10 @@ async function generateLesson(
     body: JSON.stringify({
       model: "gpt-5.4-nano",
       max_completion_tokens: 2048,
-      temperature: 0.9,
+      temperature: 0.7,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: "You are a JSON-only response bot. Always respond with valid JSON." },
+        { role: "system", content: `You are a JSON-only response bot. Always respond with valid JSON. All non-English text (explanations, translations, titles, context) MUST be written in ${cfg.nativeLang}. Never mix other languages.` },
         { role: "user", content: prompt },
       ],
     }),
@@ -333,17 +334,37 @@ Deno.serve(async (req) => {
     let targetLevel: string | null = null;
     let targetDate: string | null = null;
     let targetLanguage: string = "ko";
+    let forceRegenerate = false;
     try {
       const body = await req.json();
       targetLevel = body.level || null;
       targetDate = body.date || null;
       targetLanguage = body.language || "ko";
+      forceRegenerate = body.forceRegenerate === true;
     } catch {
       // body 없으면 기본값
     }
 
     const dateToUse = targetDate || today;
     const levelsToGenerate = targetLevel ? [targetLevel] : LEVELS;
+
+    // 강제 재생성: 기존 데이터 삭제
+    if (forceRegenerate) {
+      let deleteQuery = supabase
+        .from("daily_lessons")
+        .delete()
+        .eq("date", dateToUse)
+        .eq("language", targetLanguage);
+      if (targetLevel) {
+        deleteQuery = deleteQuery.eq("level", targetLevel);
+      }
+      const { error: delErr } = await deleteQuery;
+      if (delErr) {
+        console.error(`Delete error: ${delErr.message}`);
+      } else {
+        console.log(`Deleted existing lessons for ${dateToUse}/${targetLanguage}${targetLevel ? `/${targetLevel}` : ""}`);
+      }
+    }
 
     // 이미 생성된 레슨 확인 (언어 포함)
     const { data: existing } = await supabase
