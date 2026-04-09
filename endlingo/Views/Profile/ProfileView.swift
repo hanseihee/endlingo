@@ -146,6 +146,12 @@ struct ProfileView: View {
                         Text(appVersion)
                             .foregroundStyle(.secondary)
                     }
+
+                    Link(destination: URL(string: "https://icons8.com")!) {
+                        Text("Icons by Icons8")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
                 }
 
             }

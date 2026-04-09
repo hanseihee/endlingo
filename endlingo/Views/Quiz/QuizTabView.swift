@@ -14,8 +14,7 @@ struct QuizTabView: View {
                 ScrollView {
                     VStack(spacing: 12) {
                         quizCard(
-                            icon: "sparkles",
-                            color: .orange,
+                            image: "quiz-word",
                             title: String(localized: "단어 퀴즈"),
                             subtitle: String(localized: "영단어 실력을 테스트하세요")
                         ) {
@@ -23,8 +22,7 @@ struct QuizTabView: View {
                         }
 
                         quizCard(
-                            icon: "waveform.and.mic",
-                            color: .teal,
+                            image: "quiz-pronunciation",
                             title: String(localized: "발음 퀴즈"),
                             subtitle: String(localized: "단어를 소리 내어 읽어보세요")
                         ) {
@@ -32,8 +30,7 @@ struct QuizTabView: View {
                         }
 
                         quizCard(
-                            icon: "text.book.closed.fill",
-                            color: .purple,
+                            image: "quiz-grammar",
                             title: String(localized: "문법 퀴즈"),
                             subtitle: String(localized: "문법 실력을 테스트하세요")
                         ) {
@@ -41,8 +38,7 @@ struct QuizTabView: View {
                         }
 
                         quizCard(
-                            icon: "text.line.first.and.arrowtriangle.forward",
-                            color: .indigo,
+                            image: "quiz-sentence",
                             title: String(localized: "문장 배열"),
                             subtitle: String(localized: "단어를 올바른 순서로 배열하세요")
                         ) {
@@ -68,12 +64,13 @@ struct QuizTabView: View {
         }
     }
 
-    private func quizCard(icon: String, color: Color, title: String, subtitle: String, action: @escaping () -> Void) -> some View {
+    private func quizCard(image: String, title: String, subtitle: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.title3)
-                    .foregroundStyle(color)
+                Image(image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 32, height: 32)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
