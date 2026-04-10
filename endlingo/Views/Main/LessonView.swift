@@ -124,6 +124,7 @@ struct LessonView: View {
                         .padding(.horizontal, 16)
                 }
             }
+            .readableContentWidth()
             .padding(.bottom, 32)
         }
         .scrollIndicators(.hidden)

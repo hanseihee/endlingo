@@ -41,6 +41,7 @@ struct VocabularyView: View {
                 BannerAdView()
                     .padding(.bottom, 4)
             }
+            .readableContentWidth()
             .navigationTitle("단어장")
             .toolbar {
                 if selectedTab == .words {

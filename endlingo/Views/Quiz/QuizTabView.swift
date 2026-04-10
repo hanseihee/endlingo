@@ -47,6 +47,7 @@ struct QuizTabView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
+                    .readableContentWidth()
                 }
 
                 BannerAdView()

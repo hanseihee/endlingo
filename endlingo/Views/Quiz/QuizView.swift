@@ -50,9 +50,10 @@ struct QuizView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            Image(systemName: "sparkles")
-                .font(.system(size: 56))
-                .foregroundStyle(.orange)
+            Image("quiz-word")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 80, height: 80)
 
             Text("단어 퀴즈")
                 .font(.title2.bold())

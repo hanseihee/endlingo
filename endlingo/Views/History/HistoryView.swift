@@ -24,6 +24,7 @@ struct HistoryView: View {
                         .padding(.horizontal, 16)
                 }
                 .padding(.vertical, 8)
+                .readableContentWidth()
             }
             .scrollIndicators(.hidden)
             .safeAreaInset(edge: .bottom) {

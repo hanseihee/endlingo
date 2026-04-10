@@ -32,6 +32,7 @@ struct EnvironmentSelectionView: View {
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
+            .readableContentWidth(600)
         }
         .scrollIndicators(.hidden)
     }
