@@ -138,21 +138,21 @@ private struct DayCellView: View {
     let isToday: Bool
 
     var body: some View {
-        Text("\(day)")
-            .font(.subheadline.weight(isToday ? .bold : .medium))
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
-            .foregroundStyle(foregroundColor)
-            .frame(maxWidth: .infinity)
-            .aspectRatio(1, contentMode: .fit)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(cellColor)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(isToday ? Color.accentColor : Color.clear, lineWidth: 2)
-            )
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(cellColor)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isToday ? Color.accentColor : Color.clear, lineWidth: 2)
+                )
+
+            Text("\(day)")
+                .font(.subheadline.weight(isToday ? .bold : .medium))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .foregroundStyle(foregroundColor)
+        }
+        .aspectRatio(1, contentMode: .fit)
     }
 
     private var foregroundColor: Color {

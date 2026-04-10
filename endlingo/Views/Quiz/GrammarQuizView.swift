@@ -36,9 +36,10 @@ struct GrammarQuizView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            Image(systemName: "text.book.closed.fill")
-                .font(.system(size: 56))
-                .foregroundStyle(.purple)
+            Image("quiz-grammar")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 80, height: 80)
 
             Text("문법 퀴즈")
                 .font(.title2.bold())

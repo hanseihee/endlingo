@@ -58,9 +58,10 @@ struct PronunciationQuizView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            Image(systemName: "waveform.and.mic")
-                .font(.system(size: 56))
-                .foregroundStyle(.teal)
+            Image("quiz-pronunciation")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 80, height: 80)
 
             Text("발음 퀴즈")
                 .font(.title2.bold())

@@ -14,8 +14,11 @@ final class LessonService {
         try await fetchLesson(date: SupabaseConfig.todayDateString, level: level, environment: environment)
     }
 
+    /// 현재 UI 로케일 기반 번역 언어 코드 (ko/ja/...).
+    /// 지원하지 않는 언어는 "ko"로 폴백.
     private var currentLanguage: String {
-        Locale.current.language.languageCode?.identifier == "ja" ? "ja" : "ko"
+        let code = Locale.current.language.languageCode?.identifier ?? "ko"
+        return ["ko", "ja"].contains(code) ? code : "ko"
     }
 
     /// 캐시 강제 초기화 (pull-to-refresh, 언어 변경 시)
@@ -27,10 +30,10 @@ final class LessonService {
 
     /// 문장 배열 퀴즈용: 여러 레슨에서 문장 풀을 가져옴
     func fetchSentencePool(level: EnglishLevel, environment: LearningEnvironment) async -> [Scenario] {
+        let query = "select=*&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&order=date.desc&limit=10"
+        let rows: [DailyLessonRow] = await SupabaseAPI.fetch("daily_lessons_v2", query: query)
         let lang = currentLanguage
-        let query = "select=*&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&language=eq.\(lang)&order=date.desc&limit=10"
-        let lessons: [DailyLesson] = await SupabaseAPI.fetch("daily_lessons", query: query)
-        return lessons.flatMap { $0.scenarios }
+        return rows.flatMap { $0.resolved(language: lang).scenarios }
     }
 
     func fetchLesson(date: String, level: EnglishLevel, environment: LearningEnvironment) async throws -> DailyLesson {
@@ -50,14 +53,15 @@ final class LessonService {
             return cached
         }
 
-        // 해당 언어로 조회 (fallback 없음)
-        let query = "select=*&date=eq.\(date)&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&language=eq.\(lang)&limit=1"
-        let lessons: [DailyLesson] = await SupabaseAPI.fetch("daily_lessons", query: query)
+        // v2 테이블 조회 — 언어 필터 없음. 모든 번역이 한 row의 JSONB에 들어 있음.
+        let query = "select=*&date=eq.\(date)&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&limit=1"
+        let rows: [DailyLessonRow] = await SupabaseAPI.fetch("daily_lessons_v2", query: query)
 
-        guard let lesson = lessons.first else {
+        guard let row = rows.first else {
             throw LessonError.notFound
         }
 
+        let lesson = row.resolved(language: lang)
         cache[cacheKey] = lesson
         return lesson
     }

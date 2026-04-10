@@ -22,8 +22,10 @@ private struct BannerAdRepresentable: UIViewRepresentable {
         let container = UIView()
         container.backgroundColor = .clear
 
+        // iPad에서 광고가 과도하게 넓어지지 않도록 상한 적용
         let screenWidth = UIScreen.main.bounds.width
-        let adSize = inlineAdaptiveBanner(width: screenWidth, maxHeight: 60)
+        let adWidth = min(screenWidth, 468)
+        let adSize = inlineAdaptiveBanner(width: adWidth, maxHeight: 60)
         let banner = BannerView(adSize: adSize)
 
         #if DEBUG

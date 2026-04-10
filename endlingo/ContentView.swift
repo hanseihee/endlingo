@@ -32,6 +32,7 @@ struct ContentView: View {
                 ProfileView()
             }
         }
+        .tabViewStyle(.sidebarAdaptable)
         .tint(Color.accentColor)
     }
 }
