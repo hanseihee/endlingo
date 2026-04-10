@@ -11,6 +11,7 @@ struct endlingoApp: App {
     @AppStorage("notificationMinute") private var notificationMinute: Int = 0
 
     @State private var auth = AuthService.shared
+    @State private var updateService = AppUpdateService.shared
 
     init() {
         FirebaseApp.configure()
@@ -26,7 +27,12 @@ struct endlingoApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if auth.isLoading {
+                if updateService.shouldForceUpdate {
+                    ForceUpdateView(
+                        message: updateService.updateMessage,
+                        appStoreURL: updateService.appStoreURL
+                    )
+                } else if auth.isLoading {
                     ZStack {
                         Color(.systemBackground).ignoresSafeArea()
                         Image("MainCharacter")
@@ -39,6 +45,9 @@ struct endlingoApp: App {
                 } else {
                     OnboardingContainerView(hasCompletedOnboarding: $hasCompletedOnboarding)
                 }
+            }
+            .task {
+                await updateService.checkForUpdate()
             }
             .onOpenURL { url in
                 // 위젯 딥링크는 Auth 핸들러로 보내지 않음
