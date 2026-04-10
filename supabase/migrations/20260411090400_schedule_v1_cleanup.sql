@@ -75,6 +75,11 @@ BEGIN
 END;
 $func$;
 
+-- 보안: PUBLIC/anon/authenticated 에서 EXECUTE 회수. service_role 만 호출 가능.
+-- (이 함수는 매일 cron 으로만 실행되며, 외부 호출 경로는 제거)
+REVOKE EXECUTE ON FUNCTION public.cleanup_v1_dualwrite() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.cleanup_v1_dualwrite() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.cleanup_v1_dualwrite() FROM authenticated;
 GRANT EXECUTE ON FUNCTION public.cleanup_v1_dualwrite() TO service_role;
 
 -- 기존 cleanup job 제거 (idempotent)

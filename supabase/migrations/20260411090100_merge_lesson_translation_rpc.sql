@@ -17,4 +17,10 @@ AS $$
     WHERE id = p_id;
 $$;
 
+-- 보안: 기본적으로 PUBLIC/anon/authenticated 에 EXECUTE 권한이 부여되므로 명시적으로 제거
+-- 그렇지 않으면 PostgREST 의 /rpc/merge_lesson_translation 엔드포인트로 익명 사용자가
+-- 임의의 row 를 수정할 수 있음 (CRITICAL).
+REVOKE EXECUTE ON FUNCTION public.merge_lesson_translation(uuid, text, jsonb) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.merge_lesson_translation(uuid, text, jsonb) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.merge_lesson_translation(uuid, text, jsonb) FROM authenticated;
 GRANT EXECUTE ON FUNCTION public.merge_lesson_translation(uuid, text, jsonb) TO service_role;

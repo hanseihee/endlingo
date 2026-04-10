@@ -28,12 +28,15 @@ final class LessonService {
         cachedLanguage = nil
     }
 
-    /// 문장 배열 퀴즈용: 여러 레슨에서 문장 풀을 가져옴
+    /// 문장 배열 퀴즈용: 여러 레슨에서 문장 풀을 가져옴.
+    /// 번역이 아직 생성되지 않은 row 는 제외 — 빈 문자열 답안 표시 방지.
     func fetchSentencePool(level: EnglishLevel, environment: LearningEnvironment) async -> [Scenario] {
         let query = "select=*&level=eq.\(level.rawValue)&environment=eq.\(environment.rawValue)&order=date.desc&limit=10"
         let rows: [DailyLessonRow] = await SupabaseAPI.fetch("daily_lessons_v2", query: query)
         let lang = currentLanguage
-        return rows.flatMap { $0.resolved(language: lang).scenarios }
+        return rows
+            .filter { !$0.translations.isEmpty }
+            .flatMap { $0.resolved(language: lang).scenarios }
     }
 
     func fetchLesson(date: String, level: EnglishLevel, environment: LearningEnvironment) async throws -> DailyLesson {
@@ -58,6 +61,12 @@ final class LessonService {
         let rows: [DailyLessonRow] = await SupabaseAPI.fetch("daily_lessons_v2", query: query)
 
         guard let row = rows.first else {
+            throw LessonError.notFound
+        }
+
+        // 번역이 아직 생성되지 않은 row (영어 cron 직후 ~5분 윈도우) 는 "준비 중" 으로 처리.
+        // 그렇지 않으면 context/sentenceKo/grammar.explanation 이 빈 문자열로 렌더링됨.
+        guard !row.translations.isEmpty else {
             throw LessonError.notFound
         }
 
