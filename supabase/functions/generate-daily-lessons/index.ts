@@ -302,7 +302,7 @@ async function generateLesson(
       "Authorization": `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "gpt-5.4-nano",
+      model: "gpt-5.4-mini",
       max_completion_tokens: 2048,
       temperature: 0.7,
       response_format: { type: "json_object" },

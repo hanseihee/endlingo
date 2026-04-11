@@ -132,7 +132,7 @@ async function translateLesson(
       "Authorization": `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "gpt-5-mini",
+      model: "gpt-5.4-mini",
       max_completion_tokens: 8192,
       reasoning_effort: "low",
       response_format: { type: "json_object" },
