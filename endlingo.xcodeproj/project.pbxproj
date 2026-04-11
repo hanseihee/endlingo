@@ -307,10 +307,9 @@
 				};
 			};
 			buildConfigurationList = B558E0B42F623EEE00A126B5 /* Build configuration list for PBXProject "endlingo" */;
-			developmentRegion = en;
+			developmentRegion = ko;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
 				ko,
 				ja,
 				Base,
