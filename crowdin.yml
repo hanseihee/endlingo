@@ -6,4 +6,4 @@ preserve_hierarchy: 1
 files:
   - source: /endlingo/Localizable.xcstrings
     translation: /endlingo/Localizable.xcstrings
-    type: xcstrings
+    multilingual: 1
