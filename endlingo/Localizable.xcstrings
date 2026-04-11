@@ -744,7 +744,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Thán"
+            "value": "interj."
           }
         }
       }
@@ -1148,7 +1148,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tiếp"
+            "value": "Tiếp theo"
           }
         }
       }
@@ -1618,7 +1618,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Đại"
+            "value": "pron."
           }
         }
       }
@@ -1650,7 +1650,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Động"
+            "value": "v."
           }
         }
       }
@@ -2107,7 +2107,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Danh"
+            "value": "n."
           }
         }
       }
@@ -2707,7 +2707,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Phó"
+            "value": "adv."
           }
         }
       }
@@ -3047,7 +3047,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bạn đã làm tốt!"
+            "value": "Làm tốt lắm!"
           }
         }
       }
@@ -3473,7 +3473,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Học tiếng Anh - Học câu tiếng Anh mỗi ngày"
+            "value": "Học tiếng Anh - Câu tiếng Anh mỗi ngày"
           }
         }
       }
@@ -4229,7 +4229,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trước"
+            "value": "Trước đó"
           }
         }
       }
@@ -4357,7 +4357,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Giới"
+            "value": "prep."
           }
         }
       }
@@ -4573,7 +4573,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Liên"
+            "value": "conj."
           }
         }
       }
@@ -4703,7 +4703,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Thử tốt lắm!"
+            "value": "Cố gắng tốt lắm!"
           }
         }
       }
@@ -5851,7 +5851,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tính"
+            "value": "adj."
           }
         }
       }
