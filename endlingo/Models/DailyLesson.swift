@@ -36,7 +36,12 @@ struct GrammarPoint: Identifiable {
 
 // MARK: - DB-shape types (daily_lessons_v2 row decoder)
 
-/// daily_lessons_v2 테이블 row. 영어 콘텐츠 + 다국어 번역 맵.
+/// daily_lessons_v2 테이블 row. 영어 콘텐츠 + 현재 언어 번역.
+///
+/// 쿼리에서 PostgREST JSONB path select 로 필요한 언어만 서버에서 추출.
+///   translation: 현재 UI 로케일 번역 (vi 사용자면 vi)
+///   fallback:    ko 번역 (번역이 아직 생성되지 않은 경우 fallback)
+/// 두 필드 모두 optional — 응답 크기 최소화를 위해 언어 객체만 내려옴.
 struct DailyLessonRow: Codable, Identifiable {
     let id: UUID
     let date: String
@@ -44,11 +49,17 @@ struct DailyLessonRow: Codable, Identifiable {
     let environment: String
     let themeEn: String
     let scenarios: [EnglishScenarioRow]
-    let translations: [String: LessonTranslation]
+    let translation: LessonTranslation?
+    let fallback: LessonTranslation?
 
     enum CodingKeys: String, CodingKey {
-        case id, date, level, environment, scenarios, translations
+        case id, date, level, environment, scenarios, translation, fallback
         case themeEn = "theme_en"
+    }
+
+    /// 번역이 하나라도 있는지 (서버 사이드 필터링용 가드).
+    var hasAnyTranslation: Bool {
+        translation != nil || fallback != nil
     }
 }
 
@@ -91,19 +102,17 @@ struct ScenarioTranslation: Codable {
 // MARK: - Resolver
 
 extension DailyLessonRow {
-    /// 현재 로케일에 맞춰 DailyLesson으로 해석.
-    /// 우선순위: 요청 언어 → ko → ja → 영어 only fallback.
-    func resolved(language: String) -> DailyLesson {
-        let translation = translations[language]
-            ?? translations["ko"]
-            ?? translations["ja"]
+    /// DailyLessonRow 를 DailyLesson 으로 해석.
+    /// 언어 선택은 이미 서버 쿼리(translation:translations->\(lang))에서 끝났고,
+    /// 여기서는 translation → fallback(ko) → English-only 순으로 사용.
+    func resolved() -> DailyLesson {
+        let tr = translation ?? fallback
+        let hasNative = translation != nil
 
-        let hasNative = translations[language] != nil
-
-        let resolvedThemeNative = translation?.theme ?? themeEn
+        let resolvedThemeNative = tr?.theme ?? themeEn
 
         let resolvedScenarios = scenarios.map { eng -> Scenario in
-            let scenarioTr = translation?.scenarios.first { $0.order == eng.order }
+            let scenarioTr = tr?.scenarios.first { $0.order == eng.order }
 
             let grammarPoints = eng.grammar.enumerated().map { idx, g -> GrammarPoint in
                 let explanation = scenarioTr?.grammarExplanations.indices.contains(idx) == true
