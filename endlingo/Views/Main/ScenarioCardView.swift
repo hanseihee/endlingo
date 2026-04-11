@@ -223,13 +223,6 @@ private struct WordDetailSheet: View {
                 SpeakButton(text: word, id: "word-\(word)", font: .title3)
             }
 
-            // 문장 컨텍스트
-            Text(highlightedSentence)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
-
             // 뜻 목록
             if isLoading {
                 ProgressView()
@@ -283,14 +276,6 @@ private struct WordDetailSheet: View {
         }
     }
 
-    private var highlightedSentence: AttributedString {
-        var result = AttributedString(sentence)
-        if let range = result.range(of: word, options: .caseInsensitive) {
-            result[range].foregroundColor = .primary
-            result[range].font = .caption.bold()
-        }
-        return result
-    }
 }
 
 // MARK: - 문법 포인트
