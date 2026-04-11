@@ -142,6 +142,7 @@ struct SentenceArrangeQuizView: View {
                             RoundedRectangle(cornerRadius: 10)
                                 .strokeBorder(Color(.separator), style: StrokeStyle(lineWidth: 1, dash: [5]))
                         )
+                        .accessibilityHidden(true)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
