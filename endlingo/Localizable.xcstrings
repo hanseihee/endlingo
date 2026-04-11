@@ -98,7 +98,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$lld/%2$lld個 獲得"
+            "value": "%1$lld/%2$lld個獲得"
           }
         },
         "ko": {
@@ -884,7 +884,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "アカウントをお持ちでないですか？ 新規登録"
+            "value": "アカウントをお持ちでないですか？新規登録"
           }
         },
         "vi": {
@@ -3205,6 +3205,12 @@
             "state": "translated",
             "value": "Cập nhật từ App Store"
           }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Storeで更新"
+          }
         }
       }
     },
@@ -3280,6 +3286,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cần cập nhật"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新が必要です"
           }
         }
       }
@@ -4159,7 +4171,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "アカウントをお持ちですか？ ログイン"
+            "value": "アカウントをお持ちですか？ログイン"
           }
         },
         "vi": {
