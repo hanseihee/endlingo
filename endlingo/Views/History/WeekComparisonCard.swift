@@ -21,7 +21,7 @@ struct WeekComparisonCard: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.accentColor)
                     .frame(maxWidth: .infinity)
-                Text("")
+                Color.clear
                     .frame(width: 80)
                 Text("지난 주")
                     .font(.caption.weight(.semibold))

@@ -134,7 +134,7 @@ struct SentenceArrangeQuizView: View {
 
                 // 빈 슬롯 표시
                 ForEach(0..<viewModel.shuffledWords.count, id: \.self) { _ in
-                    Text("     ")
+                    Text(verbatim: "     ")
                         .font(.body)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
