@@ -21,6 +21,14 @@ const LEVEL_GUIDE: Record<string, Record<string, string>> = {
     C1: `上級レベル。シナリオごとに4文。倒置、強調構文、慣用表現使用。ビジネス/学術的ニュアンス含む。`,
     C2: `最上級レベル。シナリオごとに4〜5文。ネイティブレベルの慣用句、文化的背景、微妙なニュアンスの違いの説明含む。`,
   },
+  vi: {
+    A1: `Trình độ cơ bản. 2 câu mỗi tình huống. Từ vựng cơ bản trong 1000 từ. Chỉ dùng thì hiện tại, động từ to be, câu hỏi đơn giản. Câu rất ngắn và dễ.`,
+    A2: `Trình độ sơ cấp. 2-3 câu mỗi tình huống. Từ vựng hàng ngày. Dùng thì quá khứ, can/will, liên từ đơn giản (and, but).`,
+    B1: `Trình độ trung cấp. 3 câu mỗi tình huống. Dùng thì hiện tại hoàn thành, mệnh đề if, đại từ quan hệ (who, which, that). Tiếng Anh hàng ngày tự nhiên.`,
+    B2: `Trình độ trung cao. 3-4 câu mỗi tình huống. Dùng câu điều kiện, mệnh đề phân từ, câu phức. Đa dạng cách diễn đạt và từ vựng.`,
+    C1: `Trình độ cao cấp. 4 câu mỗi tình huống. Dùng đảo ngữ, cấu trúc nhấn mạnh, thành ngữ. Bao gồm sắc thái kinh doanh/học thuật.`,
+    C2: `Trình độ bản ngữ. 4-5 câu mỗi tình huống. Thành ngữ cấp bản ngữ, bối cảnh văn hóa, giải thích sắc thái tinh tế.`,
+  },
 };
 
 const ENV_TOPICS: Record<string, string[]> = {
@@ -208,6 +216,17 @@ const PROMPT_CONFIG: Record<string, { role: string; nativeLang: string; translat
    - 慣用的な日本語表現を積極的に使ってください
    - 翻訳調の表現を避けてください`,
     themeFormat: `"今日の○○英語"`,
+  },
+  vi: {
+    role: "Bạn là chuyên gia giáo dục tiếng Anh dành cho người Việt Nam.",
+    nativeLang: "tiếng Việt",
+    translationRules: `6. Quy tắc dịch sentence_ko (dịch sang tiếng Việt):
+   - Không dịch theo nghĩa đen, hãy dịch thoát để có câu tiếng Việt tự nhiên
+   - Dùng trật tự từ và ngữ pháp tiếng Việt một cách tự nhiên
+   - Dùng đại từ lịch sự nhất quán (bạn/anh/chị tùy ngữ cảnh)
+   - Tích cực sử dụng các thành ngữ và cách diễn đạt tiếng Việt
+   - Tránh lối nói giống như bản dịch máy`,
+    themeFormat: `"Tiếng Anh ○○ hôm nay"`,
   },
 };
 

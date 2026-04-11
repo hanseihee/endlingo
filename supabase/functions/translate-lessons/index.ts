@@ -59,6 +59,14 @@ const LANGUAGE_RULES: Record<
       "- Use 丁寧語 (です・ます調) consistently.\n- Prefer idiomatic Japanese over literal translation.\n- Use natural Japanese particles and word order.\n- Avoid translation-ese (翻訳調).",
     themeFormat: '"今日の○○英語"',
   },
+  vi: {
+    nativeName: "Vietnamese",
+    systemInstruction:
+      "You are a professional Vietnamese translator specializing in natural, idiomatic Vietnamese. Output JSON only, entirely in Vietnamese (except preserved grammar patterns which stay in English).",
+    toneRule:
+      "- Use polite pronouns (bạn/anh/chị) consistently depending on context.\n- Prefer idiomatic Vietnamese over literal translation.\n- Use natural Vietnamese word order and particles.\n- Avoid machine-translation style phrasing.",
+    themeFormat: '"Tiếng Anh ○○ hôm nay"',
+  },
 };
 
 function buildTranslationPrompt(
