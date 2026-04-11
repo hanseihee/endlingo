@@ -14,11 +14,11 @@ final class LessonService {
         try await fetchLesson(date: SupabaseConfig.todayDateString, level: level, environment: environment)
     }
 
-    /// 현재 UI 로케일 기반 번역 언어 코드 (ko/ja/...).
+    /// 현재 UI 로케일 기반 번역 언어 코드 (ko/ja/vi).
     /// 지원하지 않는 언어는 "ko"로 폴백.
     private var currentLanguage: String {
         let code = Locale.current.language.languageCode?.identifier ?? "ko"
-        return ["ko", "ja"].contains(code) ? code : "ko"
+        return ["ko", "ja", "vi"].contains(code) ? code : "ko"
     }
 
     /// 캐시 강제 초기화 (pull-to-refresh, 언어 변경 시)

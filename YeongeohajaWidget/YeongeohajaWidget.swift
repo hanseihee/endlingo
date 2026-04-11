@@ -68,7 +68,11 @@ struct WidgetContentView: View {
 
     private static var appName: String {
         let lang = Locale.current.language.languageCode?.identifier ?? "ko"
-        return lang == "ja" ? "英語しよ" : "영어하자"
+        switch lang {
+        case "ja": return "英語しよ"
+        case "vi": return "Học tiếng Anh"
+        default: return "영어하자"
+        }
     }
 
     var body: some View {
@@ -136,11 +140,19 @@ struct YeongeohajaWidget: Widget {
         }
         .configurationDisplayName({
             let lang = Locale.current.language.languageCode?.identifier ?? "ko"
-            return lang == "ja" ? "英語しよ" : "영어하자"
+            switch lang {
+            case "ja": return "英語しよ"
+            case "vi": return "Học tiếng Anh"
+            default: return "영어하자"
+            }
         }())
         .description({
             let lang = Locale.current.language.languageCode?.identifier ?? "ko"
-            return lang == "ja" ? "毎日新しい英文をチェックしましょう" : "매일 새로운 영어 문장을 확인하세요"
+            switch lang {
+            case "ja": return "毎日新しい英文をチェックしましょう"
+            case "vi": return "Học câu tiếng Anh mới mỗi ngày"
+            default: return "매일 새로운 영어 문장을 확인하세요"
+            }
         }())
         .supportedFamilies([.systemSmall, .systemMedium])
     }

@@ -9,6 +9,7 @@ struct AppConfig: Codable {
     let latestVersion: String
     let updateMessageKo: String
     let updateMessageJa: String
+    let updateMessageVi: String?
     let appStoreURL: String
 
     enum CodingKeys: String, CodingKey {
@@ -17,6 +18,7 @@ struct AppConfig: Codable {
         case latestVersion = "latest_version"
         case updateMessageKo = "update_message_ko"
         case updateMessageJa = "update_message_ja"
+        case updateMessageVi = "update_message_vi"
         case appStoreURL = "app_store_url"
     }
 }
@@ -54,8 +56,15 @@ final class AppUpdateService {
         guard let config = configs.first else { return }
 
         if Self.compareVersions(currentVersion, config.minSupportedVersion) < 0 {
-            let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
-            updateMessage = isJapanese ? config.updateMessageJa : config.updateMessageKo
+            let code = Locale.current.language.languageCode?.identifier ?? "ko"
+            switch code {
+            case "ja":
+                updateMessage = config.updateMessageJa
+            case "vi":
+                updateMessage = config.updateMessageVi ?? config.updateMessageKo
+            default:
+                updateMessage = config.updateMessageKo
+            }
             appStoreURL = URL(string: config.appStoreURL)
             shouldForceUpdate = true
         }

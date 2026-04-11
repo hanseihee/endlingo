@@ -312,6 +312,7 @@
 			knownRegions = (
 				ko,
 				ja,
+				vi,
 				Base,
 			);
 			mainGroup = B558E0B02F623EEE00A126B5;

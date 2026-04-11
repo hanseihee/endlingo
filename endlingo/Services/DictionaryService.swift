@@ -40,7 +40,8 @@ final class DictionaryService {
     private init() {}
 
     private var targetLanguage: String {
-        Locale.current.language.languageCode?.identifier == "ja" ? "ja" : "ko"
+        let code = Locale.current.language.languageCode?.identifier ?? "ko"
+        return ["ja", "vi"].contains(code) ? code : "ko"
     }
 
     /// Google Translate API로 영단어의 뜻 목록을 조회 (기기 언어에 따라 한국어/일본어)

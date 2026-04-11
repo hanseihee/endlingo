@@ -14,7 +14,12 @@ final class BuiltInWordBank {
 
     private func loadWords() {
         let lang = Locale.current.language.languageCode?.identifier ?? "ko"
-        let filename = lang == "ja" ? "builtin_words_ja" : "builtin_words"
+        let filename: String
+        switch lang {
+        case "ja": filename = "builtin_words_ja"
+        case "vi": filename = "builtin_words_vi"
+        default: filename = "builtin_words"
+        }
 
         guard let url = Bundle.main.url(forResource: filename, withExtension: "json"),
               let data = try? Data(contentsOf: url),
