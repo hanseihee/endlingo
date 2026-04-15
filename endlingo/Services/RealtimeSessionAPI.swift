@@ -55,9 +55,12 @@ enum RealtimeSessionAPI {
     /// Edge Function `realtime-session`을 호출해 ephemeral key를 받습니다.
     /// 로그인 필수. 일일 한도 초과 시 `dailyLimitReached` throw.
     static func fetchEphemeralKey(voice: String) async throws -> EphemeralKeyResponse {
-        guard let token = await AuthService.shared.accessToken else {
+        let auth = AuthService.shared
+        guard let token = await auth.accessToken else {
+            print("[RealtimeSessionAPI] accessToken is nil — isLoggedIn=\(auth.isLoggedIn), userId=\(auth.userId?.uuidString ?? "nil"), email=\(auth.userEmail ?? "nil")")
             throw Error.notLoggedIn
         }
+        print("[RealtimeSessionAPI] token acquired (len=\(token.count)), calling edge function")
 
         guard let url = URL(string: "\(SupabaseConfig.functionsBaseURL)/realtime-session") else {
             throw Error.badURL
@@ -75,6 +78,8 @@ enum RealtimeSessionAPI {
         guard let http = response as? HTTPURLResponse else {
             throw Error.malformedResponse
         }
+        let bodyPreview = String(data: data, encoding: .utf8)?.prefix(200) ?? ""
+        print("[RealtimeSessionAPI] http \(http.statusCode): \(bodyPreview)")
 
         switch http.statusCode {
         case 200..<300:
