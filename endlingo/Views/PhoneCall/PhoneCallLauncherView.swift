@@ -8,6 +8,7 @@ struct PhoneCallLauncherView: View {
     @AppStorage("selectedLevel") private var selectedLevelRaw: String = EnglishLevel.a2.rawValue
 
     private let controller = PhoneCallController.shared
+    @State private var auth = AuthService.shared
 
     private var level: EnglishLevel {
         EnglishLevel(rawValue: selectedLevelRaw) ?? .a2
@@ -16,22 +17,30 @@ struct PhoneCallLauncherView: View {
     var body: some View {
         NavigationStack {
             Group {
-                switch controller.phase {
-                case .idle, .ringing:
-                    scenarioList
-                case .connecting, .active:
-                    InCallView()
-                case .ended:
-                    CallEndedView(onDismiss: {
-                        controller.resetToIdle()
-                        dismiss()
-                    })
+                if !auth.isLoggedIn {
+                    loginRequiredView
+                } else {
+                    switch controller.phase {
+                    case .idle, .ringing:
+                        scenarioList
+                    case .connecting, .active:
+                        InCallView()
+                    case .ended:
+                        CallEndedView(onDismiss: {
+                            controller.resetToIdle()
+                            dismiss()
+                        })
+                    }
                 }
             }
             .navigationTitle("AI 전화영어")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                if case .idle = controller.phase {
+                if !auth.isLoggedIn {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("닫기") { dismiss() }
+                    }
+                } else if case .idle = controller.phase {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("닫기") { dismiss() }
                     }
@@ -46,6 +55,42 @@ struct PhoneCallLauncherView: View {
                 controller.resetToIdle()
             }
         }
+    }
+
+    // MARK: - Login Required
+
+    private var loginRequiredView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "person.crop.circle.badge.exclamationmark")
+                .font(.system(size: 56))
+                .foregroundStyle(.secondary)
+                .padding(.top, 40)
+
+            Text("로그인이 필요해요")
+                .font(.title3.bold())
+
+            Text("AI 전화영어는 로그인한 사용자만 이용할 수 있어요. 사용자별 일일 이용 횟수를 관리하기 위함입니다.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 8)
+
+            Button {
+                dismiss()
+            } label: {
+                Text("프로필에서 로그인하기")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.accentColor)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            .padding(.top, 8)
+
+            Spacer()
+        }
+        .padding(.horizontal, 32)
     }
 
     private var isInCall: Bool {

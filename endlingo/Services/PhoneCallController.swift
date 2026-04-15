@@ -56,7 +56,7 @@ final class PhoneCallController: NSObject {
 
     @ObservationIgnored private let callController = CXCallController()
     @ObservationIgnored private var currentCallUUID: UUID?
-    @ObservationIgnored private var ephemeralKeyTask: Task<String, Error>?
+    @ObservationIgnored private var ephemeralKeyTask: Task<RealtimeSessionAPI.EphemeralKeyResponse, Error>?
     private var nativeLanguageCode: String {
         switch Locale.current.language.languageCode?.identifier {
         case "ja": return "Japanese"
@@ -192,13 +192,13 @@ extension PhoneCallController: CXProviderDelegate {
                     self.phase = .ended(reason: "session key task missing")
                     return
                 }
-                let ephemeralKey = try await task.value
+                let keyResponse = try await task.value
 
                 await RealtimeVoiceService.shared.connect(
                     scenario: scenario,
                     level: self.currentLevel,
                     nativeLanguage: self.nativeLanguageCode,
-                    ephemeralKey: ephemeralKey
+                    ephemeralKey: keyResponse.ephemeralKey
                 )
 
                 // 연결 성공/실패 확인

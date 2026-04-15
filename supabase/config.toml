@@ -393,3 +393,9 @@ entrypoint = "./functions/generate-daily-lessons/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/generate-daily-lessons/*.html" ]
+
+[functions.realtime-session]
+enabled = true
+# JWT 검증 필수 — 함수 내부에서 user.id를 추출해 사용자별 일일 quota 적용
+verify_jwt = true
+entrypoint = "./functions/realtime-session/index.ts"

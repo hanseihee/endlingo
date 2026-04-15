@@ -4,28 +4,48 @@ import Foundation
 ///
 /// 실제 OpenAI API key는 Edge Function 환경변수(`OPENAI_API_KEY`)에만 저장되고,
 /// iOS 앱은 단기 만료되는 ephemeral secret만 사용합니다.
+///
+/// 인증: 로그인한 사용자의 JWT가 필요합니다 (`AuthService.accessToken`).
+/// 비로그인 시 `Error.notLoggedIn`이 throw 되어 호출부에서 로그인 안내 UI로 분기합니다.
 enum RealtimeSessionAPI {
 
     struct EphemeralKeyResponse: Decodable {
         let ephemeralKey: String
         let expiresAt: Int?
         let model: String?
+        let remainingToday: Int?
 
         enum CodingKeys: String, CodingKey {
             case ephemeralKey = "ephemeral_key"
             case expiresAt = "expires_at"
             case model
+            case remainingToday = "remaining_today"
         }
+    }
+
+    struct DailyLimitInfo {
+        let limit: Int
+        let used: Int
     }
 
     enum Error: Swift.Error, LocalizedError {
         case badURL
+        case notLoggedIn
+        case dailyLimitReached(DailyLimitInfo?)
+        case serverUnavailable
         case httpStatus(Int, String?)
         case malformedResponse
 
         var errorDescription: String? {
             switch self {
             case .badURL: return "bad URL"
+            case .notLoggedIn: return String(localized: "AI 전화영어는 로그인 후 이용할 수 있어요")
+            case .dailyLimitReached(let info):
+                if let info {
+                    return String(localized: "오늘 사용 가능한 통화 횟수를 모두 사용했어요 (\(info.used)/\(info.limit))")
+                }
+                return String(localized: "오늘 사용 가능한 통화 횟수를 모두 사용했어요")
+            case .serverUnavailable: return String(localized: "일시적으로 서버에 연결할 수 없어요")
             case .httpStatus(let code, let body): return "HTTP \(code): \(body ?? "no body")"
             case .malformedResponse: return "malformed response"
             }
@@ -33,14 +53,19 @@ enum RealtimeSessionAPI {
     }
 
     /// Edge Function `realtime-session`을 호출해 ephemeral key를 받습니다.
-    static func fetchEphemeralKey(voice: String) async throws -> String {
+    /// 로그인 필수. 일일 한도 초과 시 `dailyLimitReached` throw.
+    static func fetchEphemeralKey(voice: String) async throws -> EphemeralKeyResponse {
+        guard let token = await AuthService.shared.accessToken else {
+            throw Error.notLoggedIn
+        }
+
         guard let url = URL(string: "\(SupabaseConfig.functionsBaseURL)/realtime-session") else {
             throw Error.badURL
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(SupabaseConfig.anonKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue(SupabaseConfig.anonKey, forHTTPHeaderField: "apikey")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: ["voice": voice])
@@ -50,12 +75,29 @@ enum RealtimeSessionAPI {
         guard let http = response as? HTTPURLResponse else {
             throw Error.malformedResponse
         }
-        guard (200..<300).contains(http.statusCode) else {
+
+        switch http.statusCode {
+        case 200..<300:
+            return try JSONDecoder().decode(EphemeralKeyResponse.self, from: data)
+        case 401:
+            throw Error.notLoggedIn
+        case 429:
+            let info = parseDailyLimitInfo(data)
+            throw Error.dailyLimitReached(info)
+        case 503:
+            throw Error.serverUnavailable
+        default:
             let body = String(data: data, encoding: .utf8)
             throw Error.httpStatus(http.statusCode, body)
         }
+    }
 
-        let decoded = try JSONDecoder().decode(EphemeralKeyResponse.self, from: data)
-        return decoded.ephemeralKey
+    private static func parseDailyLimitInfo(_ data: Data) -> DailyLimitInfo? {
+        guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let limit = obj["limit"] as? Int,
+              let used = obj["used"] as? Int else {
+            return nil
+        }
+        return DailyLimitInfo(limit: limit, used: used)
     }
 }
