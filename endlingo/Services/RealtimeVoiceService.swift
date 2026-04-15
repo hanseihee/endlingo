@@ -73,6 +73,7 @@ final class RealtimeVoiceService: NSObject {
     @ObservationIgnored private var currentResponseId: String?
     @ObservationIgnored private var firstAudioLogged = false
     @ObservationIgnored private var firstMicChunkLogged = false
+    @ObservationIgnored private var sessionUpdatedContinuation: CheckedContinuation<Void, Never>?
 
     // MARK: - Lifecycle
 
@@ -128,6 +129,11 @@ final class RealtimeVoiceService: NSObject {
             voice: scenario.voice
         )
 
+        // session.updated 수신 대기 (최대 3초).
+        // instructions가 서버에 반영되기 전에 response.create가 처리되면
+        // AI가 기본 모드로 떨어져 역할 무시하고 혼자 대화 생성하는 문제 방지.
+        await waitForSessionUpdate(timeout: 3)
+
         // 첫 발화 트리거 — response-level instructions로 영어 시작 강제
         await sendEvent([
             "type": "response.create",
@@ -138,6 +144,31 @@ final class RealtimeVoiceService: NSObject {
         ])
 
         state = .connected
+    }
+
+    private func waitForSessionUpdate(timeout seconds: Double) async {
+        let didFinish = await withTaskGroup(of: Bool.self, returning: Bool.self) { group in
+            group.addTask { @MainActor [weak self] in
+                await withCheckedContinuation { cont in
+                    self?.sessionUpdatedContinuation = cont
+                }
+                return true
+            }
+            group.addTask {
+                try? await Task.sleep(for: .seconds(seconds))
+                return false
+            }
+            let result = await group.next() ?? false
+            group.cancelAll()
+            return result
+        }
+        if !didFinish {
+            print("[RealtimeVoice] session.updated wait timed out")
+            if let cont = sessionUpdatedContinuation {
+                sessionUpdatedContinuation = nil
+                cont.resume()
+            }
+        }
     }
 
     /// CallKit의 provider:didActivate에서 호출. 오디오 엔진을 시작하고 마이크 탭을 설치합니다.
@@ -414,9 +445,15 @@ final class RealtimeVoiceService: NSObject {
               let type = obj["type"] as? String else { return }
 
         switch type {
-        case "session.created", "session.updated":
-            print("[RealtimeVoice] \(type)")
-            break
+        case "session.created":
+            print("[RealtimeVoice] session.created")
+
+        case "session.updated":
+            print("[RealtimeVoice] session.updated ← instructions 반영 완료")
+            if let cont = sessionUpdatedContinuation {
+                sessionUpdatedContinuation = nil
+                cont.resume()
+            }
 
         case "response.created":
             if let response = obj["response"] as? [String: Any],
