@@ -9,10 +9,16 @@ struct PhoneCallLauncherView: View {
 
     private let controller = PhoneCallController.shared
     @State private var auth = AuthService.shared
+    @State private var history = PhoneCallHistoryService.shared
 
     private var level: EnglishLevel {
         EnglishLevel(rawValue: selectedLevelRaw) ?? .a2
     }
+
+    private var remaining: Int { history.remainingTodayCallCount }
+    private var used: Int { history.todayCallCount }
+    private var limit: Int { PhoneCallHistoryService.dailyCallLimit }
+    private var isLimitReached: Bool { remaining == 0 }
 
     var body: some View {
         NavigationStack {
@@ -54,6 +60,10 @@ struct PhoneCallLauncherView: View {
             if case .ended = controller.phase {
                 controller.resetToIdle()
             }
+        }
+        .task {
+            // Launcher 열릴 때 서버에서 최신 기록을 당겨와 quota 표시를 정확히 반영
+            await history.refreshFromServer()
         }
     }
 
@@ -160,6 +170,24 @@ struct PhoneCallLauncherView: View {
                     .padding(.vertical, 3)
                     .background(Color.white.opacity(0.22))
                     .clipShape(Capsule())
+
+                Spacer(minLength: 0)
+
+                HStack(spacing: 4) {
+                    Image(systemName: "phone.arrow.up.right.fill")
+                        .font(.caption2)
+                    Text("오늘 \(used)/\(limit)")
+                        .font(.caption.weight(.semibold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(
+                    isLimitReached
+                        ? Color.red.opacity(0.35)
+                        : Color.white.opacity(0.22)
+                )
+                .clipShape(Capsule())
             }
             .padding(.top, 4)
         }
@@ -178,6 +206,7 @@ struct PhoneCallLauncherView: View {
 
     private func scenarioRow(_ scenario: PhoneCallScenario) -> some View {
         Button {
+            guard !isLimitReached else { return }
             controller.incomingCall(scenario: scenario, level: level)
         } label: {
             HStack(spacing: 12) {
@@ -226,8 +255,10 @@ struct PhoneCallLauncherView: View {
             .padding(12)
             .background(Color(.secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16))
+            .opacity(isLimitReached ? 0.45 : 1.0)
         }
         .buttonStyle(.plain)
+        .disabled(isLimitReached)
     }
 
     @ViewBuilder
@@ -247,6 +278,23 @@ struct PhoneCallLauncherView: View {
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color.orange.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .padding(.horizontal, 16)
+        } else if isLimitReached {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Image(systemName: "hourglass")
+                    Text("오늘 통화를 모두 사용했어요")
+                        .font(.footnote.bold())
+                }
+                .foregroundStyle(.red)
+                Text("내일 다시 시도해주세요. 매일 자정(UTC)에 초기화됩니다")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.red.opacity(0.08))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .padding(.horizontal, 16)
         } else {
