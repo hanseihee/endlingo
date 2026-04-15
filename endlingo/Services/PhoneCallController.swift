@@ -193,6 +193,7 @@ extension PhoneCallController: CXProviderDelegate {
                     return
                 }
                 let keyResponse = try await task.value
+                print("[PhoneCall] ephemeral key received, model=\(keyResponse.model ?? "?"), remaining=\(keyResponse.remainingToday ?? -1)")
 
                 await RealtimeVoiceService.shared.connect(
                     scenario: scenario,
@@ -200,6 +201,7 @@ extension PhoneCallController: CXProviderDelegate {
                     nativeLanguage: self.nativeLanguageCode,
                     ephemeralKey: keyResponse.ephemeralKey
                 )
+                print("[PhoneCall] after connect, voice state=\(RealtimeVoiceService.shared.state)")
 
                 // 연결 성공/실패 확인
                 switch RealtimeVoiceService.shared.state {
@@ -215,6 +217,7 @@ extension PhoneCallController: CXProviderDelegate {
                     self.phase = .active
                 }
             } catch {
+                print("[PhoneCall] answerCall failed: \(error.localizedDescription)")
                 action.fail()
                 self.phase = .ended(reason: error.localizedDescription)
                 self.endCurrentCall()

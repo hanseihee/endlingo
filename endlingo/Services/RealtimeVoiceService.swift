@@ -48,9 +48,8 @@ final class RealtimeVoiceService: NSObject {
     // MARK: - Session Config
 
     /// WebSocket 연결 시 사용할 모델.
-    /// gpt-realtime-mini는 gpt-realtime 대비 약 1/3 가격으로 학습 시나리오에 충분한 품질.
-    /// 더 자연스러운 음성/뉘앙스가 필요하면 `gpt-realtime`으로 교체.
-    private let model = "gpt-realtime-mini"
+    /// gpt-realtime은 GA 모델. Preview 모델 사용하려면 `gpt-4o-realtime-preview`.
+    private let model = "gpt-realtime"
     private let realtimeURL = "wss://api.openai.com/v1/realtime"
     private let sampleRate: Double = 24_000
 
@@ -344,6 +343,7 @@ final class RealtimeVoiceService: NSObject {
         do {
             try await webSocket.send(.string(str))
         } catch {
+            print("[RealtimeVoice] send failed: \(error.localizedDescription)")
             state = .error("send failed: \(error.localizedDescription)")
         }
     }
@@ -436,6 +436,8 @@ final class RealtimeVoiceService: NSObject {
         case "error":
             let errorDict = obj["error"] as? [String: Any]
             let message = errorDict?["message"] as? String ?? "unknown realtime error"
+            let code = errorDict?["code"] as? String ?? "unknown"
+            print("[RealtimeVoice] server error [\(code)]: \(message)")
             state = .error(message)
 
         default:

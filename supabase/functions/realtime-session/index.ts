@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
         "OpenAI-Beta": "realtime=v1",
       },
       body: JSON.stringify({
-        model: "gpt-realtime-mini",
+        model: "gpt-realtime",
         voice,
         modalities: ["audio", "text"],
       }),
@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
     return json({
       ephemeral_key: clientSecret.value,
       expires_at: clientSecret.expires_at ?? null,
-      model: data.model ?? "gpt-realtime-mini",
+      model: data.model ?? "gpt-realtime",
       remaining_today: DAILY_LIMIT - usedToday - 1,
     });
   } catch (err) {
