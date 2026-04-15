@@ -81,6 +81,90 @@ final class PhoneCallHistoryService {
         }
     }
 
+    /// Edge Function이 pending으로 만들어둔 row를 완성시킵니다.
+    /// 로그인 사용자 전용. 서버 UPDATE가 완료되면 로컬 records 배열에도 반영.
+    func complete(
+        sessionId: UUID,
+        scenario: PhoneCallScenario,
+        durationSeconds: Int,
+        transcript: [PhoneCallRecord.TranscriptLine],
+        startedAt: Date
+    ) {
+        guard auth.isLoggedIn,
+              let userUUID = auth.userId else { return }
+
+        let record = PhoneCallRecord(
+            id: sessionId,
+            userId: userUUID,
+            scenarioId: scenario.id,
+            scenarioTitle: scenario.title,
+            personaName: scenario.personaName,
+            personaEmoji: scenario.emoji,
+            durationSeconds: durationSeconds,
+            transcript: transcript,
+            startedAt: startedAt,
+            createdAt: Date(),
+            reviewIssues: nil
+        )
+
+        // 메모리 반영 (insert 혹은 기존 placeholder 덮어쓰기)
+        if let idx = records.firstIndex(where: { $0.id == sessionId }) {
+            records[idx] = record
+        } else {
+            records.insert(record, at: 0)
+        }
+
+        Task {
+            guard let token = await auth.accessToken else { return }
+            let payload: [String: Any] = [
+                "duration_seconds": durationSeconds,
+                "transcript": transcript.map { line -> [String: Any] in
+                    var dict: [String: Any] = ["speaker": line.speaker, "text": line.text]
+                    if let t = line.translation { dict["translation"] = t }
+                    return dict
+                },
+                "status": "completed",
+                "completed_at": ISO8601DateFormatter().string(from: Date()),
+            ]
+            await Self.updateSession(id: sessionId, payload: payload, token: token)
+        }
+    }
+
+    /// 통화 후 생성된 영작 피드백을 기존 session row에 저장.
+    func updateReview(sessionId: UUID, issues: [CallReviewIssue]) {
+        guard auth.isLoggedIn else { return }
+
+        if let idx = records.firstIndex(where: { $0.id == sessionId }) {
+            records[idx].reviewIssues = issues
+        }
+
+        Task {
+            guard let token = await auth.accessToken else { return }
+            let issuesJson = issues.map { issue in
+                [
+                    "original": issue.original,
+                    "improved": issue.improved,
+                    "explanation": issue.explanation,
+                ]
+            }
+            let payload: [String: Any] = ["review_issues": issuesJson]
+            await Self.updateSession(id: sessionId, payload: payload, token: token)
+        }
+    }
+
+    /// Supabase REST PATCH 헬퍼.
+    private static func updateSession(id: UUID, payload: [String: Any], token: String) async {
+        guard let url = URL(string: "\(SupabaseConfig.restBaseURL)/phone_call_sessions?id=eq.\(id.uuidString)") else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue(SupabaseConfig.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+        _ = try? await URLSession.shared.data(for: request)
+    }
+
     func remove(id: UUID) {
         records.removeAll { $0.id == id }
 

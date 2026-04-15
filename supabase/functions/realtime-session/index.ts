@@ -93,13 +93,21 @@ Deno.serve(async (req) => {
     }, 429);
   }
 
-  // ---- 3) voice 파라미터 파싱 ----
+  // ---- 3) 요청 파라미터 파싱 ----
   let voice = "alloy";
+  let scenarioId = "unknown";
+  let scenarioTitle = "Phone Call";
+  let personaName = "AI";
+  let personaEmoji = "📞";
   try {
     const body = await req.json();
     if (typeof body.voice === "string" && ALLOWED_VOICES.has(body.voice)) {
       voice = body.voice;
     }
+    if (typeof body.scenario_id === "string") scenarioId = body.scenario_id;
+    if (typeof body.scenario_title === "string") scenarioTitle = body.scenario_title;
+    if (typeof body.persona_name === "string") personaName = body.persona_name;
+    if (typeof body.persona_emoji === "string") personaEmoji = body.persona_emoji;
   } catch {
     // body 없음 — 기본값 사용
   }
@@ -133,11 +141,38 @@ Deno.serve(async (req) => {
       return json({ error: "client_secret_missing" }, 502);
     }
 
+    // ---- 5) phone_call_sessions에 pending row 선삽입 (quota 회피 차단) ----
+    // OpenAI 호출 성공 직후 row를 만들어두면, iOS가 통화를 즉시 끊거나 기록 저장에
+    // 실패해도 사용자의 일일 quota는 정확히 소진됨. iOS는 통화 종료 시 이 row를
+    // UPDATE로 완성한다. 장시간 pending 상태 row는 별도 cleanup job으로 정리.
+    const { data: insertedRow, error: insertError } = await adminClient
+      .from("phone_call_sessions")
+      .insert({
+        user_id: user.id,
+        scenario_id: scenarioId,
+        scenario_title: scenarioTitle,
+        persona_name: personaName,
+        persona_emoji: personaEmoji,
+        duration_seconds: 0,
+        started_at: new Date().toISOString(),
+        status: "pending",
+        transcript: [],
+      })
+      .select("id")
+      .single();
+
+    if (insertError) {
+      console.error("pending session insert failed:", insertError);
+      // pending row 실패해도 ephemeral key는 반환 (사용자 경험 우선).
+      // 대신 클라이언트가 session_id 없이 동작하므로 이번 통화는 record() 경로로 fallback.
+    }
+
     return json({
       ephemeral_key: clientSecret.value,
       expires_at: clientSecret.expires_at ?? null,
       model: data.model ?? "gpt-realtime",
       remaining_today: DAILY_LIMIT - usedToday - 1,
+      session_id: insertedRow?.id ?? null,
     });
   } catch (err) {
     console.error("Realtime session fetch failed:", err);

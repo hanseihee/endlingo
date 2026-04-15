@@ -4,13 +4,7 @@ import Foundation
 /// 두 Edge Function(`translate-phone-turn`, `review-phone-call`)의 래퍼.
 enum PhoneCallAIService {
 
-    struct CallIssue: Codable, Identifiable, Hashable, Sendable {
-        let original: String
-        let improved: String
-        let explanation: String
-
-        var id: String { original + "→" + improved }
-    }
+    typealias CallIssue = CallReviewIssue
 
     // MARK: - Public API
 

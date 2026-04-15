@@ -554,7 +554,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = NO;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "영어 문장을 따라 읽고 발음을 확인하기 위해 마이크 접근이 필요합니다.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "영어 발음 연습과 AI 전화영어에서 영어로 대화하기 위해 마이크 접근이 필요합니다. AI 전화영어 사용 시 음성은 OpenAI 서버로 전송되어 실시간 응답 생성에 사용됩니다.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "따라 읽기 기능에서 음성을 텍스트로 변환하기 위해 음성 인식이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -593,7 +593,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = NO;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "영어 문장을 따라 읽고 발음을 확인하기 위해 마이크 접근이 필요합니다.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "영어 발음 연습과 AI 전화영어에서 영어로 대화하기 위해 마이크 접근이 필요합니다. AI 전화영어 사용 시 음성은 OpenAI 서버로 전송되어 실시간 응답 생성에 사용됩니다.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "따라 읽기 기능에서 음성을 텍스트로 변환하기 위해 음성 인식이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-5.4-mini",
+        model: "gpt-4o-mini",
         max_completion_tokens: 200,
         temperature: 0.3,
         messages: [

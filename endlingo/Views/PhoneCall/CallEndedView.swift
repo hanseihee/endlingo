@@ -12,9 +12,10 @@ struct CallEndedView: View {
 
     @State private var didAwardXP = false
     @State private var didSaveRecord = false
+    @State private var savedSessionId: UUID?
     @State private var isLoadingReview = false
     @State private var didFetchReview = false
-    @State private var reviewIssues: [PhoneCallAIService.CallIssue] = []
+    @State private var reviewIssues: [CallReviewIssue] = []
 
     var body: some View {
         ScrollView {
@@ -30,8 +31,14 @@ struct CallEndedView: View {
         }
         .onAppear {
             awardXPIfNeeded()
-            saveRecordIfNeeded()
-            fetchReviewIfNeeded()
+            // 마지막 transcript/translation이 WebSocket으로 도착할 시간을 잠시 대기
+            Task {
+                try? await Task.sleep(for: .milliseconds(600))
+                await MainActor.run {
+                    saveRecordIfNeeded()
+                    fetchReviewIfNeeded()
+                }
+            }
         }
     }
 
@@ -138,12 +145,17 @@ struct CallEndedView: View {
             )
         }
         let level = selectedLevelRaw
+        let sessionId = savedSessionId
 
         Task {
             let issues = await PhoneCallAIService.review(transcript: lines, level: level)
             await MainActor.run {
                 reviewIssues = issues
                 isLoadingReview = false
+                // 서버 session row에 영구 저장 (히스토리에서도 재열람 가능)
+                if let sessionId, !issues.isEmpty {
+                    PhoneCallHistoryService.shared.updateReview(sessionId: sessionId, issues: issues)
+                }
             }
         }
     }
@@ -281,7 +293,8 @@ struct CallEndedView: View {
     }
 
     /// 통화가 30초 이상이고 대화가 2턴 이상일 때만 기록 저장.
-    /// 연결 실패나 즉시 종료된 통화는 기록하지 않습니다.
+    /// 로그인 사용자: Edge Function이 만든 pending row를 complete로 UPDATE.
+    /// 게스트: 로컬 파일에 record() 저장.
     private func saveRecordIfNeeded() {
         guard !didSaveRecord,
               controller.elapsedSeconds >= 30,
@@ -298,12 +311,24 @@ struct CallEndedView: View {
             )
         }
 
-        PhoneCallHistoryService.shared.record(
-            scenario: scenario,
-            durationSeconds: controller.elapsedSeconds,
-            transcript: lines,
-            startedAt: startedAt
-        )
+        if let sessionId = controller.currentSessionId {
+            savedSessionId = sessionId
+            PhoneCallHistoryService.shared.complete(
+                sessionId: sessionId,
+                scenario: scenario,
+                durationSeconds: controller.elapsedSeconds,
+                transcript: lines,
+                startedAt: startedAt
+            )
+        } else {
+            // Fallback: session_id 없는 (게스트 or 서버 insert 실패) 경우
+            PhoneCallHistoryService.shared.record(
+                scenario: scenario,
+                durationSeconds: controller.elapsedSeconds,
+                transcript: lines,
+                startedAt: startedAt
+            )
+        }
     }
 }
 

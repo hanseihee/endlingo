@@ -8,10 +8,11 @@ struct PhoneCallRecord: Codable, Identifiable, Hashable, Sendable {
     let scenarioTitle: String
     let personaName: String
     let personaEmoji: String
-    let durationSeconds: Int
-    let transcript: [TranscriptLine]
+    var durationSeconds: Int
+    var transcript: [TranscriptLine]
     let startedAt: Date
     let createdAt: Date
+    var reviewIssues: [CallReviewIssue]?
 
     struct TranscriptLine: Codable, Hashable, Sendable {
         let speaker: String  // "user" | "assistant"
@@ -30,5 +31,6 @@ struct PhoneCallRecord: Codable, Identifiable, Hashable, Sendable {
         case transcript
         case startedAt = "started_at"
         case createdAt = "created_at"
+        case reviewIssues = "review_issues"
     }
 }

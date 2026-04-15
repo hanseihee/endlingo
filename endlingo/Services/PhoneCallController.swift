@@ -57,6 +57,9 @@ final class PhoneCallController: NSObject {
     @ObservationIgnored private let callController = CXCallController()
     @ObservationIgnored private var currentCallUUID: UUID?
     @ObservationIgnored private var ephemeralKeyTask: Task<RealtimeSessionAPI.EphemeralKeyResponse, Error>?
+    /// Edge Function이 pending row로 만들어둔 phone_call_sessions.id.
+    /// 통화 종료 시 이 id로 UPDATE 해서 pending → completed로 전환.
+    private(set) var currentSessionId: UUID?
     private var nativeLanguageCode: String {
         switch Locale.current.language.languageCode?.identifier {
         case "ja": return "Japanese"
@@ -87,13 +90,14 @@ final class PhoneCallController: NSObject {
         currentLevel = level
         callStartDate = nil
         callEndDate = nil
+        currentSessionId = nil
 
         let uuid = UUID()
         currentCallUUID = uuid
 
-        // ephemeral key 미리 발급 시작
+        // ephemeral key + 서버 session_id 미리 발급 시작 (quota는 이 시점에 차감됨)
         ephemeralKeyTask = Task {
-            try await RealtimeSessionAPI.fetchEphemeralKey(voice: scenario.voice)
+            try await RealtimeSessionAPI.fetchEphemeralKey(scenario: scenario)
         }
 
         let update = CXCallUpdate()
@@ -146,6 +150,7 @@ final class PhoneCallController: NSObject {
         currentScenario = nil
         callStartDate = nil
         callEndDate = nil
+        currentSessionId = nil
     }
 
     // MARK: - Private
@@ -193,7 +198,8 @@ extension PhoneCallController: CXProviderDelegate {
                     return
                 }
                 let keyResponse = try await task.value
-                print("[PhoneCall] ephemeral key received, model=\(keyResponse.model ?? "?"), remaining=\(keyResponse.remainingToday ?? -1)")
+                self.currentSessionId = keyResponse.sessionId
+                print("[PhoneCall] ephemeral key received, model=\(keyResponse.model ?? "?"), remaining=\(keyResponse.remainingToday ?? -1), session_id=\(keyResponse.sessionId?.uuidString ?? "nil")")
 
                 await RealtimeVoiceService.shared.connect(
                     scenario: scenario,

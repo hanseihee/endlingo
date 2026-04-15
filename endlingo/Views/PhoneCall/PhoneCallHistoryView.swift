@@ -118,6 +118,10 @@ struct PhoneCallDetailView: View {
             VStack(alignment: .leading, spacing: 16) {
                 header
 
+                if let issues = record.reviewIssues, !issues.isEmpty {
+                    reviewSection(issues)
+                }
+
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(Array(record.transcript.enumerated()), id: \.offset) { _, line in
                         bubble(line)
@@ -129,6 +133,47 @@ struct PhoneCallDetailView: View {
         }
         .navigationTitle(Text(LocalizedStringKey(record.scenarioTitle)))
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: - Review Section
+
+    private func reviewSection(_ issues: [CallReviewIssue]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Image(systemName: "checkmark.bubble.fill")
+                    .foregroundStyle(Color.accentColor)
+                Text("영작 피드백")
+                    .font(.headline)
+            }
+
+            VStack(spacing: 10) {
+                ForEach(issues) { issue in
+                    VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("원문")
+                                .font(.caption2.bold())
+                                .foregroundStyle(.red.opacity(0.8))
+                            Text(issue.original)
+                                .font(.callout)
+                        }
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("자연스러운 표현")
+                                .font(.caption2.bold())
+                                .foregroundStyle(.green)
+                            Text(issue.improved)
+                                .font(.callout)
+                        }
+                        Text(issue.explanation)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+            }
+        }
     }
 
     private var header: some View {
