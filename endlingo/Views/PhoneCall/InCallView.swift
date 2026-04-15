@@ -224,13 +224,16 @@ struct InCallView: View {
                     .shadow(color: Color.red.opacity(0.4), radius: 10, y: 4)
             }
 
-            // 트랜스크립트 토글 (placeholder — 이미 항상 표시 중)
-            controlButton(
-                systemName: "captions.bubble.fill",
-                color: .white.opacity(0.9),
-                background: Color.white.opacity(0.12)
-            )
-            .opacity(0.4) // 비활성 상태 표시
+            // 스피커 ↔ 수화기 토글
+            Button {
+                voice.setSpeakerEnabled(!voice.isSpeakerOn)
+            } label: {
+                controlButton(
+                    systemName: voice.isSpeakerOn ? "speaker.wave.3.fill" : "ear.fill",
+                    color: voice.isSpeakerOn ? .white : .white.opacity(0.9),
+                    background: voice.isSpeakerOn ? Color.white.opacity(0.3) : Color.white.opacity(0.12)
+                )
+            }
         }
     }
 

@@ -45,6 +45,9 @@ final class RealtimeVoiceService: NSObject {
     private(set) var partialUserText: String = ""
     private(set) var partialAssistantText: String = ""
     var isMuted: Bool = false
+    /// 스피커폰 모드 여부. true=라우드스피커, false=수화기(이어피스).
+    /// CallKit `.voiceChat` 모드의 기본은 수화기이므로 앱은 통화 시작 시 스피커폰으로 override.
+    private(set) var isSpeakerOn: Bool = true
 
     // MARK: - Session Config
 
@@ -185,10 +188,28 @@ final class RealtimeVoiceService: NSObject {
             }
             // 큐에 쌓인 재생 버퍼 flush
             flushPendingPlayback()
-            print("[RealtimeVoice] engine started — running=\(audioEngine.isRunning), player=\(playerNode.isPlaying), mic hz=\(audioEngine.inputNode.outputFormat(forBus: 0).sampleRate)")
+            // 기본 출력을 스피커폰으로 설정 (.voiceChat 모드의 기본은 수화기)
+            applySpeakerRoute()
+            print("[RealtimeVoice] engine started — running=\(audioEngine.isRunning), player=\(playerNode.isPlaying), mic hz=\(audioEngine.inputNode.outputFormat(forBus: 0).sampleRate), speaker=\(isSpeakerOn)")
         } catch {
             print("[RealtimeVoice] engine start failed: \(error.localizedDescription)")
             state = .error("audio engine start failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// 스피커폰 ↔ 수화기 전환. 통화 중 언제든 호출 가능.
+    func setSpeakerEnabled(_ enabled: Bool) {
+        isSpeakerOn = enabled
+        applySpeakerRoute()
+    }
+
+    private func applySpeakerRoute() {
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.overrideOutputAudioPort(isSpeakerOn ? .speaker : .none)
+            print("[RealtimeVoice] audio route → \(isSpeakerOn ? "speaker" : "receiver")")
+        } catch {
+            print("[RealtimeVoice] audio route override failed: \(error.localizedDescription)")
         }
     }
 
@@ -390,9 +411,11 @@ final class RealtimeVoiceService: NSObject {
             "input_audio_transcription": ["model": "whisper-1"],
             "turn_detection": [
                 "type": "server_vad",
-                "threshold": NSNumber(value: 0.5 as Float),
+                // AI 발화 중 사용자 barge-in이 더 잘 감지되도록 민감도 상향(값은 낮을수록 민감).
+                // .voiceChat 모드의 ducking이 마이크 입력을 약하게 만들 수 있어 0.3 수준이 실용적.
+                "threshold": NSNumber(value: 0.3 as Float),
                 "prefix_padding_ms": 300,
-                "silence_duration_ms": 600,
+                "silence_duration_ms": 500,
                 "create_response": true
             ]
             // temperature는 생략 — OpenAI 기본값(0.8) 사용
