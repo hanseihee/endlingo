@@ -123,8 +123,14 @@ final class RealtimeVoiceService: NSObject {
             voice: scenario.voice
         )
 
-        // 첫 발화 트리거 (AI가 먼저 인사)
-        await sendEvent(["type": "response.create"])
+        // 첫 발화 트리거 — response-level instructions로 영어 시작 강제
+        await sendEvent([
+            "type": "response.create",
+            "response": [
+                "modalities": ["audio", "text"],
+                "instructions": scenario.firstResponseInstructions
+            ]
+        ])
 
         state = .connected
     }
