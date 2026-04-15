@@ -269,6 +269,8 @@ final class RealtimeVoiceService: NSObject {
     // MARK: - Playback: Base64 PCM16 → AVAudioPCMBuffer
 
     private func enqueuePlaybackChunk(base64: String) {
+        // barge-in으로 isAssistantSpeaking이 false면 이후 도착한 잔여 delta 무시
+        guard isAssistantSpeaking else { return }
         guard let data = Data(base64Encoded: base64), !data.isEmpty else { return }
         guard let playerFmt = outputFormat else { return }
 
@@ -314,6 +316,9 @@ final class RealtimeVoiceService: NSObject {
     // MARK: - WebSocket Send/Receive
 
     private func sendSessionUpdate(instructions: String, voice: String) async {
+        // 주의: Swift Double(0.8)은 JSON 직렬화 시 0.80000000000000004처럼
+        // 17 decimal places로 serialize되어 OpenAI가 거부합니다.
+        // 따라서 temperature/threshold 같은 float 값은 NSNumber로 명시 정밀도 지정.
         let sessionConfig: [String: Any] = [
             "modalities": ["text", "audio"],
             "instructions": instructions,
@@ -323,12 +328,12 @@ final class RealtimeVoiceService: NSObject {
             "input_audio_transcription": ["model": "whisper-1"],
             "turn_detection": [
                 "type": "server_vad",
-                "threshold": 0.5,
+                "threshold": NSNumber(value: 0.5 as Float),
                 "prefix_padding_ms": 300,
                 "silence_duration_ms": 600,
                 "create_response": true
-            ],
-            "temperature": 0.8
+            ]
+            // temperature는 생략 — OpenAI 기본값(0.8) 사용
         ]
         await sendEvent([
             "type": "session.update",
@@ -379,6 +384,7 @@ final class RealtimeVoiceService: NSObject {
 
         switch type {
         case "session.created", "session.updated":
+            print("[RealtimeVoice] \(type)")
             break
 
         case "response.created":
@@ -423,11 +429,9 @@ final class RealtimeVoiceService: NSObject {
         case "input_audio_buffer.speech_started":
             // 사용자가 말하기 시작 → AI가 말 중이면 중단 (barge-in)
             if isAssistantSpeaking {
+                isAssistantSpeaking = false  // 즉시 false로 → 이후 delta drop + 중복 cancel 방지
                 cancelPlayback()
-                if let id = currentResponseId {
-                    await sendEvent(["type": "response.cancel"])
-                    _ = id
-                }
+                await sendEvent(["type": "response.cancel"])
             }
 
         case "input_audio_buffer.speech_stopped", "input_audio_buffer.committed":
@@ -438,7 +442,14 @@ final class RealtimeVoiceService: NSObject {
             let message = errorDict?["message"] as? String ?? "unknown realtime error"
             let code = errorDict?["code"] as? String ?? "unknown"
             print("[RealtimeVoice] server error [\(code)]: \(message)")
-            state = .error(message)
+            // 경량 오류는 통화 유지 (로그만). 치명적 오류만 state 변경.
+            let ignorableCodes: Set<String> = [
+                "response_cancel_not_active",  // barge-in 경합
+                "input_audio_buffer_commit_empty"  // 침묵 commit
+            ]
+            if !ignorableCodes.contains(code) {
+                state = .error(message)
+            }
 
         default:
             break
