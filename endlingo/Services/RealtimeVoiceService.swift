@@ -150,26 +150,16 @@ final class RealtimeVoiceService: NSObject {
     }
 
     private func waitForSessionUpdate(timeout seconds: Double) async {
-        let didFinish = await withTaskGroup(of: Bool.self, returning: Bool.self) { group in
-            group.addTask { @MainActor [weak self] in
-                await withCheckedContinuation { cont in
-                    self?.sessionUpdatedContinuation = cont
-                }
-                return true
-            }
-            group.addTask {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            sessionUpdatedContinuation = continuation
+            // timeout 감시 — `session.updated` 이벤트 또는 error 이벤트로 먼저 resume
+            // 되면 여기서 continuation을 다시 resume 하지 않도록 nil 체크로 가드.
+            Task { @MainActor [weak self] in
                 try? await Task.sleep(for: .seconds(seconds))
-                return false
-            }
-            let result = await group.next() ?? false
-            group.cancelAll()
-            return result
-        }
-        if !didFinish {
-            print("[RealtimeVoice] session.updated wait timed out")
-            if let cont = sessionUpdatedContinuation {
-                sessionUpdatedContinuation = nil
-                cont.resume()
+                guard let self, let pending = self.sessionUpdatedContinuation else { return }
+                self.sessionUpdatedContinuation = nil
+                print("[RealtimeVoice] session.updated wait timed out")
+                pending.resume()
             }
         }
     }
@@ -411,9 +401,9 @@ final class RealtimeVoiceService: NSObject {
             "input_audio_transcription": ["model": "whisper-1"],
             "turn_detection": [
                 "type": "server_vad",
-                // AI 발화 중 사용자 barge-in이 더 잘 감지되도록 민감도 상향(값은 낮을수록 민감).
-                // .voiceChat 모드의 ducking이 마이크 입력을 약하게 만들 수 있어 0.3 수준이 실용적.
-                "threshold": NSNumber(value: 0.3 as Float),
+                // float에서 정확히 표현되는 값만 사용 (0.3, 0.6 등은 17자리 확장됨).
+                // 0.25 = 2^-2로 정확. 기본값 0.5보다 민감해 barge-in 감도 향상.
+                "threshold": 0.25,
                 "prefix_padding_ms": 300,
                 "silence_duration_ms": 500,
                 "create_response": true
@@ -556,6 +546,12 @@ final class RealtimeVoiceService: NSObject {
             ]
             if !ignorableCodes.contains(code) {
                 state = .error(message)
+            }
+            // session.update가 에러로 거부되면 session.updated 이벤트가 오지 않으므로
+            // 대기 중인 continuation을 여기서 해제해 connect() 흐름이 멈추지 않도록 함.
+            if let cont = sessionUpdatedContinuation {
+                sessionUpdatedContinuation = nil
+                cont.resume()
             }
 
         default:
