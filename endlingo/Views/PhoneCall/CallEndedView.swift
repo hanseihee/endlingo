@@ -172,7 +172,8 @@ struct CallEndedView: View {
                 .font(.title3.bold())
 
             if let scenario = controller.currentScenario {
-                Text("\(scenario.emoji) \(scenario.personaName)")
+                let name = controller.currentVariant?.personaName ?? scenario.personaName
+                Text("\(scenario.emoji) \(name)")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -212,11 +213,11 @@ struct CallEndedView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
-    private func statRow(label: String, value: String) -> some View {
+    private func statRow(label: LocalizedStringKey, value: String) -> some View {
         VStack(spacing: 2) {
             Text(value)
                 .font(.title3.bold().monospacedDigit())
-            Text(LocalizedStringKey(label))
+            Text(label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -311,11 +312,13 @@ struct CallEndedView: View {
             )
         }
 
+        let personaNameOverride = controller.currentVariant?.personaName
         if let sessionId = controller.currentSessionId {
             savedSessionId = sessionId
             PhoneCallHistoryService.shared.complete(
                 sessionId: sessionId,
                 scenario: scenario,
+                personaNameOverride: personaNameOverride,
                 durationSeconds: controller.elapsedSeconds,
                 transcript: lines,
                 startedAt: startedAt
@@ -324,6 +327,7 @@ struct CallEndedView: View {
             // Fallback: session_id 없는 (게스트 or 서버 insert 실패) 경우
             PhoneCallHistoryService.shared.record(
                 scenario: scenario,
+                personaNameOverride: personaNameOverride,
                 durationSeconds: controller.elapsedSeconds,
                 transcript: lines,
                 startedAt: startedAt

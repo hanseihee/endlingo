@@ -57,7 +57,7 @@ enum RealtimeSessionAPI {
     /// Edge Function `realtime-session`을 호출해 ephemeral key + 서버 session_id를 받습니다.
     /// 로그인 필수. 일일 한도 초과 시 `dailyLimitReached` throw.
     /// 서버가 pending row를 미리 insert해 quota를 정확히 차감하고, session_id를 반환.
-    static func fetchEphemeralKey(scenario: PhoneCallScenario) async throws -> EphemeralKeyResponse {
+    static func fetchEphemeralKey(scenario: PhoneCallScenario, personaNameOverride: String? = nil) async throws -> EphemeralKeyResponse {
         let auth = AuthService.shared
         guard let token = await auth.accessToken else {
             print("[RealtimeSessionAPI] accessToken is nil — isLoggedIn=\(auth.isLoggedIn), userId=\(auth.userId?.uuidString ?? "nil"), email=\(auth.userEmail ?? "nil")")
@@ -78,7 +78,7 @@ enum RealtimeSessionAPI {
             "voice": scenario.voice,
             "scenario_id": scenario.id,
             "scenario_title": scenario.title,
-            "persona_name": scenario.personaName,
+            "persona_name": personaNameOverride ?? scenario.personaName,
             "persona_emoji": scenario.emoji,
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)

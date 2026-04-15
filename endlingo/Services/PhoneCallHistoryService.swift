@@ -14,7 +14,8 @@ final class PhoneCallHistoryService {
     /// 로그인 사용자당 일일 통화 한도.
     /// Edge Function `realtime-session`의 `DAILY_LIMIT`과 일치해야 합니다.
     /// 두 값을 변경할 때는 함께 조정하고 Edge Function을 재배포하세요.
-    static let dailyCallLimit = 10
+    // TEMP: 오디오 파이프라인 디버깅용 상향. 정식 배포 전 10으로 복원 필요.
+    static let dailyCallLimit = 999
 
     private(set) var records: [PhoneCallRecord] = []
 
@@ -47,9 +48,11 @@ final class PhoneCallHistoryService {
     // MARK: - Public API
 
     /// 통화 기록을 저장합니다. 동일 `id`가 이미 있으면 무시됩니다.
+    /// `personaNameOverride`를 주면 variant에서 확정된 이름(예: "Priya")을 기록. nil이면 시나리오 대표 이름.
     func record(
         id: UUID = UUID(),
         scenario: PhoneCallScenario,
+        personaNameOverride: String? = nil,
         durationSeconds: Int,
         transcript: [PhoneCallRecord.TranscriptLine],
         startedAt: Date
@@ -61,7 +64,7 @@ final class PhoneCallHistoryService {
             userId: auth.userId,
             scenarioId: scenario.id,
             scenarioTitle: scenario.title,
-            personaName: scenario.personaName,
+            personaName: personaNameOverride ?? scenario.personaName,
             personaEmoji: scenario.emoji,
             durationSeconds: durationSeconds,
             transcript: transcript,
@@ -83,9 +86,11 @@ final class PhoneCallHistoryService {
 
     /// Edge Function이 pending으로 만들어둔 row를 완성시킵니다.
     /// 로그인 사용자 전용. 서버 UPDATE가 완료되면 로컬 records 배열에도 반영.
+    /// `personaNameOverride`를 주면 variant에서 확정된 이름으로 기록.
     func complete(
         sessionId: UUID,
         scenario: PhoneCallScenario,
+        personaNameOverride: String? = nil,
         durationSeconds: Int,
         transcript: [PhoneCallRecord.TranscriptLine],
         startedAt: Date
@@ -98,7 +103,7 @@ final class PhoneCallHistoryService {
             userId: userUUID,
             scenarioId: scenario.id,
             scenarioTitle: scenario.title,
-            personaName: scenario.personaName,
+            personaName: personaNameOverride ?? scenario.personaName,
             personaEmoji: scenario.emoji,
             durationSeconds: durationSeconds,
             transcript: transcript,

@@ -51,7 +51,7 @@ struct InCallView: View {
                 .background(Color.white.opacity(0.08))
                 .clipShape(Circle())
 
-            Text(controller.currentScenario?.personaName ?? "AI")
+            Text(controller.currentVariant?.personaName ?? controller.currentScenario?.personaName ?? "AI")
                 .font(.title2.bold())
                 .foregroundStyle(.white)
 
@@ -125,9 +125,16 @@ struct InCallView: View {
                         transcriptBubble(speaker: .assistant, text: voice.partialAssistantText, isPartial: true)
                             .id("partial-assistant")
                     }
+
+                    // 보이지 않는 bottom anchor — 마지막 bubble 아래 여유 공간을 확보해
+                    // scrollTo(anchor: .bottom) 호출 시 실제 bubble이 잘리지 않게 함.
+                    Color.clear
+                        .frame(height: 12)
+                        .id("bottom-anchor")
                 }
                 .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .padding(.top, 8)
+                .padding(.bottom, 16)
             }
             .onChange(of: voice.transcript.count) { _, _ in
                 scrollToBottom(proxy)
@@ -135,17 +142,20 @@ struct InCallView: View {
             .onChange(of: voice.partialAssistantText) { _, _ in
                 scrollToBottom(proxy)
             }
+            .onChange(of: voice.partialUserText) { _, _ in
+                scrollToBottom(proxy)
+            }
+            .onChange(of: voice.transcript.last?.translation) { _, _ in
+                scrollToBottom(proxy)
+            }
         }
     }
 
     private func scrollToBottom(_ proxy: ScrollViewProxy) {
-        withAnimation(.easeOut(duration: 0.2)) {
-            if !voice.partialAssistantText.isEmpty {
-                proxy.scrollTo("partial-assistant", anchor: .bottom)
-            } else if !voice.partialUserText.isEmpty {
-                proxy.scrollTo("partial-user", anchor: .bottom)
-            } else if let last = voice.transcript.last {
-                proxy.scrollTo(last.id, anchor: .bottom)
+        // LazyVStack의 레이아웃이 반영된 후 스크롤되도록 한 프레임 지연.
+        DispatchQueue.main.async {
+            withAnimation(.easeOut(duration: 0.2)) {
+                proxy.scrollTo("bottom-anchor", anchor: .bottom)
             }
         }
     }

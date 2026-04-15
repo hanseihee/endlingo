@@ -21,7 +21,8 @@ const ALLOWED_VOICES = new Set([
 
 /// 로그인 사용자 일일 통화 한도.
 /// 향후 구독 티어별 차등 적용 시 user metadata 또는 별도 테이블에서 조회하도록 확장.
-const DAILY_LIMIT = 10;
+// TEMP: 오디오 파이프라인 디버깅용 상향. 정식 배포 전 10으로 복원 필요.
+const DAILY_LIMIT = 999;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -122,7 +123,9 @@ Deno.serve(async (req) => {
         "OpenAI-Beta": "realtime=v1",
       },
       body: JSON.stringify({
-        model: "gpt-realtime",
+        // 비용 최적화: gpt-realtime-mini 사용 (gpt-realtime 대비 오디오 약 70% 저렴).
+        // 시나리오 롤플레이/CEFR 가이드 준수는 충분히 수행 — 품질 저하 시 gpt-realtime으로 복원.
+        model: "gpt-realtime-mini",
         voice,
         modalities: ["audio", "text"],
       }),
@@ -170,7 +173,7 @@ Deno.serve(async (req) => {
     return json({
       ephemeral_key: clientSecret.value,
       expires_at: clientSecret.expires_at ?? null,
-      model: data.model ?? "gpt-realtime",
+      model: data.model ?? "gpt-realtime-mini",
       remaining_today: DAILY_LIMIT - usedToday - 1,
       session_id: insertedRow?.id ?? null,
     });

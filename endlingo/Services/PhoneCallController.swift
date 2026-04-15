@@ -27,6 +27,9 @@ final class PhoneCallController: NSObject {
 
     private(set) var phase: Phase = .idle
     private(set) var currentScenario: PhoneCallScenario?
+    /// 현재 통화에서 뽑힌 시나리오 variant (opening/situation/mood/persona name 등이 확정된 상태).
+    /// UI/History/CallKit 표시는 모두 이 variant를 우선 사용.
+    private(set) var currentVariant: ScenarioVariant?
     private(set) var callStartDate: Date?
     private(set) var callEndDate: Date?
 
@@ -87,6 +90,10 @@ final class PhoneCallController: NSObject {
         if case .idle = phase {} else if case .ended = phase {} else { return }
 
         currentScenario = scenario
+        // 매 통화마다 시나리오 variant를 새로 뽑아 대화를 다양화.
+        let variant = scenario.randomVariant()
+        currentVariant = variant
+        print("[PhoneCall] variant — name=\(variant.personaName), situation=\(variant.situationLabel), params=\(variant.resolvedParameters)")
         currentLevel = level
         callStartDate = nil
         callEndDate = nil
@@ -97,12 +104,12 @@ final class PhoneCallController: NSObject {
 
         // ephemeral key + 서버 session_id 미리 발급 시작 (quota는 이 시점에 차감됨)
         ephemeralKeyTask = Task {
-            try await RealtimeSessionAPI.fetchEphemeralKey(scenario: scenario)
+            try await RealtimeSessionAPI.fetchEphemeralKey(scenario: scenario, personaNameOverride: variant.personaName)
         }
 
         let update = CXCallUpdate()
-        update.remoteHandle = CXHandle(type: .generic, value: scenario.personaName)
-        update.localizedCallerName = "\(scenario.emoji) \(scenario.personaName) · AI"
+        update.remoteHandle = CXHandle(type: .generic, value: variant.personaName)
+        update.localizedCallerName = "\(scenario.emoji) \(variant.personaName) · AI"
         update.hasVideo = false
         update.supportsHolding = false
         update.supportsGrouping = false
@@ -148,6 +155,7 @@ final class PhoneCallController: NSObject {
         guard case .ended = phase else { return }
         phase = .idle
         currentScenario = nil
+        currentVariant = nil
         callStartDate = nil
         callEndDate = nil
         currentSessionId = nil
@@ -201,8 +209,14 @@ extension PhoneCallController: CXProviderDelegate {
                 self.currentSessionId = keyResponse.sessionId
                 print("[PhoneCall] ephemeral key received, model=\(keyResponse.model ?? "?"), remaining=\(keyResponse.remainingToday ?? -1), session_id=\(keyResponse.sessionId?.uuidString ?? "nil")")
 
+                guard let variant = self.currentVariant else {
+                    action.fail()
+                    self.phase = .ended(reason: "variant missing")
+                    return
+                }
                 await RealtimeVoiceService.shared.connect(
                     scenario: scenario,
+                    variant: variant,
                     level: self.currentLevel,
                     nativeLanguage: self.nativeLanguageCode,
                     ephemeralKey: keyResponse.ephemeralKey
