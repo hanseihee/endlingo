@@ -96,6 +96,14 @@ final class RealtimeVoiceService: NSObject {
     /// whisper STT 결과(transcription.completed)가 도착하면 이 entry의 text를 업데이트.
     /// AI 응답보다 user 말풍선이 UI에서 먼저 보이게 하는 핵심 장치.
     @ObservationIgnored private var pendingUserEntryId: UUID?
+
+    /// 서버 conversation context의 item_id 시간순 FIFO.
+    /// `conversation.item.created` 수신 때마다 append, 개수가 임계치 초과 시
+    /// 오래된 item부터 `conversation.item.delete`로 서버에서 제거 → input 토큰 누적 억제.
+    @ObservationIgnored private var conversationItemIds: [String] = []
+    /// 서버에 유지할 최근 대화 아이템 최대 개수 (사용자+AI 합산).
+    /// 너무 작으면 AI가 이전 문맥을 잊고 반복. 너무 크면 절감 효과↓.
+    private let maxContextItems = 10
     /// playerNode.scheduleBuffer가 실제 호출된 횟수 (재생 경로 진단용).
     @ObservationIgnored private var scheduleBufferCount: Int = 0
     /// pending queue에 쌓인 횟수 (엔진 미실행 상태에서 수신된 audio delta).
@@ -172,6 +180,7 @@ final class RealtimeVoiceService: NSObject {
         pendingPlaybackFinishesExpected = 0
         responseDoneAwaitingPlayback = false
         pendingUserEntryId = nil
+        conversationItemIds = []
 
         // 진단: 현재 마이크 권한 + AVAudioSession 상태 덤프
         let audioSession = AVAudioSession.sharedInstance()
@@ -623,6 +632,24 @@ final class RealtimeVoiceService: NSObject {
         }
     }
 
+    /// 서버 conversation context에서 오래된 아이템을 제거해 input 토큰 누적을 억제.
+    /// 최근 `maxContextItems`개만 남기고 FIFO로 delete 이벤트 송신.
+    /// 실제 요금 절감은 통화가 길수록 큼 (5분 이상 통화에서 40~60%).
+    private func pruneOldItemsIfNeeded() async {
+        var pruned = 0
+        while conversationItemIds.count > maxContextItems {
+            let oldestId = conversationItemIds.removeFirst()
+            await sendEvent([
+                "type": "conversation.item.delete",
+                "item_id": oldestId
+            ])
+            pruned += 1
+        }
+        if pruned > 0 {
+            print("[RealtimeVoice] pruned \(pruned) old conversation items, remaining=\(conversationItemIds.count)")
+        }
+    }
+
     /// 한 buffer 재생이 실제 스피커에서 완료됐을 때 호출.
     /// response.done이 이미 도달했고 남은 재생 버퍼가 0이면 마이크 재개 (echo 루프 차단 해제).
     private func handlePlaybackBufferFinished() {
@@ -724,6 +751,15 @@ final class RealtimeVoiceService: NSObject {
               let type = obj["type"] as? String else { return }
 
         switch type {
+        case "conversation.item.created":
+            // 서버가 새 대화 아이템을 만들었음을 알림 — item_id를 저장해두고
+            // 누적이 임계치 초과하면 가장 오래된 것부터 delete 이벤트로 제거.
+            if let item = obj["item"] as? [String: Any],
+               let itemId = item["id"] as? String {
+                conversationItemIds.append(itemId)
+                await pruneOldItemsIfNeeded()
+            }
+
         case "session.created":
             print("[RealtimeVoice] session.created")
 
@@ -861,7 +897,9 @@ final class RealtimeVoiceService: NSObject {
             // 경량 오류는 통화 유지 (로그만). 치명적 오류만 state 변경.
             let ignorableCodes: Set<String> = [
                 "response_cancel_not_active",  // barge-in 경합
-                "input_audio_buffer_commit_empty"  // 침묵 commit
+                "input_audio_buffer_commit_empty",  // 침묵 commit
+                "item_not_found",  // delete 이벤트 후 이미 사라진 item 참조 시
+                "item_truncate_invalid_audio_end_ms"  // truncate 타이밍 경합
             ]
             if !ignorableCodes.contains(code) {
                 state = .error(message)

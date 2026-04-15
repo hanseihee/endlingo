@@ -20,7 +20,10 @@ struct PhoneCallScenario: Identifiable, Hashable, Sendable {
     let title: String
     let description: String
     let personaRole: String
+    /// CallKit 수신 UI / Supabase 기록용. 시스템 문자열이라 Image 대신 이모지 유지.
     let emoji: String
+    /// 시나리오 카드에 표시할 Asset 이름 (doodle 스타일 이미지).
+    let iconName: String
     /// OpenAI Realtime voice 이름 (alloy, ash, ballad, coral, echo, sage, shimmer, verse)
     let voice: String
 
@@ -183,6 +186,7 @@ extension PhoneCallScenario {
         description: "주제 자유, 원하는 대화를 해요",
         personaRole: "영어 회화 파트너",
         emoji: "💬",
+        iconName: "doodle-chat",
         voice: "coral",
         personaNamePool: ["Jamie", "Robin", "Sam", "Charlie", "Avery"],
         openingLines: [
@@ -225,6 +229,7 @@ extension PhoneCallScenario {
         description: "카페에 전화로 커피를 주문해요",
         personaRole: "Blue Bottle 바리스타",
         emoji: "☕",
+        iconName: "doodle-coffee",
         voice: "shimmer",
         personaNamePool: ["Emma", "Michael", "Priya", "Diego", "Sophie"],
         openingLines: [
@@ -270,6 +275,7 @@ extension PhoneCallScenario {
         description: "호텔에 전화로 객실을 예약해요",
         personaRole: "Grand Hotel 프론트 데스크",
         emoji: "🏨",
+        iconName: "doodle-hotel",
         voice: "ash",
         personaNamePool: ["David", "Rachel", "Hiroshi", "Olivia", "Marcus"],
         openingLines: [
@@ -315,6 +321,7 @@ extension PhoneCallScenario {
         description: "채용 담당자와 간단한 전화 면접을 봐요",
         personaRole: "채용 담당자",
         emoji: "💼",
+        iconName: "doodle-briefcase",
         voice: "sage",
         personaNamePool: ["Sarah", "James", "Aisha", "Kenji", "Carmen"],
         openingLines: [
@@ -358,6 +365,7 @@ extension PhoneCallScenario {
         description: "오랜만에 연락된 친구와 근황을 나눠요",
         personaRole: "오랜 친구",
         emoji: "📱",
+        iconName: "doodle-smartphone",
         voice: "verse",
         personaNamePool: ["Alex", "Jordan", "Taylor", "Morgan", "Casey"],
         openingLines: [
@@ -404,6 +412,7 @@ extension PhoneCallScenario {
         description: "음식 배달 도착 시간을 문의해요",
         personaRole: "배달 기사",
         emoji: "🛵",
+        iconName: "doodle-scooter",
         voice: "echo",
         personaNamePool: ["Mike", "Omar", "Ravi", "Luis", "DeShawn"],
         openingLines: [
@@ -446,6 +455,7 @@ extension PhoneCallScenario {
         description: "항공편 일정을 변경해요",
         personaRole: "항공사 상담원",
         emoji: "✈️",
+        iconName: "doodle-airplane",
         voice: "coral",
         personaNamePool: ["Jennifer", "Chen", "Rodrigo", "Naomi", "Ethan"],
         openingLines: [

@@ -24,8 +24,8 @@ struct ContentView: View {
                 QuizTabView()
             }
 
-            Tab("기록", image: "tab-history", value: 3) {
-                HistoryView()
+            Tab("전화영어", image: "tab-phone", value: 3) {
+                PhoneCallLauncherView()
             }
 
             Tab("프로필", image: "tab-profile", value: 4) {
