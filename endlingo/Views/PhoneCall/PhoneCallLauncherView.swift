@@ -63,7 +63,9 @@ struct PhoneCallLauncherView: View {
         }
         .task {
             // Launcher 열릴 때 서버에서 최신 기록을 당겨와 quota 표시를 정확히 반영
+            print("[Launcher] onTask — loggedIn=\(auth.isLoggedIn), userId=\(auth.userId?.uuidString ?? "nil"), today=\(history.todayCallCount), remaining=\(history.remainingTodayCallCount)")
             await history.refreshFromServer()
+            print("[Launcher] after refresh — today=\(history.todayCallCount), remaining=\(history.remainingTodayCallCount), isLimitReached=\(isLimitReached)")
         }
     }
 

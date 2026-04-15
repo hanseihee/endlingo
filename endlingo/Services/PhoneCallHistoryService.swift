@@ -227,8 +227,15 @@ final class PhoneCallHistoryService {
     /// 로그인 사용자는 서버가 진실의 원천이므로 remote가 빈 배열이어도
     /// 무조건 덮어써서 서버 측 삭제/초기화가 즉시 반영되게 함.
     func refreshFromServer() async {
-        guard auth.isLoggedIn,
-              let token = await auth.accessToken else { return }
+        guard auth.isLoggedIn else {
+            print("[PhoneCallHistory] refresh skipped — not logged in")
+            return
+        }
+        guard let token = await auth.accessToken else {
+            print("[PhoneCallHistory] refresh skipped — no access token")
+            return
+        }
+        let before = records.count
         let remote: [PhoneCallRecord] = await SupabaseAPI.fetch(
             "phone_call_sessions",
             query: "select=*&order=started_at.desc",
@@ -237,6 +244,7 @@ final class PhoneCallHistoryService {
         records = remote
         // 예전 게스트 세션의 잔존 파일이 있으면 정리 (todayCallCount 불일치 방지)
         try? FileManager.default.removeItem(at: fileURL)
+        print("[PhoneCallHistory] refreshed — remote=\(remote.count), local before=\(before), today=\(todayCallCount), remaining=\(remainingTodayCallCount)")
     }
 
     // MARK: - Local Storage

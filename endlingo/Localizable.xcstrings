@@ -816,6 +816,22 @@
         }
       }
     },
+    "간편 로그인" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "簡単ログイン"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đăng nhập nhanh"
+          }
+        }
+      }
+    },
     "감" : {
       "localizations" : {
         "ja" : {
@@ -846,22 +862,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nhập email đã đăng ký\nchúng tôi sẽ gửi liên kết đặt lại mật khẩu"
-          }
-        }
-      }
-    },
-    "간편 로그인" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "簡単ログイン"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đăng nhập nhanh"
           }
         }
       }
@@ -4360,7 +4360,6 @@
       }
     },
     "원문" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ja" : {
           "stringUnit" : {
@@ -4609,22 +4608,6 @@
         }
       }
     },
-    "일" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "日"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CN"
-          }
-        }
-      }
-    },
     "이메일" : {
       "localizations" : {
         "ja" : {
@@ -4637,6 +4620,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Email"
+          }
+        }
+      }
+    },
+    "일" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CN"
           }
         }
       }
@@ -4916,7 +4915,6 @@
       }
     },
     "자연스러운 표현" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ja" : {
           "stringUnit" : {
