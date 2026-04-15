@@ -6725,6 +6725,54 @@
           }
         }
       }
+    },
+    "통화 기록" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通話履歴"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lịch sử cuộc gọi"
+          }
+        }
+      }
+    },
+    "아직 저장된 통화가 없어요" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ保存された通話がありません"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa có cuộc gọi nào được lưu"
+          }
+        }
+      }
+    },
+    "30초 이상 통화하면 자동으로 기록이 남아요" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30秒以上通話すると自動的に記録されます"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi từ 30 giây trở lên sẽ được tự động lưu"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

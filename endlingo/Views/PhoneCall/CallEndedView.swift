@@ -9,6 +9,7 @@ struct CallEndedView: View {
     private let voice = RealtimeVoiceService.shared
 
     @State private var didAwardXP = false
+    @State private var didSaveRecord = false
 
     var body: some View {
         ScrollView {
@@ -23,6 +24,7 @@ struct CallEndedView: View {
         }
         .onAppear {
             awardXPIfNeeded()
+            saveRecordIfNeeded()
         }
     }
 
@@ -156,6 +158,31 @@ struct CallEndedView: View {
         guard !didAwardXP, controller.elapsedSeconds >= 60 else { return }
         didAwardXP = true
         GamificationService.shared.awardPhoneCallXP()
+    }
+
+    /// 통화가 30초 이상이고 대화가 2턴 이상일 때만 기록 저장.
+    /// 연결 실패나 즉시 종료된 통화는 기록하지 않습니다.
+    private func saveRecordIfNeeded() {
+        guard !didSaveRecord,
+              controller.elapsedSeconds >= 30,
+              voice.transcript.count >= 2,
+              let scenario = controller.currentScenario,
+              let startedAt = controller.callStartDate else { return }
+        didSaveRecord = true
+
+        let lines = voice.transcript.map { entry in
+            PhoneCallRecord.TranscriptLine(
+                speaker: entry.speaker == .user ? "user" : "assistant",
+                text: entry.text
+            )
+        }
+
+        PhoneCallHistoryService.shared.record(
+            scenario: scenario,
+            durationSeconds: controller.elapsedSeconds,
+            transcript: lines,
+            startedAt: startedAt
+        )
     }
 }
 

@@ -95,6 +95,23 @@ struct ProfileView: View {
                         }
                     }
                     .buttonStyle(.plain)
+
+                    NavigationLink {
+                        PhoneCallHistoryView()
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                                .frame(width: 36, height: 36)
+                                .background(Color(.tertiarySystemGroupedBackground))
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                            Text("통화 기록")
+                                .font(.callout.weight(.medium))
+                                .foregroundStyle(.primary)
+                        }
+                    }
                 }
 
                 // 학습 설정
