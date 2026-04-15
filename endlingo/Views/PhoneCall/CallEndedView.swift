@@ -8,13 +8,19 @@ struct CallEndedView: View {
     private let controller = PhoneCallController.shared
     private let voice = RealtimeVoiceService.shared
 
+    @AppStorage("selectedLevel") private var selectedLevelRaw: String = EnglishLevel.a2.rawValue
+
     @State private var didAwardXP = false
     @State private var didSaveRecord = false
+    @State private var isLoadingReview = false
+    @State private var didFetchReview = false
+    @State private var reviewIssues: [PhoneCallAIService.CallIssue] = []
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 headerCard
+                reviewSection
                 transcriptSection
                 dismissButton
             }
@@ -25,6 +31,120 @@ struct CallEndedView: View {
         .onAppear {
             awardXPIfNeeded()
             saveRecordIfNeeded()
+            fetchReviewIfNeeded()
+        }
+    }
+
+    // MARK: - Review Section
+
+    @ViewBuilder
+    private var reviewSection: some View {
+        if shouldShowReview {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.bubble.fill")
+                        .foregroundStyle(Color.accentColor)
+                    Text("영작 피드백")
+                        .font(.headline)
+                }
+
+                if isLoadingReview {
+                    HStack(spacing: 10) {
+                        ProgressView().controlSize(.small)
+                        Text("피드백을 분석하는 중…")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                } else if reviewIssues.isEmpty {
+                    HStack(spacing: 10) {
+                        Image(systemName: "hands.sparkles.fill")
+                            .foregroundStyle(.yellow)
+                        Text("훌륭해요! 특별히 수정할 문장이 없어요")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                } else {
+                    VStack(spacing: 10) {
+                        ForEach(reviewIssues) { issue in
+                            issueCard(issue)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func issueCard(_ issue: PhoneCallAIService.CallIssue) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            labeledLine(
+                label: "원문",
+                text: issue.original,
+                color: .red.opacity(0.8)
+            )
+            labeledLine(
+                label: "자연스러운 표현",
+                text: issue.improved,
+                color: .green
+            )
+            Text(issue.explanation)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+
+    private func labeledLine(label: String, text: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(LocalizedStringKey(label))
+                .font(.caption2.bold())
+                .foregroundStyle(color)
+            Text(text)
+                .font(.callout)
+                .foregroundStyle(.primary)
+        }
+    }
+
+    private var shouldShowReview: Bool {
+        // 짧은 통화는 피드백 의미 없음
+        controller.elapsedSeconds >= 30 && userTurnCount >= 2
+    }
+
+    private var userTurnCount: Int {
+        voice.transcript.filter { $0.speaker == .user }.count
+    }
+
+    private func fetchReviewIfNeeded() {
+        guard !didFetchReview, shouldShowReview else { return }
+        didFetchReview = true
+        isLoadingReview = true
+
+        let lines = voice.transcript.map {
+            PhoneCallRecord.TranscriptLine(
+                speaker: $0.speaker == .user ? "user" : "assistant",
+                text: $0.text,
+                translation: $0.translation
+            )
+        }
+        let level = selectedLevelRaw
+
+        Task {
+            let issues = await PhoneCallAIService.review(transcript: lines, level: level)
+            await MainActor.run {
+                reviewIssues = issues
+                isLoadingReview = false
+            }
         }
     }
 
@@ -173,7 +293,8 @@ struct CallEndedView: View {
         let lines = voice.transcript.map { entry in
             PhoneCallRecord.TranscriptLine(
                 speaker: entry.speaker == .user ? "user" : "assistant",
-                text: entry.text
+                text: entry.text,
+                translation: entry.translation
             )
         }
 

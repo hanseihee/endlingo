@@ -35,6 +35,7 @@ final class RealtimeVoiceService: NSObject {
         let id = UUID()
         let speaker: Speaker
         var text: String
+        var translation: String?
         let createdAt: Date
     }
 
@@ -305,6 +306,21 @@ final class RealtimeVoiceService: NSObject {
         pendingPlaybackBuffers.removeAll()
     }
 
+    // MARK: - Translation
+
+    /// 확정된 transcript entry를 네이티브 언어로 번역해 UI에 실시간 반영.
+    private func fetchTranslation(for entryId: UUID, text: String) {
+        Task { [weak self] in
+            guard let translation = await PhoneCallAIService.translate(text: text) else { return }
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                if let idx = self.transcript.firstIndex(where: { $0.id == entryId }) {
+                    self.transcript[idx].translation = translation
+                }
+            }
+        }
+    }
+
     private func cancelPlayback() {
         playerNode.stop()
         pendingPlaybackBuffers.removeAll()
@@ -407,8 +423,10 @@ final class RealtimeVoiceService: NSObject {
 
         case "response.audio_transcript.done":
             if let finalText = obj["transcript"] as? String, !finalText.isEmpty {
-                transcript.append(TranscriptEntry(speaker: .assistant, text: finalText, createdAt: Date()))
+                let entry = TranscriptEntry(speaker: .assistant, text: finalText, createdAt: Date())
+                transcript.append(entry)
                 partialAssistantText = ""
+                fetchTranslation(for: entry.id, text: finalText)
             }
 
         case "response.done":
@@ -417,8 +435,10 @@ final class RealtimeVoiceService: NSObject {
 
         case "conversation.item.input_audio_transcription.completed":
             if let finalText = obj["transcript"] as? String, !finalText.isEmpty {
-                transcript.append(TranscriptEntry(speaker: .user, text: finalText, createdAt: Date()))
+                let entry = TranscriptEntry(speaker: .user, text: finalText, createdAt: Date())
+                transcript.append(entry)
                 partialUserText = ""
+                fetchTranslation(for: entry.id, text: finalText)
             }
 
         case "conversation.item.input_audio_transcription.delta":

@@ -159,7 +159,7 @@ struct PhoneCallDetailView: View {
         HStack(alignment: .top) {
             if line.speaker == "user" { Spacer(minLength: 40) }
 
-            VStack(alignment: line.speaker == "user" ? .trailing : .leading, spacing: 2) {
+            VStack(alignment: line.speaker == "user" ? .trailing : .leading, spacing: 3) {
                 Text(line.speaker == "user" ? String(localized: "나") : record.personaName)
                     .font(.caption2.bold())
                     .foregroundStyle(line.speaker == "user" ? .blue : .secondary)
@@ -174,6 +174,14 @@ struct PhoneCallDetailView: View {
                             : Color(.secondarySystemGroupedBackground)
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                if let translation = line.translation, !translation.isEmpty {
+                    Text(translation)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 4)
+                        .multilineTextAlignment(line.speaker == "user" ? .trailing : .leading)
+                }
             }
 
             if line.speaker == "assistant" { Spacer(minLength: 40) }

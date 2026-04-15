@@ -401,3 +401,13 @@ enabled = true
 # (플랫폼 검증이 특정 토큰에서 Invalid JWT를 반환하는 문제가 있어 우회)
 verify_jwt = false
 entrypoint = "./functions/realtime-session/index.ts"
+
+[functions.translate-phone-turn]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/translate-phone-turn/index.ts"
+
+[functions.review-phone-call]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/review-phone-call/index.ts"

@@ -16,6 +16,7 @@ struct PhoneCallRecord: Codable, Identifiable, Hashable, Sendable {
     struct TranscriptLine: Codable, Hashable, Sendable {
         let speaker: String  // "user" | "assistant"
         let text: String
+        var translation: String?
     }
 
     enum CodingKeys: String, CodingKey {

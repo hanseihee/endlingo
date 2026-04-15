@@ -151,25 +151,45 @@ struct InCallView: View {
     }
 
     private func transcriptBubble(_ entry: RealtimeVoiceService.TranscriptEntry) -> some View {
-        transcriptBubble(speaker: entry.speaker, text: entry.text, isPartial: false)
+        transcriptBubble(
+            speaker: entry.speaker,
+            text: entry.text,
+            translation: entry.translation,
+            isPartial: false
+        )
     }
 
     private func transcriptBubble(
         speaker: RealtimeVoiceService.Speaker,
         text: String,
+        translation: String? = nil,
         isPartial: Bool
     ) -> some View {
-        HStack {
+        HStack(alignment: .top) {
             if speaker == .user { Spacer(minLength: 40) }
 
-            Text(text)
-                .font(.callout)
-                .foregroundStyle(speaker == .user ? .white : .black)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 9)
-                .background(speaker == .user ? Color.blue : Color.white)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .opacity(isPartial ? 0.7 : 1)
+            VStack(alignment: speaker == .user ? .trailing : .leading, spacing: 4) {
+                Text(text)
+                    .font(.callout)
+                    .foregroundStyle(speaker == .user ? .white : .black)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 9)
+                    .background(speaker == .user ? Color.blue : Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .opacity(isPartial ? 0.7 : 1)
+
+                if let translation, !translation.isEmpty {
+                    Text(translation)
+                        .font(.caption)
+                        .foregroundStyle(
+                            speaker == .user
+                                ? Color.white.opacity(0.7)
+                                : Color.white.opacity(0.55)
+                        )
+                        .padding(.horizontal, 6)
+                        .multilineTextAlignment(speaker == .user ? .trailing : .leading)
+                }
+            }
 
             if speaker == .assistant { Spacer(minLength: 40) }
         }

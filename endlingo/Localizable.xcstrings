@@ -6935,6 +6935,86 @@
           }
         }
       }
+    },
+    "영작 피드백" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "英作文フィードバック"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phản hồi viết tiếng Anh"
+          }
+        }
+      }
+    },
+    "피드백을 분석하는 중…" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フィードバックを分析中…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang phân tích phản hồi…"
+          }
+        }
+      }
+    },
+    "훌륭해요! 특별히 수정할 문장이 없어요" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "素晴らしい!特に修正する文はありません"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tuyệt vời! Không có câu nào cần chỉnh sửa"
+          }
+        }
+      }
+    },
+    "원문" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原文"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nguyên văn"
+          }
+        }
+      }
+    },
+    "자연스러운 표현" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自然な表現"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cách diễn đạt tự nhiên"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"
