@@ -1,5 +1,3 @@
-import "@supabase/functions-js/edge-runtime.d.ts";
-
 /**
  * OpenAI Realtime API용 ephemeral client_secret 발급.
  *
