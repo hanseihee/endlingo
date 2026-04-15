@@ -23,6 +23,7 @@ struct PhoneCallLauncherView: View {
                     InCallView()
                 case .ended:
                     CallEndedView(onDismiss: {
+                        controller.resetToIdle()
                         dismiss()
                     })
                 }
@@ -38,6 +39,13 @@ struct PhoneCallLauncherView: View {
             }
         }
         .interactiveDismissDisabled(isInCall)
+        .onAppear {
+            // 사용자가 이전 통화의 CallEndedView를 "완료"로 닫지 않고
+            // 스와이프 dismiss한 경우를 대비한 안전망
+            if case .ended = controller.phase {
+                controller.resetToIdle()
+            }
+        }
     }
 
     private var isInCall: Bool {

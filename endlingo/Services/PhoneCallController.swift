@@ -138,6 +138,16 @@ final class PhoneCallController: NSObject {
         callController.request(transaction) { _ in }
     }
 
+    /// 통화 종료 후 다음 통화를 받기 위해 상태를 초기화합니다.
+    /// `.ended` 상태에서만 실행하여 활성 통화를 끊지 않습니다.
+    func resetToIdle() {
+        guard case .ended = phase else { return }
+        phase = .idle
+        currentScenario = nil
+        callStartDate = nil
+        callEndDate = nil
+    }
+
     // MARK: - Private
 
     private func cleanup() {
