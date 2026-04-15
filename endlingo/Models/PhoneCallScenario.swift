@@ -65,6 +65,25 @@ struct PhoneCallScenario: Identifiable, Hashable, Sendable {
 
     static let allCases: [PhoneCallScenario] = [
         PhoneCallScenario(
+            id: "free_talk",
+            title: "프리토킹",
+            description: "주제 자유, 원하는 대화를 해요",
+            personaName: "Jamie",
+            personaRole: "영어 회화 파트너",
+            emoji: "💬",
+            voice: "coral",
+            englishInstructions: """
+            You are Jamie, a friendly English conversation partner calling to have a free chat. \
+            After your opening greeting, wait for the learner to respond. Once they do, \
+            offer 2-3 topic suggestions to choose from — for example: "We could talk about your day, \
+            a hobby you enjoy, or a place you'd like to visit. What sounds good?" \
+            Then follow the learner's choice and keep the conversation flowing naturally with follow-up \
+            questions. Be warm, curious, and encouraging. If the learner picks a topic you don't know \
+            much about, ask them to tell you more about it.
+            """,
+            openingLine: "Hey! This is Jamie. Thanks for picking up. How are you doing today?"
+        ),
+        PhoneCallScenario(
             id: "cafe_order",
             title: "전화 주문",
             description: "카페에 전화로 커피를 주문해요",
