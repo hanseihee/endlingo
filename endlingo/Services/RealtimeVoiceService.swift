@@ -188,6 +188,16 @@ final class RealtimeVoiceService: NSObject {
         ) else { return }
         outputFormat = playerFmt
 
+        // 에코 캔슬 + 노이즈 억제 활성화 (iOS 13+).
+        // AI 음성이 스피커에서 마이크로 되돌아가 서버가 사용자 발화로
+        // 오인식하는 echo-loop(AI 혼자 대화) 방지에 결정적.
+        do {
+            try audioEngine.inputNode.setVoiceProcessingEnabled(true)
+            print("[RealtimeVoice] voice processing enabled")
+        } catch {
+            print("[RealtimeVoice] voice processing failed: \(error.localizedDescription)")
+        }
+
         audioEngine.attach(playerNode)
         audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: playerFmt)
         isEngineConfigured = true
@@ -344,9 +354,11 @@ final class RealtimeVoiceService: NSObject {
             "input_audio_transcription": ["model": "whisper-1"],
             "turn_detection": [
                 "type": "server_vad",
-                "threshold": NSNumber(value: 0.5 as Float),
-                "prefix_padding_ms": 300,
-                "silence_duration_ms": 600,
+                // echo-loop 방지 위해 민감도 다소 낮춤. 약한 소리/AI 잔향은 무시되고
+                // 명확한 사용자 발화만 턴 시작으로 간주.
+                "threshold": NSNumber(value: 0.6 as Float),
+                "prefix_padding_ms": 500,
+                "silence_duration_ms": 900,
                 "create_response": true
             ]
             // temperature는 생략 — OpenAI 기본값(0.8) 사용
@@ -407,6 +419,7 @@ final class RealtimeVoiceService: NSObject {
             if let response = obj["response"] as? [String: Any],
                let id = response["id"] as? String {
                 currentResponseId = id
+                print("[RealtimeVoice] response.created id=\(id)")
             }
             isAssistantSpeaking = true
             partialAssistantText = ""
@@ -447,6 +460,7 @@ final class RealtimeVoiceService: NSObject {
             }
 
         case "input_audio_buffer.speech_started":
+            print("[RealtimeVoice] speech_started (assistantSpeaking=\(isAssistantSpeaking))")
             // 사용자가 말하기 시작 → AI가 말 중이면 중단 (barge-in)
             if isAssistantSpeaking {
                 isAssistantSpeaking = false  // 즉시 false로 → 이후 delta drop + 중복 cancel 방지
@@ -454,8 +468,11 @@ final class RealtimeVoiceService: NSObject {
                 await sendEvent(["type": "response.cancel"])
             }
 
-        case "input_audio_buffer.speech_stopped", "input_audio_buffer.committed":
-            break
+        case "input_audio_buffer.speech_stopped":
+            print("[RealtimeVoice] speech_stopped")
+
+        case "input_audio_buffer.committed":
+            print("[RealtimeVoice] audio committed")
 
         case "error":
             let errorDict = obj["error"] as? [String: Any]
