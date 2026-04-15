@@ -71,6 +71,8 @@ final class RealtimeVoiceService: NSObject {
 
     /// 현재 AI가 말하고 있는 응답의 id. interrupt 시 cancel 용도로 사용.
     @ObservationIgnored private var currentResponseId: String?
+    @ObservationIgnored private var firstAudioLogged = false
+    @ObservationIgnored private var firstMicChunkLogged = false
 
     // MARK: - Lifecycle
 
@@ -93,6 +95,8 @@ final class RealtimeVoiceService: NSObject {
         partialAssistantText = ""
         isAssistantSpeaking = false
         currentResponseId = nil
+        firstAudioLogged = false
+        firstMicChunkLogged = false
 
         guard var urlComponents = URLComponents(string: realtimeURL) else {
             state = .error("invalid URL")
@@ -150,7 +154,9 @@ final class RealtimeVoiceService: NSObject {
             }
             // 큐에 쌓인 재생 버퍼 flush
             flushPendingPlayback()
+            print("[RealtimeVoice] engine started — running=\(audioEngine.isRunning), player=\(playerNode.isPlaying), mic hz=\(audioEngine.inputNode.outputFormat(forBus: 0).sampleRate)")
         } catch {
+            print("[RealtimeVoice] engine start failed: \(error.localizedDescription)")
             state = .error("audio engine start failed: \(error.localizedDescription)")
         }
     }
@@ -188,15 +194,10 @@ final class RealtimeVoiceService: NSObject {
         ) else { return }
         outputFormat = playerFmt
 
-        // 에코 캔슬 + 노이즈 억제 활성화 (iOS 13+).
-        // AI 음성이 스피커에서 마이크로 되돌아가 서버가 사용자 발화로
-        // 오인식하는 echo-loop(AI 혼자 대화) 방지에 결정적.
-        do {
-            try audioEngine.inputNode.setVoiceProcessingEnabled(true)
-            print("[RealtimeVoice] voice processing enabled")
-        } catch {
-            print("[RealtimeVoice] voice processing failed: \(error.localizedDescription)")
-        }
+        // NOTE: setVoiceProcessingEnabled(true)는 사용하지 않음.
+        // CallKit의 AVAudioSession mode `.voiceChat`이 이미 시스템 레벨 AEC/NS를
+        // 수행하므로 중복 활성화 시 오디오 파이프라인이 꼬여 AI 음성이 안 들리고
+        // 마이크 포맷이 16kHz로 강제 변경되는 회귀가 발생.
 
         audioEngine.attach(playerNode)
         audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: playerFmt)
@@ -231,6 +232,10 @@ final class RealtimeVoiceService: NSObject {
             }
             Task { @MainActor [weak self] in
                 guard let self, !self.isMuted else { return }
+                if !self.firstMicChunkLogged {
+                    self.firstMicChunkLogged = true
+                    print("[RealtimeVoice] first mic chunk sent (b64 len=\(base64.count))")
+                }
                 await self.sendEvent([
                     "type": "input_audio_buffer.append",
                     "audio": base64
@@ -354,11 +359,9 @@ final class RealtimeVoiceService: NSObject {
             "input_audio_transcription": ["model": "whisper-1"],
             "turn_detection": [
                 "type": "server_vad",
-                // echo-loop 방지 위해 민감도 다소 낮춤. 약한 소리/AI 잔향은 무시되고
-                // 명확한 사용자 발화만 턴 시작으로 간주.
-                "threshold": NSNumber(value: 0.6 as Float),
-                "prefix_padding_ms": 500,
-                "silence_duration_ms": 900,
+                "threshold": NSNumber(value: 0.5 as Float),
+                "prefix_padding_ms": 300,
+                "silence_duration_ms": 600,
                 "create_response": true
             ]
             // temperature는 생략 — OpenAI 기본값(0.8) 사용
@@ -426,6 +429,10 @@ final class RealtimeVoiceService: NSObject {
 
         case "response.audio.delta":
             if let base64 = obj["delta"] as? String {
+                if !firstAudioLogged {
+                    firstAudioLogged = true
+                    print("[RealtimeVoice] first audio delta received (len=\(base64.count))")
+                }
                 enqueuePlaybackChunk(base64: base64)
             }
 
@@ -447,7 +454,10 @@ final class RealtimeVoiceService: NSObject {
             currentResponseId = nil
 
         case "conversation.item.input_audio_transcription.completed":
-            if let finalText = obj["transcript"] as? String, !finalText.isEmpty {
+            let rawText = obj["transcript"] as? String ?? ""
+            print("[RealtimeVoice] user transcription: \"\(rawText)\"")
+            let finalText = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !finalText.isEmpty {
                 let entry = TranscriptEntry(speaker: .user, text: finalText, createdAt: Date())
                 transcript.append(entry)
                 partialUserText = ""
