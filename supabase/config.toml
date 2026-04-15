@@ -396,6 +396,8 @@ entrypoint = "./functions/generate-daily-lessons/index.ts"
 
 [functions.realtime-session]
 enabled = true
-# JWT 검증 필수 — 함수 내부에서 user.id를 추출해 사용자별 일일 quota 적용
-verify_jwt = true
+# 플랫폼 레벨 검증은 끔. 함수 내부에서 supabase.auth.getUser()로
+# access token을 직접 검증하고 user.id 기반 일일 quota 적용.
+# (플랫폼 검증이 특정 토큰에서 Invalid JWT를 반환하는 문제가 있어 우회)
+verify_jwt = false
 entrypoint = "./functions/realtime-session/index.ts"
