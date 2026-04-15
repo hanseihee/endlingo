@@ -6045,6 +6045,240 @@
           }
         }
       }
+    },
+    "AI 전화영어": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "AI電話英会話" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Tiếng Anh qua điện thoại AI" } }
+      }
+    },
+    "AI와 실제 전화처럼 영어로 대화해요": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "本物の電話のようにAIと英語で会話します" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Trò chuyện với AI bằng tiếng Anh như cuộc gọi thật" } }
+      }
+    },
+    "Blue Bottle 바리스타": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "Blue Bottleバリスタ" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Nhân viên pha chế Blue Bottle" } }
+      }
+    },
+    "Grand Hotel 프론트 데스크": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "Grand Hotelフロントデスク" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Lễ tân Grand Hotel" } }
+      }
+    },
+    "대화 내역": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "会話履歴" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Nội dung cuộc trò chuyện" } }
+      }
+    },
+    "대화 수": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "会話数" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Lượt thoại" } }
+      }
+    },
+    "배달 기사": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "配達員" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Tài xế giao hàng" } }
+      }
+    },
+    "배달 문의": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "配達問い合わせ" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Hỏi về giao hàng" } }
+      }
+    },
+    "베타": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "ベータ" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Beta" } }
+      }
+    },
+    "사용 불가 지역": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "利用不可地域" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Khu vực không khả dụng" } }
+      }
+    },
+    "상대방이 말하는 중": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "相手が話し中" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Đối phương đang nói" } }
+      }
+    },
+    "시나리오를 선택하면 AI가 먼저 전화를 걸어옵니다": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "シナリオを選択するとAIから先に電話がかかってきます" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Chọn tình huống và AI sẽ gọi cho bạn trước" } }
+      }
+    },
+    "시나리오를 선택하세요": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "シナリオを選択してください" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Chọn một tình huống" } }
+      }
+    },
+    "실제 전화처럼 AI와 영어로 통화해보세요": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "本物の電話のようにAIと英語で通話してみましょう" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Trò chuyện tiếng Anh với AI như cuộc gọi điện thoại thật" } }
+      }
+    },
+    "연결 중…": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "接続中…" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Đang kết nối…" } }
+      }
+    },
+    "오랜 친구": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "古い友人" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Bạn cũ" } }
+      }
+    },
+    "오랜만에 연락된 친구와 근황을 나눠요": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "久しぶりに連絡を取った友達と近況を話します" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Trò chuyện với người bạn lâu ngày không gặp" } }
+      }
+    },
+    "완료": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "完了" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Hoàn tất" } }
+      }
+    },
+    "음식 배달 도착 시간을 문의해요": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "食べ物の配達到着時間を問い合わせます" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Hỏi về thời gian giao đồ ăn" } }
+      }
+    },
+    "이 지역에서는 AI 전화영어 기능을 사용할 수 없습니다": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "この地域ではAI電話英会話機能を使用できません" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Chức năng này không khả dụng trong khu vực của bạn" } }
+      }
+    },
+    "이용 안내": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "ご利用案内" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Hướng dẫn sử dụng" } }
+      }
+    },
+    "전화 면접": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "電話面接" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Phỏng vấn qua điện thoại" } }
+      }
+    },
+    "전화 주문": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "電話注文" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Đặt hàng qua điện thoại" } }
+      }
+    },
+    "채용 담당자": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "採用担当者" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Nhà tuyển dụng" } }
+      }
+    },
+    "채용 담당자와 간단한 전화 면접을 봐요": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "採用担当者と簡単な電話面接を受けます" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Tham gia phỏng vấn qua điện thoại với nhà tuyển dụng" } }
+      }
+    },
+    "친구와 통화": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "友達と通話" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Gọi cho bạn bè" } }
+      }
+    },
+    "카페에 전화로 커피를 주문해요": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "カフェに電話でコーヒーを注文します" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Gọi điện đặt cà phê tại quán" } }
+      }
+    },
+    "통화가 종료되었습니다": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "通話が終了しました" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Cuộc gọi đã kết thúc" } }
+      }
+    },
+    "통화 시간": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "通話時間" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Thời lượng" } }
+      }
+    },
+    "통화는 OpenAI Realtime API로 연결됩니다. 조용한 환경에서 이어폰 사용을 권장합니다": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "通話はOpenAI Realtime APIで接続されます。静かな環境でイヤホンの使用をお勧めします" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Cuộc gọi được kết nối qua OpenAI Realtime API. Khuyến nghị dùng tai nghe ở nơi yên tĩnh" } }
+      }
+    },
+    "통화 중": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "通話中" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Đang gọi" } }
+      }
+    },
+    "항공편 일정을 변경해요": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "航空便の日程を変更します" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Thay đổi lịch trình chuyến bay" } }
+      }
+    },
+    "항공사 고객센터": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "航空会社カスタマーセンター" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Tổng đài hãng hàng không" } }
+      }
+    },
+    "항공사 상담원": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "航空会社相談員" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Tư vấn viên hãng hàng không" } }
+      }
+    },
+    "현재 레벨": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "現在のレベル" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Cấp độ hiện tại" } }
+      }
+    },
+    "현재 지역에서는 전화 기능을 사용할 수 없습니다": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "現在の地域では通話機能を使用できません" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Chức năng gọi không khả dụng trong khu vực hiện tại" } }
+      }
+    },
+    "호텔 예약": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "ホテル予約" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Đặt phòng khách sạn" } }
+      }
+    },
+    "호텔에 전화로 객실을 예약해요": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "ホテルに電話で客室を予約します" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Đặt phòng khách sạn qua điện thoại" } }
+      }
+    },
+    "나": {
+      "localizations": {
+        "ja": { "stringUnit": { "state": "translated", "value": "私" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Tôi" } }
+      }
     }
   },
   "version": "1.1"

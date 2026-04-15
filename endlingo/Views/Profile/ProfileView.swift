@@ -14,6 +14,7 @@ struct ProfileView: View {
     @State private var showDeleteConfirm = false
     @State private var showChangePassword = false
     @State private var notificationTime = Date()
+    @State private var showPhoneCall = false
 
     private var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
@@ -47,6 +48,53 @@ struct ProfileView: View {
                             }
                         }
                     }
+                }
+
+                // AI 전화영어 (베타)
+                Section {
+                    Button {
+                        showPhoneCall = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "phone.circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(.white)
+                                .frame(width: 36, height: 36)
+                                .background(
+                                    LinearGradient(
+                                        colors: [Color.accentColor, Color.accentColor.opacity(0.75)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 6) {
+                                    Text("AI 전화영어")
+                                        .font(.callout.weight(.semibold))
+                                        .foregroundStyle(.primary)
+                                    Text("베타")
+                                        .font(.caption2.bold())
+                                        .foregroundStyle(.white)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.orange)
+                                        .clipShape(Capsule())
+                                }
+                                Text("AI와 실제 전화처럼 영어로 대화해요")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 // 학습 설정
@@ -182,6 +230,9 @@ struct ProfileView: View {
                 Button("취소", role: .cancel) {}
             } message: {
                 Text("계정을 삭제하면 복구할 수 없습니다. 정말 탈퇴하시겠습니까?")
+            }
+            .sheet(isPresented: $showPhoneCall) {
+                PhoneCallLauncherView()
             }
         }
     }
