@@ -109,17 +109,29 @@ Deno.serve(async (req) => {
     if (typeof body.scenario_title === "string") scenarioTitle = body.scenario_title;
     if (typeof body.persona_name === "string") personaName = body.persona_name;
     if (typeof body.persona_emoji === "string") personaEmoji = body.persona_emoji;
-    if (typeof body.tier === "string" && body.tier in TIER_LIMITS) clientTier = body.tier;
   } catch {
     // body 없음 — 기본값 사용
   }
 
-  // ---- 3b) 시간 기반 quota 체크 ----
-  const limits = TIER_LIMITS[clientTier] || TIER_LIMITS.free;
+  // ---- 3b) 서버 측 tier 검증 (user_subscriptions DB) ----
+  // 클라이언트가 보내는 tier는 무시. DB가 source of truth (RevenueCat webhook이 동기화).
+  const { data: subData } = await adminClient
+    .from("user_subscriptions")
+    .select("tier, expires_at")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const serverTier = (
+    subData?.tier === "premium" &&
+    (!subData.expires_at || new Date(subData.expires_at) > new Date())
+  ) ? "premium" : "free";
+
+  // ---- 3c) 시간 기반 quota 체크 ----
+  const limits = TIER_LIMITS[serverTier] || TIER_LIMITS.free;
   if (usedSeconds >= limits.dailySeconds) {
     return json({
       error: "daily_limit_reached",
-      tier: clientTier,
+      tier: serverTier,
       daily_limit_seconds: limits.dailySeconds,
       used_seconds: usedSeconds,
     }, 429);
@@ -188,7 +200,7 @@ Deno.serve(async (req) => {
       ephemeral_key: clientSecret.value,
       expires_at: clientSecret.expires_at ?? null,
       model: data.model ?? "gpt-realtime-mini",
-      tier: clientTier,
+      tier: serverTier,
       max_duration_seconds: maxDuration,
       remaining_seconds_today: remainingSeconds - maxDuration,
       session_id: insertedRow?.id ?? null,
