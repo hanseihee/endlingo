@@ -13,14 +13,18 @@ enum RealtimeSessionAPI {
         let ephemeralKey: String
         let expiresAt: Int?
         let model: String?
-        let remainingToday: Int?
+        let tier: String?
+        let maxDurationSeconds: Int?
+        let remainingSecondsToday: Int?
         let sessionId: UUID?
 
         enum CodingKeys: String, CodingKey {
             case ephemeralKey = "ephemeral_key"
             case expiresAt = "expires_at"
             case model
-            case remainingToday = "remaining_today"
+            case tier
+            case maxDurationSeconds = "max_duration_seconds"
+            case remainingSecondsToday = "remaining_seconds_today"
             case sessionId = "session_id"
         }
     }
@@ -80,6 +84,7 @@ enum RealtimeSessionAPI {
             "scenario_title": scenario.title,
             "persona_name": personaNameOverride ?? scenario.personaName,
             "persona_emoji": scenario.emoji,
+            "tier": SubscriptionService.shared.currentTier.rawValue,
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         request.timeoutInterval = 15

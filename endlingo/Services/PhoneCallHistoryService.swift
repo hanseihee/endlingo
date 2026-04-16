@@ -11,26 +11,38 @@ import Foundation
 final class PhoneCallHistoryService {
     static let shared = PhoneCallHistoryService()
 
-    /// 로그인 사용자당 일일 통화 한도.
-    /// Edge Function `realtime-session`의 `DAILY_LIMIT`과 일치해야 합니다.
-    /// 두 값을 변경할 때는 함께 조정하고 Edge Function을 재배포하세요.
-    // TEMP: 오디오 파이프라인 디버깅용 상향. 정식 배포 전 10으로 복원 필요.
-    static let dailyCallLimit = 999
-
     private(set) var records: [PhoneCallRecord] = []
 
     private let fileURL: URL
     private var auth: AuthService { AuthService.shared }
 
-    /// 오늘(UTC 00:00 기준) 사용한 통화 수. Edge Function의 카운트와 동일 기준.
+    /// 오늘(UTC 00:00 기준) 사용한 총 통화 시간 (초).
+    var todayUsedSeconds: Int {
+        let todayStart = Self.todayStartUTC
+        return records.filter { $0.startedAt >= todayStart }
+            .reduce(0) { $0 + $1.durationSeconds }
+    }
+
+    /// 오늘 사용한 통화 수. UI 참고용.
     var todayCallCount: Int {
         let todayStart = Self.todayStartUTC
         return records.filter { $0.startedAt >= todayStart }.count
     }
 
-    /// 남은 통화 가능 횟수.
+    /// 오늘 남은 통화 가능 시간 (초). tier에 따라 동적.
+    var remainingTodaySeconds: Int {
+        let limit = SubscriptionService.shared.currentTier.dailyCallDurationSeconds
+        return max(0, limit - todayUsedSeconds)
+    }
+
+    /// 일일 한도 도달 여부.
+    var isLimitReached: Bool { remainingTodaySeconds <= 0 }
+
+    /// UI 표시용 남은 통화 횟수 (하위 호환). 시간 기반이므로 근사값.
     var remainingTodayCallCount: Int {
-        max(0, Self.dailyCallLimit - todayCallCount)
+        let maxSingle = SubscriptionService.shared.currentTier.maxSingleCallSeconds
+        guard maxSingle > 0 else { return 0 }
+        return remainingTodaySeconds / maxSingle
     }
 
     private static var todayStartUTC: Date {

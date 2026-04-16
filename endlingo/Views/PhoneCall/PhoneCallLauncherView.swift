@@ -9,15 +9,14 @@ struct PhoneCallLauncherView: View {
     private let controller = PhoneCallController.shared
     @State private var auth = AuthService.shared
     @State private var history = PhoneCallHistoryService.shared
+    @State private var subscription = SubscriptionService.shared
+    @State private var showPaywall = false
 
     private var level: EnglishLevel {
         EnglishLevel(rawValue: selectedLevelRaw) ?? .a2
     }
 
-    private var remaining: Int { history.remainingTodayCallCount }
-    private var used: Int { history.todayCallCount }
-    private var limit: Int { PhoneCallHistoryService.dailyCallLimit }
-    private var isLimitReached: Bool { remaining == 0 }
+    private var isLimitReached: Bool { history.isLimitReached }
 
     var body: some View {
         NavigationStack {
@@ -60,10 +59,12 @@ struct PhoneCallLauncherView: View {
             }
         }
         .task {
-            // Launcher 열릴 때 서버에서 최신 기록을 당겨와 quota 표시를 정확히 반영
             print("[Launcher] onTask — loggedIn=\(auth.isLoggedIn), userId=\(auth.userId?.uuidString ?? "nil"), today=\(history.todayCallCount), remaining=\(history.remainingTodayCallCount)")
             await history.refreshFromServer()
             print("[Launcher] after refresh — today=\(history.todayCallCount), remaining=\(history.remainingTodayCallCount), isLimitReached=\(isLimitReached)")
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
         }
     }
 
@@ -172,7 +173,9 @@ struct PhoneCallLauncherView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "phone.arrow.up.right.fill")
                         .font(.caption2)
-                    Text("오늘 \(used)/\(limit)")
+                    let remainMin = history.remainingTodaySeconds / 60
+                    let remainSec = history.remainingTodaySeconds % 60
+                    Text("남은 시간 \(remainMin):\(String(format: "%02d", remainSec))")
                         .font(.caption.weight(.semibold))
                 }
                 .foregroundStyle(.white)
@@ -281,16 +284,35 @@ struct PhoneCallLauncherView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .padding(.horizontal, 16)
         } else if isLimitReached {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Image(systemName: "hourglass")
                     Text("오늘 통화를 모두 사용했어요")
                         .font(.footnote.bold())
                 }
                 .foregroundStyle(.red)
-                Text("내일 다시 시도해주세요. 매일 자정(UTC)에 초기화됩니다")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+
+                if !subscription.isPremium {
+                    Button {
+                        showPaywall = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "crown.fill")
+                                .foregroundStyle(.yellow)
+                            Text("Premium으로 업그레이드 (하루 10분)")
+                                .font(.footnote.weight(.semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.accentColor)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                } else {
+                    Text("내일 다시 시도해주세요. 매일 자정(UTC)에 초기화됩니다")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)

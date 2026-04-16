@@ -19,10 +19,13 @@ const ALLOWED_VOICES = new Set([
   "alloy", "ash", "ballad", "coral", "echo", "sage", "shimmer", "verse",
 ]);
 
-/// 로그인 사용자 일일 통화 한도.
-/// 향후 구독 티어별 차등 적용 시 user metadata 또는 별도 테이블에서 조회하도록 확장.
-// TEMP: 오디오 파이프라인 디버깅용 상향. 정식 배포 전 10으로 복원 필요.
-const DAILY_LIMIT = 999;
+/// 티어별 일일 통화 한도 (초 기준).
+/// iOS SubscriptionService.Tier와 동기화. 클라이언트가 전달하는 tier를 신뢰(MVP).
+/// 향후 RevenueCat REST API 또는 user_subscriptions 테이블로 서버 측 검증 예정.
+const TIER_LIMITS: Record<string, { dailySeconds: number; maxSingleSeconds: number }> = {
+  free:    { dailySeconds: 60,  maxSingleSeconds: 60  },
+  premium: { dailySeconds: 600, maxSingleSeconds: 600 },
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -73,26 +76,22 @@ Deno.serve(async (req) => {
     now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0,
   ));
 
-  const { count, error: countError } = await adminClient
+  // ---- 2b) 오늘 사용한 총 시간(초) 집계 ----
+  const { data: usageData, error: usageError } = await adminClient
     .from("phone_call_sessions")
-    .select("*", { count: "exact", head: true })
+    .select("duration_seconds")
     .eq("user_id", user.id)
     .gte("started_at", todayStartUTC.toISOString());
 
-  if (countError) {
-    console.error("Quota check failed:", countError);
-    // fail-closed: 장애 시 차단해 비용 폭탄 방지
+  if (usageError) {
+    console.error("Quota check failed:", usageError);
     return json({ error: "quota_check_failed" }, 503);
   }
 
-  const usedToday = count ?? 0;
-  if (usedToday >= DAILY_LIMIT) {
-    return json({
-      error: "daily_limit_reached",
-      limit: DAILY_LIMIT,
-      used: usedToday,
-    }, 429);
-  }
+  const usedSeconds = (usageData || []).reduce(
+    (sum: number, r: { duration_seconds: number }) => sum + (r.duration_seconds || 0),
+    0
+  );
 
   // ---- 3) 요청 파라미터 파싱 ----
   let voice = "alloy";
@@ -100,6 +99,7 @@ Deno.serve(async (req) => {
   let scenarioTitle = "Phone Call";
   let personaName = "AI";
   let personaEmoji = "📞";
+  let clientTier = "free";
   try {
     const body = await req.json();
     if (typeof body.voice === "string" && ALLOWED_VOICES.has(body.voice)) {
@@ -109,9 +109,23 @@ Deno.serve(async (req) => {
     if (typeof body.scenario_title === "string") scenarioTitle = body.scenario_title;
     if (typeof body.persona_name === "string") personaName = body.persona_name;
     if (typeof body.persona_emoji === "string") personaEmoji = body.persona_emoji;
+    if (typeof body.tier === "string" && body.tier in TIER_LIMITS) clientTier = body.tier;
   } catch {
     // body 없음 — 기본값 사용
   }
+
+  // ---- 3b) 시간 기반 quota 체크 ----
+  const limits = TIER_LIMITS[clientTier] || TIER_LIMITS.free;
+  if (usedSeconds >= limits.dailySeconds) {
+    return json({
+      error: "daily_limit_reached",
+      tier: clientTier,
+      daily_limit_seconds: limits.dailySeconds,
+      used_seconds: usedSeconds,
+    }, 429);
+  }
+  const remainingSeconds = limits.dailySeconds - usedSeconds;
+  const maxDuration = Math.min(remainingSeconds, limits.maxSingleSeconds);
 
   // ---- 4) OpenAI 세션 발급 ----
   try {
@@ -174,7 +188,9 @@ Deno.serve(async (req) => {
       ephemeral_key: clientSecret.value,
       expires_at: clientSecret.expires_at ?? null,
       model: data.model ?? "gpt-realtime-mini",
-      remaining_today: DAILY_LIMIT - usedToday - 1,
+      tier: clientTier,
+      max_duration_seconds: maxDuration,
+      remaining_seconds_today: remainingSeconds - maxDuration,
       session_id: insertedRow?.id ?? null,
     });
   } catch (err) {

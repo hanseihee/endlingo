@@ -14,6 +14,8 @@ struct ProfileView: View {
     @State private var showDeleteConfirm = false
     @State private var showChangePassword = false
     @State private var notificationTime = Date()
+    @State private var showPaywall = false
+    @State private var subscription = SubscriptionService.shared
 
     private var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
@@ -69,6 +71,49 @@ struct ProfileView: View {
                                     .foregroundStyle(.secondary)
                             }
                         }
+                    }
+                }
+
+                // 구독 관리
+                Section {
+                    if subscription.isPremium {
+                        HStack(spacing: 12) {
+                            Image(systemName: "crown.fill")
+                                .foregroundStyle(.yellow)
+                                .frame(width: 28, height: 28)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Premium")
+                                    .font(.callout.weight(.semibold))
+                                Text("구독 중")
+                                    .font(.caption)
+                                    .foregroundStyle(.green)
+                            }
+                            Spacer()
+                            Link("관리", destination: URL(string: "https://apps.apple.com/account/subscriptions")!)
+                                .font(.caption)
+                        }
+                    } else {
+                        Button {
+                            showPaywall = true
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "crown")
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 28, height: 28)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Premium으로 업그레이드")
+                                        .font(.callout.weight(.semibold))
+                                    Text("AI 전화영어 10분 · 광고제거")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
 
@@ -205,6 +250,9 @@ struct ProfileView: View {
                 Button("취소", role: .cancel) {}
             } message: {
                 Text("계정을 삭제하면 복구할 수 없습니다. 정말 탈퇴하시겠습니까?")
+            }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView()
             }
         }
     }

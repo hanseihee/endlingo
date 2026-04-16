@@ -72,6 +72,8 @@ final class PhoneCallController: NSObject {
         }
     }
     @ObservationIgnored private var currentLevel: EnglishLevel = .a2
+    /// 현재 통화의 최대 시간 (초). SubscriptionService.currentTier에서 결정.
+    private(set) var maxDurationSeconds: Int = 60
 
     private override init() {
         super.init()
@@ -90,6 +92,7 @@ final class PhoneCallController: NSObject {
         if case .idle = phase {} else if case .ended = phase {} else { return }
 
         currentScenario = scenario
+        maxDurationSeconds = SubscriptionService.shared.currentTier.maxSingleCallSeconds
         // 매 통화마다 시나리오 variant를 새로 뽑아 대화를 다양화.
         let variant = scenario.randomVariant()
         currentVariant = variant
@@ -207,7 +210,11 @@ extension PhoneCallController: CXProviderDelegate {
                 }
                 let keyResponse = try await task.value
                 self.currentSessionId = keyResponse.sessionId
-                print("[PhoneCall] ephemeral key received, model=\(keyResponse.model ?? "?"), remaining=\(keyResponse.remainingToday ?? -1), session_id=\(keyResponse.sessionId?.uuidString ?? "nil")")
+                // 서버가 결정한 최대 통화 시간 적용 (남은 quota 반영)
+                if let serverMax = keyResponse.maxDurationSeconds, serverMax > 0 {
+                    self.maxDurationSeconds = serverMax
+                }
+                print("[PhoneCall] ephemeral key received, model=\(keyResponse.model ?? "?"), tier=\(keyResponse.tier ?? "?"), maxDuration=\(self.maxDurationSeconds)s, session_id=\(keyResponse.sessionId?.uuidString ?? "nil")")
 
                 guard let variant = self.currentVariant else {
                     action.fail()

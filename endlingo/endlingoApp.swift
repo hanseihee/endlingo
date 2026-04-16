@@ -3,6 +3,7 @@ import FirebaseCore
 import FirebaseAnalytics
 import GoogleSignIn
 import GoogleMobileAds
+import RevenueCat
 
 @main
 struct endlingoApp: App {
@@ -22,6 +23,8 @@ struct endlingoApp: App {
         )
         // Google Mobile Ads 초기화
         MobileAds.shared.start(completionHandler: nil)
+        // RevenueCat 구독 관리 초기화
+        SubscriptionService.shared.configure()
     }
 
     var body: some Scene {
@@ -61,6 +64,16 @@ struct endlingoApp: App {
                 NotificationService.shared.scheduleDailyNotification(
                     hour: notificationHour, minute: notificationMinute
                 )
+            }
+            // RevenueCat userId 연동 — AuthService 상태 변화 시 자동 logIn/logOut
+            .onChange(of: auth.isLoggedIn) { _, isLoggedIn in
+                Task {
+                    if isLoggedIn, let userId = auth.userId?.uuidString {
+                        await SubscriptionService.shared.logIn(userId: userId)
+                    } else {
+                        await SubscriptionService.shared.logOut()
+                    }
+                }
             }
         }
     }

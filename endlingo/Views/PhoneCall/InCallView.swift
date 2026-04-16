@@ -64,10 +64,20 @@ struct InCallView: View {
             statusBadge
                 .padding(.top, 2)
 
-            Text(elapsedFormatted)
-                .font(.body.monospacedDigit())
-                .foregroundStyle(.white.opacity(0.85))
-                .padding(.top, 2)
+            // 경과 시간 + 남은 시간
+            HStack(spacing: 8) {
+                Text(elapsedFormatted)
+                    .font(.body.monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.85))
+
+                let remaining = max(0, controller.maxDurationSeconds - elapsed)
+                if remaining <= 30 && remaining > 0 {
+                    Text("(\(remaining)초 남음)")
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.red)
+                }
+            }
+            .padding(.top, 2)
         }
     }
 
@@ -269,6 +279,10 @@ struct InCallView: View {
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             Task { @MainActor in
                 elapsed = controller.elapsedSeconds
+                // 최대 시간 도달 시 자동 종료
+                if elapsed >= controller.maxDurationSeconds {
+                    controller.endCurrentCall()
+                }
             }
         }
     }
