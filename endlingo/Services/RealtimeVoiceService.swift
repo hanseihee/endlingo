@@ -333,6 +333,11 @@ final class RealtimeVoiceService: NSObject {
         stopAudioEngine()
         pendingPlaybackBuffers.removeAll()
         isAssistantSpeaking = false
+        // 다음 통화에서 VPIO/playerNode를 현재 하드웨어 포맷에 맞게 재구성하도록 리셋.
+        // 블루투스/이어폰 전환 시 outputNode 포맷이 바뀔 수 있어 재사용하면 무음 발생.
+        isEngineConfigured = false
+        playbackConverter = nil
+        playbackSourceFormat = nil
         state = .disconnected
     }
 
@@ -601,7 +606,14 @@ final class RealtimeVoiceService: NSObject {
     private func flushPendingPlayback() {
         guard !pendingPlaybackBuffers.isEmpty, audioEngine.isRunning else { return }
         for buffer in pendingPlaybackBuffers {
-            playerNode.scheduleBuffer(buffer, completionHandler: nil)
+            // enqueuePlaybackChunk와 동일하게 completion 등록 — 카운터 일관성 유지.
+            // flush된 버퍼도 재생 완료까지 마이크 차단 유지(echo 방지).
+            pendingPlaybackFinishesExpected += 1
+            playerNode.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.handlePlaybackBufferFinished()
+                }
+            }
         }
         pendingPlaybackBuffers.removeAll()
     }

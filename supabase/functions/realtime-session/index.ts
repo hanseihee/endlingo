@@ -20,8 +20,8 @@ const ALLOWED_VOICES = new Set([
 ]);
 
 /// 티어별 일일 통화 한도 (초 기준).
-/// iOS SubscriptionService.Tier와 동기화. 클라이언트가 전달하는 tier를 신뢰(MVP).
-/// 향후 RevenueCat REST API 또는 user_subscriptions 테이블로 서버 측 검증 예정.
+/// iOS SubscriptionService.Tier와 동기화. 서버는 user_subscriptions DB를 조회해 tier를 판정.
+/// 클라이언트가 보내는 tier 값은 무시 (RevenueCat webhook이 DB를 동기화).
 const TIER_LIMITS: Record<string, { dailySeconds: number; maxSingleSeconds: number }> = {
   free:    { dailySeconds: 60,  maxSingleSeconds: 60  },
   premium: { dailySeconds: 600, maxSingleSeconds: 600 },

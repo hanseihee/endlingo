@@ -276,11 +276,12 @@ struct InCallView: View {
 
     private func startTimer() {
         stopTimer()
-        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak timer] _ in
             Task { @MainActor in
                 elapsed = controller.elapsedSeconds
-                // 최대 시간 도달 시 자동 종료
+                // 최대 시간 도달 시 자동 종료 (1회만 호출되도록 즉시 타이머 정지)
                 if elapsed >= controller.maxDurationSeconds {
+                    timer?.invalidate()
                     controller.endCurrentCall()
                 }
             }

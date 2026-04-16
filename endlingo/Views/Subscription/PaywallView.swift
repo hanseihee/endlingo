@@ -208,7 +208,8 @@ struct PaywallView: View {
                         ProgressView()
                             .tint(.white)
                     } else {
-                        Text("무료 체험 시작")
+                        let eligible = selectedPackage.flatMap { trialEligibility[$0.storeProduct.productIdentifier] } ?? false
+                        Text(eligible ? "무료 체험 시작" : "구독하기")
                             .font(.body.weight(.bold))
                     }
                 }
