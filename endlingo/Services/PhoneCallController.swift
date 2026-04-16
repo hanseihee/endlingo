@@ -60,6 +60,7 @@ final class PhoneCallController: NSObject {
     @ObservationIgnored private let callController = CXCallController()
     @ObservationIgnored private var currentCallUUID: UUID?
     @ObservationIgnored private var ephemeralKeyTask: Task<RealtimeSessionAPI.EphemeralKeyResponse, Error>?
+    @ObservationIgnored private var geminiSessionTask: Task<GeminiSessionAPI.SessionResponse, Error>?
     /// Edge Function이 pending row로 만들어둔 phone_call_sessions.id.
     /// 통화 종료 시 이 id로 UPDATE 해서 pending → completed로 전환.
     private(set) var currentSessionId: UUID?
@@ -81,9 +82,12 @@ final class PhoneCallController: NSObject {
 
     // MARK: - Public API
 
+    /// 현재 통화에 사용 중인 AI provider.
+    private(set) var currentProvider: CallAIProvider = .openAI
+
     /// 전화 오는 연출을 시작합니다. 사용자가 수락하면 자동으로 WebSocket 연결이 이어집니다.
     /// CallKit이 사용 불가한 지역에서는 즉시 `.ended(reason:)`로 종료됩니다 — 호출자가 fallback UI를 제공해야 합니다.
-    func incomingCall(scenario: PhoneCallScenario, level: EnglishLevel) {
+    func incomingCall(scenario: PhoneCallScenario, level: EnglishLevel, aiProvider: CallAIProvider = .openAI) {
         guard isCallKitAvailable else {
             phase = .ended(reason: String(localized: "이 지역에서는 AI 전화영어 기능을 사용할 수 없습니다"))
             return
@@ -92,6 +96,7 @@ final class PhoneCallController: NSObject {
         if case .idle = phase {} else if case .ended = phase {} else { return }
 
         currentScenario = scenario
+        currentProvider = aiProvider
         maxDurationSeconds = SubscriptionService.shared.currentTier.maxSingleCallSeconds
         // 매 통화마다 시나리오 variant를 새로 뽑아 대화를 다양화.
         let variant = scenario.randomVariant()
@@ -105,9 +110,15 @@ final class PhoneCallController: NSObject {
         let uuid = UUID()
         currentCallUUID = uuid
 
-        // ephemeral key + 서버 session_id 미리 발급 시작 (quota는 이 시점에 차감됨)
-        ephemeralKeyTask = Task {
-            try await RealtimeSessionAPI.fetchEphemeralKey(scenario: scenario, personaNameOverride: variant.personaName)
+        // 서버 session_id + quota 미리 발급 (provider별 분기)
+        if currentProvider == .openAI {
+            ephemeralKeyTask = Task {
+                try await RealtimeSessionAPI.fetchEphemeralKey(scenario: scenario, personaNameOverride: variant.personaName)
+            }
+        } else {
+            geminiSessionTask = Task {
+                try await GeminiSessionAPI.registerSession(scenario: scenario, personaNameOverride: variant.personaName)
+            }
         }
 
         let update = CXCallUpdate()
@@ -170,7 +181,34 @@ final class PhoneCallController: NSObject {
         currentCallUUID = nil
         ephemeralKeyTask?.cancel()
         ephemeralKeyTask = nil
+        geminiSessionTask?.cancel()
+        geminiSessionTask = nil
+        // 연결 실패 등으로 통화가 즉시 종료된 경우 pending row를 completed로 전환.
+        // CallEndedView를 거치지 않는 경로에서 pending row가 남아 다음 통화를 차단하는 것을 방지.
+        if let sessionId = currentSessionId {
+            cancelPendingSession(sessionId: sessionId)
+        }
         RealtimeVoiceService.shared.disconnect()
+    }
+
+    /// pending 상태인 session row를 duration=0으로 완료 처리.
+    private func cancelPendingSession(sessionId: UUID) {
+        Task {
+            guard let token = await AuthService.shared.accessToken else { return }
+            let payload: [String: Any] = [
+                "status": "completed",
+                "duration_seconds": 0,
+                "completed_at": ISO8601DateFormatter().string(from: Date()),
+            ]
+            var request = URLRequest(url: URL(string: "\(SupabaseConfig.restBaseURL)/phone_call_sessions?id=eq.\(sessionId.uuidString)")!)
+            request.httpMethod = "PATCH"
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.setValue(SupabaseConfig.anonKey, forHTTPHeaderField: "apikey")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+            _ = try? await URLSession.shared.data(for: request)
+            print("[PhoneCall] pending session \(sessionId) → completed (cleanup)")
+        }
     }
 
     /// 통화 지속 시간 (초). 진행 중/종료 후 모두 사용 가능.
@@ -202,31 +240,57 @@ extension PhoneCallController: CXProviderDelegate {
             self.callStartDate = Date()
 
             do {
-                // ephemeral key가 아직 발급 중이면 대기
-                guard let task = self.ephemeralKeyTask else {
-                    action.fail()
-                    self.phase = .ended(reason: "session key task missing")
-                    return
-                }
-                let keyResponse = try await task.value
-                self.currentSessionId = keyResponse.sessionId
-                // 서버가 결정한 최대 통화 시간 적용 (남은 quota 반영)
-                if let serverMax = keyResponse.maxDurationSeconds, serverMax > 0 {
-                    self.maxDurationSeconds = serverMax
-                }
-                print("[PhoneCall] ephemeral key received, model=\(keyResponse.model ?? "?"), tier=\(keyResponse.tier ?? "?"), maxDuration=\(self.maxDurationSeconds)s, session_id=\(keyResponse.sessionId?.uuidString ?? "nil")")
-
                 guard let variant = self.currentVariant else {
                     action.fail()
                     self.phase = .ended(reason: "variant missing")
                     return
                 }
+
+                var ephemeralKey = ""
+                // OpenAI: ephemeral key 대기, Gemini: 건너뜀 (Firebase SDK가 인증 처리)
+                if self.currentProvider == .openAI {
+                    guard let task = self.ephemeralKeyTask else {
+                        action.fail()
+                        self.phase = .ended(reason: "session key task missing")
+                        return
+                    }
+                    let keyResponse = try await task.value
+                    self.currentSessionId = keyResponse.sessionId
+                    if let serverMax = keyResponse.maxDurationSeconds, serverMax > 0 {
+                        self.maxDurationSeconds = serverMax
+                    }
+                    ephemeralKey = keyResponse.ephemeralKey
+                    print("[PhoneCall] ephemeral key received, model=\(keyResponse.model ?? "?"), tier=\(keyResponse.tier ?? "?"), maxDuration=\(self.maxDurationSeconds)s, session_id=\(keyResponse.sessionId?.uuidString ?? "nil")")
+                } else {
+                    print("[PhoneCall] Gemini path — waiting for gemini session task…")
+                    guard let task = self.geminiSessionTask else {
+                        print("[PhoneCall] ❌ geminiSessionTask is nil!")
+                        action.fail()
+                        self.phase = .ended(reason: "gemini session task missing")
+                        return
+                    }
+                    do {
+                        let sessionResponse = try await task.value
+                        self.currentSessionId = sessionResponse.sessionId
+                        if let serverMax = sessionResponse.maxDurationSeconds, serverMax > 0 {
+                            self.maxDurationSeconds = serverMax
+                        }
+                        print("[PhoneCall] ✅ Gemini session registered, tier=\(sessionResponse.tier ?? "?"), maxDuration=\(self.maxDurationSeconds)s, session_id=\(sessionResponse.sessionId?.uuidString ?? "nil")")
+                    } catch {
+                        print("[PhoneCall] ❌ Gemini session FAILED: \(error)")
+                        print("[PhoneCall] error type: \(type(of: error)), desc: \(error.localizedDescription)")
+                        // quota 실패해도 통화 시도는 계속 (Firebase SDK가 직접 연결)
+                        print("[PhoneCall] continuing without server session…")
+                    }
+                }
+
                 await RealtimeVoiceService.shared.connect(
                     scenario: scenario,
                     variant: variant,
                     level: self.currentLevel,
                     nativeLanguage: self.nativeLanguageCode,
-                    ephemeralKey: keyResponse.ephemeralKey
+                    ephemeralKey: ephemeralKey,
+                    provider: self.currentProvider
                 )
                 print("[PhoneCall] after connect, voice state=\(RealtimeVoiceService.shared.state)")
 

@@ -14,6 +14,7 @@
 		B5A6F0412F66FEB200B2B2D7 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5A6F0402F66FEB200B2B2D7 /* SwiftUI.framework */; };
 		B5A6F0522F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B5A6F03C2F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B5DB12922F65C4F000A0599A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = B5DB12912F65C4F000A0599A /* FirebaseAnalytics */; };
+		B5DB12942F65C4F000A0599A /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = B5DB12932F65C4F000A0599A /* FirebaseAI */; };
 		B5F5E4852F6D799C0075D91A /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = B5F5E4842F6D799C0075D91A /* GoogleSignIn */; };
 		B5F5E66D2F6D847E0075D91A /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = B5F5E66C2F6D847E0075D91A /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
@@ -121,6 +122,7 @@
 				B59AAA272F909BAE00A92C90 /* RevenueCat in Frameworks */,
 				B5F5E66D2F6D847E0075D91A /* GoogleMobileAds in Frameworks */,
 				B5DB12922F65C4F000A0599A /* FirebaseAnalytics in Frameworks */,
+				B5DB12942F65C4F000A0599A /* FirebaseAI in Frameworks */,
 				B50C39AE2F625C2A00A1597E /* Supabase in Frameworks */,
 				B5F5E4852F6D799C0075D91A /* GoogleSignIn in Frameworks */,
 			);
@@ -209,6 +211,7 @@
 			packageProductDependencies = (
 				B50C39AD2F625C2A00A1597E /* Supabase */,
 				B5DB12912F65C4F000A0599A /* FirebaseAnalytics */,
+				B5DB12932F65C4F000A0599A /* FirebaseAI */,
 				B5F5E4842F6D799C0075D91A /* GoogleSignIn */,
 				B5F5E66C2F6D847E0075D91A /* GoogleMobileAds */,
 				B5AA00022F800000DEADBEE0 /* RevenueCat */,
@@ -884,6 +887,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B5DB12902F65C4F000A0599A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAnalytics;
+		};
+		B5DB12932F65C4F000A0599A /* FirebaseAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B5DB12902F65C4F000A0599A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAI;
 		};
 		B5F5E4842F6D799C0075D91A /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
