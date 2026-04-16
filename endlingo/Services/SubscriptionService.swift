@@ -144,7 +144,14 @@ final class SubscriptionService {
 
     private func updateTier(from customerInfo: CustomerInfo) {
         let wasActive = currentTier == .premium
-        if customerInfo.entitlements[Self.entitlementId]?.isActive == true {
+        let entitlement = customerInfo.entitlements[Self.entitlementId]
+        let isActive = entitlement?.isActive == true
+
+        // 디버그: entitlement 상태 상세 출력
+        print("[Subscription] entitlements keys: \(Array(customerInfo.entitlements.all.keys))")
+        print("[Subscription] '\(Self.entitlementId)' → isActive=\(isActive), productId=\(entitlement?.productIdentifier ?? "nil")")
+
+        if isActive {
             currentTier = .premium
         } else {
             currentTier = .free
