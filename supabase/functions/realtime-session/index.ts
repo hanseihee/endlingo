@@ -79,13 +79,21 @@ Deno.serve(async (req) => {
   // ---- 2b) 오늘 사용한 총 시간(초) 집계 ----
   const { data: usageData, error: usageError } = await adminClient
     .from("phone_call_sessions")
-    .select("duration_seconds")
+    .select("duration_seconds, status")
     .eq("user_id", user.id)
     .gte("started_at", todayStartUTC.toISOString());
 
   if (usageError) {
     console.error("Quota check failed:", usageError);
     return json({ error: "quota_check_failed" }, 503);
+  }
+
+  // 동시 통화 방지: 진행 중인(pending) 통화가 있으면 새 통화 차단.
+  const pendingCount = (usageData || []).filter(
+    (r: { status?: string }) => r.status === "pending"
+  ).length;
+  if (pendingCount > 0) {
+    return json({ error: "call_in_progress", message: "이미 진행 중인 통화가 있습니다" }, 429);
   }
 
   const usedSeconds = (usageData || []).reduce(
