@@ -11,6 +11,8 @@ struct PaywallView: View {
     @State private var selectedPackage: Package?
     @State private var errorMessage: String?
     @State private var showRestoreSuccess = false
+    /// 무료 체험 자격 (productIdentifier → eligible). 이미 체험 사용한 유저에겐 "7일 무료" 미표시.
+    @State private var trialEligibility: [String: Bool] = [:]
 
     var body: some View {
         NavigationStack {
@@ -41,8 +43,15 @@ struct PaywallView: View {
             .task {
                 do {
                     offering = try await subscription.loadCurrentOffering()
-                    // 연간을 기본 선택 (할인 강조)
                     selectedPackage = offering?.annual ?? offering?.monthly
+
+                    // 무료 체험 자격 검증 — 이미 사용한 유저에겐 "7일 무료" 미표시
+                    let productIds = [offering?.monthly, offering?.annual]
+                        .compactMap { $0?.storeProduct.productIdentifier }
+                    let eligibility = await Purchases.shared.checkTrialOrIntroDiscountEligibility(productIdentifiers: productIds)
+                    for (id, result) in eligibility {
+                        trialEligibility[id] = result.status == .eligible
+                    }
                 } catch {
                     errorMessage = error.localizedDescription
                 }
@@ -90,7 +99,7 @@ struct PaywallView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
-    private func benefitRow(icon: String, color: Color, title: String, subtitle: String) -> some View {
+    private func benefitRow(icon: String, color: Color, title: LocalizedStringKey, subtitle: LocalizedStringKey) -> some View {
         HStack(spacing: 14) {
             Image(systemName: icon)
                 .font(.body.weight(.semibold))
@@ -122,7 +131,7 @@ struct PaywallView: View {
         }
     }
 
-    private func packageCard(_ package: Package, label: String, badge: String?) -> some View {
+    private func packageCard(_ package: Package, label: LocalizedStringKey, badge: String?) -> some View {
         let isSelected = selectedPackage?.identifier == package.identifier
         return Button {
             selectedPackage = package
@@ -143,7 +152,8 @@ struct PaywallView: View {
                         }
                     }
                     if let intro = package.storeProduct.introductoryDiscount,
-                       intro.price == 0 {
+                       intro.price == 0,
+                       trialEligibility[package.storeProduct.productIdentifier] == true {
                         Text("7일 무료 체험")
                             .font(.caption)
                             .foregroundStyle(.green)

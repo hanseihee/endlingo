@@ -155,13 +155,13 @@ final class SubscriptionService {
     }
 
     /// customerInfo 변경 실시간 감지 (구독 갱신, 만료, 환불, 가족 공유 등).
+    /// customerInfo 변경 실시간 감지 (구독 갱신, 만료, 환불 등).
+    /// @MainActor 클래스이므로 Task 내 직접 호출 가능.
     private func startCustomerInfoListener() {
         customerInfoTask?.cancel()
-        customerInfoTask = Task { [weak self] in
+        customerInfoTask = Task { @MainActor [weak self] in
             for await customerInfo in Purchases.shared.customerInfoStream {
-                await MainActor.run { [weak self] in
-                    self?.updateTier(from: customerInfo)
-                }
+                self?.updateTier(from: customerInfo)
             }
         }
     }

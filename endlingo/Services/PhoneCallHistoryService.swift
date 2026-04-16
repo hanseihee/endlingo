@@ -17,6 +17,9 @@ final class PhoneCallHistoryService {
     private var auth: AuthService { AuthService.shared }
 
     /// 오늘(UTC 00:00 기준) 사용한 총 통화 시간 (초).
+    /// 로컬 records 기반이라 서버의 pending row(duration=0)와 소폭 차이 가능.
+    /// 통화 중 앱 강제 종료 시 해당 통화 시간이 반영되지 않을 수 있음 (사용자에게 유리한 방향).
+    /// 정확한 quota는 realtime-session Edge Function이 서버 DB 기준으로 판정.
     var todayUsedSeconds: Int {
         let todayStart = Self.todayStartUTC
         return records.filter { $0.startedAt >= todayStart }
