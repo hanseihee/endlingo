@@ -23,8 +23,6 @@ struct endlingoApp: App {
         )
         // Google Mobile Ads 초기화
         MobileAds.shared.start(completionHandler: nil)
-        // RevenueCat 구독 관리 초기화
-        SubscriptionService.shared.configure()
     }
 
     var body: some Scene {
@@ -50,6 +48,8 @@ struct endlingoApp: App {
                 }
             }
             .task {
+                // RevenueCat SDK 초기화 (@MainActor 안전, Swift 6 호환)
+                SubscriptionService.shared.configure()
                 await updateService.checkForUpdate()
             }
             .onOpenURL { url in

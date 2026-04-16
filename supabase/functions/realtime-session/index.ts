@@ -99,7 +99,6 @@ Deno.serve(async (req) => {
   let scenarioTitle = "Phone Call";
   let personaName = "AI";
   let personaEmoji = "📞";
-  let clientTier = "free";
   try {
     const body = await req.json();
     if (typeof body.voice === "string" && ALLOWED_VOICES.has(body.voice)) {

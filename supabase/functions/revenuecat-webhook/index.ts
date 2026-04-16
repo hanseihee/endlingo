@@ -23,9 +23,13 @@ Deno.serve(async (req) => {
 
   // ---- 1) Webhook 인증 ----
   const webhookSecret = Deno.env.get("REVENUECAT_WEBHOOK_SECRET");
-  const authHeader = req.headers.get("Authorization");
+  if (!webhookSecret) {
+    console.error("REVENUECAT_WEBHOOK_SECRET not configured — rejecting all requests");
+    return json({ error: "server_config_missing" }, 500);
+  }
 
-  if (webhookSecret && authHeader !== `Bearer ${webhookSecret}`) {
+  const authHeader = req.headers.get("Authorization");
+  if (authHeader !== `Bearer ${webhookSecret}`) {
     console.error("Webhook auth failed");
     return json({ error: "unauthorized" }, 401);
   }
@@ -57,6 +61,12 @@ Deno.serve(async (req) => {
   if (!appUserId) {
     console.error("Webhook missing app_user_id:", JSON.stringify(event).slice(0, 300));
     return json({ error: "missing_app_user_id" }, 400);
+  }
+
+  // RevenueCat anonymous ID ($RCAnonymousID:xxx)는 Supabase UUID와 매칭 안 되므로 무시
+  if (appUserId.startsWith("$RCAnonymousID")) {
+    console.log(`[Webhook] skipping anonymous user: ${appUserId}`);
+    return json({ ok: true, skipped: "anonymous_user" });
   }
 
   console.log(`[Webhook] type=${type}, user=${appUserId}, product=${productId}, expires=${expiresAt}`);
