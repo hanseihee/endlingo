@@ -9,10 +9,13 @@ enum PhoneCallAIService {
     // MARK: - Public API
 
     /// 단일 발화를 네이티브 언어로 번역합니다. 실패 시 nil 반환 (UI가 번역 생략).
+    /// 현재 활성 통화의 provider(OpenAI/Gemini)에 따라 서버가 동일 엔진을 사용.
     static func translate(text: String) async -> String? {
+        let provider = await currentProviderString()
         let body: [String: Any] = [
             "text": text,
             "native_language": currentNativeLanguage(),
+            "provider": provider,
         ]
         do {
             let response: TranslationResponse = try await callFunction("translate-phone-turn", body: body)
@@ -30,10 +33,12 @@ enum PhoneCallAIService {
         level: String
     ) async -> [CallIssue] {
         let transcriptJson = transcript.map { ["speaker": $0.speaker, "text": $0.text] }
+        let provider = await currentProviderString()
         let body: [String: Any] = [
             "transcript": transcriptJson,
             "native_language": currentNativeLanguage(),
             "level": level,
+            "provider": provider,
         ]
         do {
             let response: ReviewResponse = try await callFunction("review-phone-call", body: body)
@@ -41,6 +46,16 @@ enum PhoneCallAIService {
         } catch {
             print("[PhoneCallAI] review failed: \(error.localizedDescription)")
             return []
+        }
+    }
+
+    /// 현재 활성 통화의 AI provider를 서버 전달용 문자열로 반환.
+    /// 통화 중이 아니면 OpenAI 기본값.
+    @MainActor
+    private static func currentProviderString() -> String {
+        switch PhoneCallController.shared.currentProvider {
+        case .openAI: return "openai"
+        case .gemini: return "gemini"
         }
     }
 
