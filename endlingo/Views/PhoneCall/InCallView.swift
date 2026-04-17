@@ -12,12 +12,9 @@ struct InCallView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [Color.black, Color(.systemGray6).opacity(0.05)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            // 라이트=흰색, 다크=검정. iOS Messages 앱과 동일한 단색 배경.
+            Color(.systemBackground)
+                .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 callerHeader
@@ -48,17 +45,17 @@ struct InCallView: View {
             Text(controller.currentScenario?.emoji ?? "📞")
                 .font(.system(size: 68))
                 .frame(width: 120, height: 120)
-                .background(Color.white.opacity(0.08))
+                .background(Color(.tertiarySystemGroupedBackground))
                 .clipShape(Circle())
 
             Text(controller.currentVariant?.personaName ?? controller.currentScenario?.personaName ?? "AI")
                 .font(.title2.bold())
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
 
             if let role = controller.currentScenario?.personaRole {
                 Text(LocalizedStringKey(role))
                     .font(.footnote)
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(.secondary)
             }
 
             statusBadge
@@ -68,7 +65,7 @@ struct InCallView: View {
             HStack(spacing: 8) {
                 Text(elapsedFormatted)
                     .font(.body.monospacedDigit())
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(.primary)
 
                 let remaining = max(0, controller.maxDurationSeconds - elapsed)
                 if remaining <= 30 && remaining > 0 {
@@ -86,28 +83,28 @@ struct InCallView: View {
         switch controller.phase {
         case .connecting:
             HStack(spacing: 6) {
-                ProgressView().scaleEffect(0.7).tint(.white)
+                ProgressView().scaleEffect(0.7)
                 Text("연결 중…")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
-            .background(Color.white.opacity(0.15))
+            .background(Color(.tertiarySystemGroupedBackground))
             .clipShape(Capsule())
 
         case .active:
             HStack(spacing: 6) {
                 Circle()
-                    .fill(voice.isAssistantSpeaking ? Color.green : Color.white.opacity(0.4))
+                    .fill(voice.isAssistantSpeaking ? Color.green : Color.secondary.opacity(0.4))
                     .frame(width: 6, height: 6)
                 Text(voice.isAssistantSpeaking ? "상대방이 말하는 중" : "통화 중")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
-            .background(Color.white.opacity(0.15))
+            .background(Color(.tertiarySystemGroupedBackground))
             .clipShape(Capsule())
 
         default:
@@ -191,21 +188,17 @@ struct InCallView: View {
             VStack(alignment: speaker == .user ? .trailing : .leading, spacing: 4) {
                 Text(text)
                     .font(.callout)
-                    .foregroundStyle(speaker == .user ? .white : .black)
+                    .foregroundStyle(speaker == .user ? .white : .primary)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 9)
-                    .background(speaker == .user ? Color.blue : Color.white)
+                    .background(speaker == .user ? Color.accentColor : Color(.systemGray5))
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .opacity(isPartial ? 0.7 : 1)
 
                 if let translation, !translation.isEmpty {
                     Text(translation)
                         .font(.caption)
-                        .foregroundStyle(
-                            speaker == .user
-                                ? Color.white.opacity(0.7)
-                                : Color.white.opacity(0.55)
-                        )
+                        .foregroundStyle(.secondary)
                         .padding(.horizontal, 6)
                         .multilineTextAlignment(speaker == .user ? .trailing : .leading)
                 }
@@ -226,8 +219,8 @@ struct InCallView: View {
             } label: {
                 controlButton(
                     systemName: isMuted ? "mic.slash.fill" : "mic.fill",
-                    color: isMuted ? .white : .white.opacity(0.9),
-                    background: isMuted ? Color.white.opacity(0.3) : Color.white.opacity(0.12)
+                    color: isMuted ? Color.accentColor : .primary,
+                    background: isMuted ? Color.accentColor.opacity(0.15) : Color(.tertiarySystemGroupedBackground)
                 )
             }
 
@@ -250,8 +243,8 @@ struct InCallView: View {
             } label: {
                 controlButton(
                     systemName: voice.isSpeakerOn ? "speaker.wave.3.fill" : "ear.fill",
-                    color: voice.isSpeakerOn ? .white : .white.opacity(0.9),
-                    background: voice.isSpeakerOn ? Color.white.opacity(0.3) : Color.white.opacity(0.12)
+                    color: voice.isSpeakerOn ? Color.accentColor : .primary,
+                    background: voice.isSpeakerOn ? Color.accentColor.opacity(0.15) : Color(.tertiarySystemGroupedBackground)
                 )
             }
         }
