@@ -491,9 +491,6 @@
         }
       }
     },
-    "AI 엔진" : {
-
-    },
     "AI 전화영어" : {
       "localizations" : {
         "ja" : {
@@ -704,9 +701,6 @@
         }
       }
     },
-    "Gemini" : {
-
-    },
     "Google 로그인 정보를 가져올 수 없습니다" : {
       "localizations" : {
         "ja" : {
@@ -849,9 +843,6 @@
           }
         }
       }
-    },
-    "OpenAI" : {
-
     },
     "Premium" : {
       "localizations" : {
@@ -4808,18 +4799,82 @@
         }
       }
     },
-    "이번 주" : {
+    "이메일 또는 비밀번호가 올바르지 않습니다" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "今週"
+            "value" : "メールアドレスまたはパスワードが正しくありません"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tuần này"
+            "value" : "Email hoặc mật khẩu không đúng"
+          }
+        }
+      }
+    },
+    "이메일로 로그인" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メールでログイン"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đăng nhập bằng email"
+          }
+        }
+      }
+    },
+    "이미 계정이 있으신가요? **로그인**" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウントをお持ちですか？ **ログイン**"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã có tài khoản? **Đăng nhập**"
+          }
+        }
+      }
+    },
+    "이미 등록된 이메일입니다. 로그인해주세요" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すでに登録済みのメールアドレスです。ログインしてください"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Email này đã được đăng ký. Vui lòng đăng nhập"
+          }
+        }
+      }
+    },
+    "이미 저장된 단어입니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すでに保存済みの単語です"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Từ này đã được lưu"
           }
         }
       }
@@ -4904,22 +4959,6 @@
         }
       }
     },
-    "이메일 또는 비밀번호가 올바르지 않습니다" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "メールアドレスまたはパスワードが正しくありません"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Email hoặc mật khẩu không đúng"
-          }
-        }
-      }
-    },
     "이메일 인증이 완료되지 않았습니다. 메일함을 확인해주세요." : {
       "localizations" : {
         "ja" : {
@@ -4932,38 +4971,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa xác thực email. Vui lòng kiểm tra hộp thư."
-          }
-        }
-      }
-    },
-    "이메일로 로그인" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "メールでログイン"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đăng nhập bằng email"
-          }
-        }
-      }
-    },
-    "이미 계정이 있으신가요? **로그인**" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アカウントをお持ちですか？ **ログイン**"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đã có tài khoản? **Đăng nhập**"
           }
         }
       }
@@ -4986,34 +4993,18 @@
         }
       }
     },
-    "이미 등록된 이메일입니다. 로그인해주세요" : {
+    "이번 주" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "すでに登録済みのメールアドレスです。ログインしてください"
+            "value" : "今週"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Email này đã được đăng ký. Vui lòng đăng nhập"
-          }
-        }
-      }
-    },
-    "이미 저장된 단어입니다" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "すでに保存済みの単語です"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Từ này đã được lưu"
+            "value" : "Tuần này"
           }
         }
       }
@@ -5146,22 +5137,6 @@
         }
       }
     },
-    "저장한 단어가 없습니다" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "保存した単語はありません"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chưa lưu từ nào"
-          }
-        }
-      }
-    },
     "전" : {
       "localizations" : {
         "ja" : {
@@ -5174,55 +5149,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "prep."
-          }
-        }
-      }
-    },
-    "전문적인 영어를 유창하게 구사해요" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "専門的な英語を流暢に使いこなせます"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sử dụng tiếng Anh chuyên ngành một cách lưu loát"
-          }
-        }
-      }
-    },
-    "전화 주문" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "電話注文"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đặt hàng qua điện thoại"
-          }
-        }
-      }
-    },
-    "접" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "接"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "conj."
           }
         }
       }
@@ -5311,6 +5237,22 @@
         }
       }
     },
+    "저장한 단어가 없습니다" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存した単語はありません"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa lưu từ nào"
+          }
+        }
+      }
+    },
     "저장한 문법이 없습니다" : {
       "localizations" : {
         "ja" : {
@@ -5323,6 +5265,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa lưu điểm ngữ pháp nào"
+          }
+        }
+      }
+    },
+    "전문적인 영어를 유창하게 구사해요" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "専門的な英語を流暢に使いこなせます"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sử dụng tiếng Anh chuyên ngành một cách lưu loát"
           }
         }
       }
@@ -5396,6 +5354,23 @@
         }
       }
     },
+    "전화 주문" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "電話注文"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đặt hàng qua điện thoại"
+          }
+        }
+      }
+    },
     "전화영어" : {
 
     },
@@ -5411,6 +5386,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "12 giờ trưa"
+          }
+        }
+      }
+    },
+    "접" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "conj."
           }
         }
       }
@@ -6523,18 +6514,18 @@
         }
       }
     },
-    "통화는 OpenAI Realtime API로 연결됩니다. 조용한 환경에서 이어폰 사용을 권장합니다" : {
+    "통화는 Google Gemini Live API로 연결됩니다. 조용한 환경에서 이어폰 사용을 권장합니다" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "通話はOpenAI Realtime APIで接続されます。静かな環境でイヤホンの使用をお勧めします"
+            "value" : "通話はGoogle Gemini Live APIで接続されます。静かな環境でイヤホンの使用をお勧めします"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cuộc gọi được kết nối qua OpenAI Realtime API. Khuyến nghị dùng tai nghe ở nơi yên tĩnh"
+            "value" : "Cuộc gọi được kết nối qua Google Gemini Live API. Khuyến nghị dùng tai nghe ở nơi yên tĩnh"
           }
         }
       }

@@ -5,10 +5,8 @@ import SwiftUI
 /// AI 실시간 음성 통화 파사드.
 ///
 /// UI(InCallView)와 PhoneCallController가 직접 참조하는 유일한 서비스.
-/// 실제 네트워크 전송은 `RealtimeProviderAdapter`(OpenAI / Gemini)에 위임하고,
+/// 실제 네트워크 전송은 `GeminiLiveAdapter`에 위임하고,
 /// 오디오 캡처/재생은 `CallAudioPipeline`에 위임합니다.
-///
-/// 공개 API는 기존과 100% 동일하게 유지하여 호출부 변경이 필요 없습니다.
 @Observable
 @MainActor
 final class RealtimeVoiceService: NSObject {
@@ -68,31 +66,21 @@ final class RealtimeVoiceService: NSObject {
 
     // MARK: - Public API (기존과 동일한 시그니처)
 
-    /// AI provider에 연결하고 세션을 구성합니다.
+    /// Gemini Live API에 연결하고 세션을 구성합니다.
     /// - 선행 조건: AVAudioSession이 이미 활성화돼 있어야 함 (CallKit이 처리).
     func connect(
         scenario: PhoneCallScenario,
         variant: ScenarioVariant,
         level: EnglishLevel,
-        nativeLanguage: String,
-        ephemeralKey: String,
-        provider: CallAIProvider = .openAI
+        nativeLanguage: String
     ) async {
         guard state != .connecting && state != .connected else { return }
         state = .connecting
         resetState()
 
-        // Provider adapter 생성
-        let selectedAdapter: RealtimeProviderAdapter
-        switch provider {
-        case .openAI:
-            selectedAdapter = OpenAIRealtimeAdapter()
-        case .gemini:
-            selectedAdapter = GeminiLiveAdapter()
-        }
+        let selectedAdapter: RealtimeProviderAdapter = GeminiLiveAdapter()
         adapter = selectedAdapter
 
-        // 오디오 파이프라인 생성 (provider의 sampleRate 사용)
         let pipeline = CallAudioPipeline(
             inputSampleRate: selectedAdapter.inputSampleRate,
             outputSampleRate: selectedAdapter.outputSampleRate
@@ -118,19 +106,17 @@ final class RealtimeVoiceService: NSObject {
         case .undetermined: permission = "undetermined"
         @unknown default: permission = "unknown"
         }
-        print("[RealtimeVoice] connect start — provider=\(provider), micPermission=\(permission), inputAvail=\(audioSession.isInputAvailable), category=\(audioSession.category.rawValue)")
+        print("[RealtimeVoice] connect start — micPermission=\(permission), inputAvail=\(audioSession.isInputAvailable), category=\(audioSession.category.rawValue)")
 
-        // 세션 구성
         let config = ProviderSessionConfig(
             instructions: scenario.instructions(for: level, nativeLanguage: nativeLanguage, variant: variant),
             voice: variant.voice,
             firstResponseInstructions: variant.firstResponseInstructions,
-            ephemeralKey: provider == .openAI ? ephemeralKey : nil,
-            geminiModel: provider == .gemini ? "gemini-3.1-flash-live-preview" : nil
+            geminiModel: "gemini-3.1-flash-live-preview"
         )
 
         do {
-            print("[RealtimeVoice] calling adapter.connect — provider=\(provider)")
+            print("[RealtimeVoice] calling adapter.connect")
             try await selectedAdapter.connect(config: config, delegate: self)
             if state == .connecting { state = .connected }
             print("[RealtimeVoice] ✅ adapter connected, state=\(state)")
@@ -199,10 +185,8 @@ final class RealtimeVoiceService: NSObject {
     // MARK: - Translation
 
     private func fetchTranslation(for entryId: UUID, text: String) {
-        // provider를 MainActor에서 캡처 (통화 간 race 방지)
-        let provider = PhoneCallController.shared.currentProvider
         Task { [weak self] in
-            guard let translation = await PhoneCallAIService.translate(text: text, provider: provider) else { return }
+            guard let translation = await PhoneCallAIService.translate(text: text) else { return }
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 if let idx = self.transcript.firstIndex(where: { $0.id == entryId }) {

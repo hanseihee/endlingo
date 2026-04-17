@@ -1,15 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 /**
- * 통화 종료 후 사용자 발화 피드백 생성.
+ * 통화 종료 후 사용자 발화 피드백 생성 (Gemini 3.1 Flash Lite).
  * 어색하거나 잘못된 문장을 자연스러운 영어로 교정 + 네이티브 언어로 설명.
  *
  * Request:
  *   {
  *     transcript: [{ speaker: "user"|"assistant", text: string }, ...],
  *     native_language: "ko" | "ja" | "vi" | "en",
- *     level: "A1" | "A2" | ... | "C2",
- *     provider?: "openai" | "gemini"  // default: openai
+ *     level: "A1" | "A2" | ... | "C2"
  *   }
  * Response: { issues: [{ original, improved, explanation }, ...] }  (0~5개)
  */
@@ -25,7 +24,6 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors() });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
-  const openaiKey = Deno.env.get("OPENAI_API_KEY");
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
@@ -47,7 +45,6 @@ Deno.serve(async (req) => {
   let transcript: Turn[] = [];
   let language = "ko";
   let level = "A2";
-  let provider = "openai";
   try {
     const body = await req.json();
     if (Array.isArray(body.transcript)) {
@@ -63,9 +60,6 @@ Deno.serve(async (req) => {
       language = body.native_language;
     }
     if (typeof body.level === "string") level = body.level;
-    if (body.provider === "gemini" || body.provider === "openai") {
-      provider = body.provider;
-    }
   } catch {
     return json({ error: "invalid_body" }, 400);
   }
@@ -100,9 +94,7 @@ Learner's sentences:
 ${numbered}`;
 
   try {
-    const content = provider === "gemini"
-      ? await reviewWithGemini(geminiKey, systemPrompt, userPrompt)
-      : await reviewWithOpenAI(openaiKey, systemPrompt, userPrompt);
+    const content = await reviewWithGemini(geminiKey, systemPrompt, userPrompt);
 
     try {
       const parsed = JSON.parse(content);
@@ -117,41 +109,14 @@ ${numbered}`;
         .slice(0, 5);
       return json({ issues: clean });
     } catch {
-      console.error(`Failed to parse review JSON (${provider}):`, content.slice(0, 300));
+      console.error("Failed to parse review JSON:", content.slice(0, 300));
       return json({ issues: [] });
     }
   } catch (err) {
-    console.error(`Review (${provider}) failed:`, err);
+    console.error("Review failed:", err);
     return json({ error: String(err) }, 502);
   }
 });
-
-async function reviewWithOpenAI(apiKey: string | undefined, systemPrompt: string, userPrompt: string): Promise<string> {
-  if (!apiKey) throw new Error("OPENAI_API_KEY missing");
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-5.4-mini",
-      max_completion_tokens: 1500,
-      temperature: 0.4,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-    }),
-  });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`openai_${response.status}: ${detail.slice(0, 200)}`);
-  }
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content ?? "{}";
-}
 
 async function reviewWithGemini(apiKey: string | undefined, systemPrompt: string, userPrompt: string): Promise<string> {
   if (!apiKey) throw new Error("GEMINI_API_KEY missing");

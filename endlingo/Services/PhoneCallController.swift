@@ -20,7 +20,7 @@ final class PhoneCallController: NSObject {
     enum Phase: Equatable {
         case idle
         case ringing         // reportNewIncomingCall 호출, 사용자 응답 대기 중
-        case connecting      // 수락 후 ephemeral key 대기 + WebSocket 연결 중
+        case connecting      // 수락 후 Gemini 세션 등록 + WebSocket 연결 중
         case active          // 통화 진행 중
         case ended(reason: String?)  // 정상 종료 또는 에러
     }
@@ -59,7 +59,6 @@ final class PhoneCallController: NSObject {
 
     @ObservationIgnored private let callController = CXCallController()
     @ObservationIgnored private var currentCallUUID: UUID?
-    @ObservationIgnored private var ephemeralKeyTask: Task<RealtimeSessionAPI.EphemeralKeyResponse, Error>?
     @ObservationIgnored private var geminiSessionTask: Task<GeminiSessionAPI.SessionResponse, Error>?
     /// Edge Function이 pending row로 만들어둔 phone_call_sessions.id.
     /// 통화 종료 시 이 id로 UPDATE 해서 pending → completed로 전환.
@@ -82,12 +81,9 @@ final class PhoneCallController: NSObject {
 
     // MARK: - Public API
 
-    /// 현재 통화에 사용 중인 AI provider.
-    private(set) var currentProvider: CallAIProvider = .openAI
-
     /// 전화 오는 연출을 시작합니다. 사용자가 수락하면 자동으로 WebSocket 연결이 이어집니다.
     /// CallKit이 사용 불가한 지역에서는 즉시 `.ended(reason:)`로 종료됩니다 — 호출자가 fallback UI를 제공해야 합니다.
-    func incomingCall(scenario: PhoneCallScenario, level: EnglishLevel, aiProvider: CallAIProvider = .openAI) {
+    func incomingCall(scenario: PhoneCallScenario, level: EnglishLevel) {
         guard isCallKitAvailable else {
             phase = .ended(reason: String(localized: "이 지역에서는 AI 전화영어 기능을 사용할 수 없습니다"))
             return
@@ -96,7 +92,6 @@ final class PhoneCallController: NSObject {
         if case .idle = phase {} else if case .ended = phase {} else { return }
 
         currentScenario = scenario
-        currentProvider = aiProvider
         maxDurationSeconds = SubscriptionService.shared.currentTier.maxSingleCallSeconds
         // 매 통화마다 시나리오 variant를 새로 뽑아 대화를 다양화.
         let variant = scenario.randomVariant()
@@ -110,15 +105,9 @@ final class PhoneCallController: NSObject {
         let uuid = UUID()
         currentCallUUID = uuid
 
-        // 서버 session_id + quota 미리 발급 (provider별 분기)
-        if currentProvider == .openAI {
-            ephemeralKeyTask = Task {
-                try await RealtimeSessionAPI.fetchEphemeralKey(scenario: scenario, personaNameOverride: variant.personaName)
-            }
-        } else {
-            geminiSessionTask = Task {
-                try await GeminiSessionAPI.registerSession(scenario: scenario, personaNameOverride: variant.personaName)
-            }
+        // 서버 session_id + quota 미리 발급
+        geminiSessionTask = Task {
+            try await GeminiSessionAPI.registerSession(scenario: scenario, personaNameOverride: variant.personaName)
         }
 
         let update = CXCallUpdate()
@@ -179,8 +168,6 @@ final class PhoneCallController: NSObject {
 
     private func cleanup() {
         currentCallUUID = nil
-        ephemeralKeyTask?.cancel()
-        ephemeralKeyTask = nil
         geminiSessionTask?.cancel()
         geminiSessionTask = nil
         // 연결 실패 등으로 통화가 즉시 종료된 경우 pending row를 completed로 전환.
@@ -188,6 +175,8 @@ final class PhoneCallController: NSObject {
         if let sessionId = currentSessionId {
             cancelPendingSession(sessionId: sessionId)
         }
+        // resetToIdle()로 가기 전 재진입 시 stale sessionId를 쓰지 않도록 즉시 초기화.
+        currentSessionId = nil
         RealtimeVoiceService.shared.disconnect()
     }
 
@@ -246,51 +235,25 @@ extension PhoneCallController: CXProviderDelegate {
                     return
                 }
 
-                var ephemeralKey = ""
-                // OpenAI: ephemeral key 대기, Gemini: 건너뜀 (Firebase SDK가 인증 처리)
-                if self.currentProvider == .openAI {
-                    guard let task = self.ephemeralKeyTask else {
-                        action.fail()
-                        self.phase = .ended(reason: "session key task missing")
-                        return
-                    }
-                    let keyResponse = try await task.value
-                    self.currentSessionId = keyResponse.sessionId
-                    if let serverMax = keyResponse.maxDurationSeconds, serverMax > 0 {
-                        self.maxDurationSeconds = serverMax
-                    }
-                    ephemeralKey = keyResponse.ephemeralKey
-                    print("[PhoneCall] ephemeral key received, model=\(keyResponse.model ?? "?"), tier=\(keyResponse.tier ?? "?"), maxDuration=\(self.maxDurationSeconds)s, session_id=\(keyResponse.sessionId?.uuidString ?? "nil")")
-                } else {
-                    print("[PhoneCall] Gemini path — waiting for gemini session task…")
-                    guard let task = self.geminiSessionTask else {
-                        print("[PhoneCall] ❌ geminiSessionTask is nil!")
-                        action.fail()
-                        self.phase = .ended(reason: "gemini session task missing")
-                        return
-                    }
-                    do {
-                        let sessionResponse = try await task.value
-                        self.currentSessionId = sessionResponse.sessionId
-                        if let serverMax = sessionResponse.maxDurationSeconds, serverMax > 0 {
-                            self.maxDurationSeconds = serverMax
-                        }
-                        print("[PhoneCall] ✅ Gemini session registered, tier=\(sessionResponse.tier ?? "?"), maxDuration=\(self.maxDurationSeconds)s, session_id=\(sessionResponse.sessionId?.uuidString ?? "nil")")
-                    } catch {
-                        print("[PhoneCall] ❌ Gemini session FAILED: \(error)")
-                        print("[PhoneCall] error type: \(type(of: error)), desc: \(error.localizedDescription)")
-                        // quota 실패해도 통화 시도는 계속 (Firebase SDK가 직접 연결)
-                        print("[PhoneCall] continuing without server session…")
-                    }
+                guard let task = self.geminiSessionTask else {
+                    action.fail()
+                    self.phase = .ended(reason: "gemini session task missing")
+                    return
                 }
+                // Gemini 세션 등록 실패는 통화 중단으로 처리 — 서버 quota/동시통화 검증을 건너뛰면
+                // 사용자가 한도를 우회할 수 있으므로 반드시 서버 응답을 받은 뒤 연결한다.
+                let sessionResponse = try await task.value
+                self.currentSessionId = sessionResponse.sessionId
+                if let serverMax = sessionResponse.maxDurationSeconds, serverMax > 0 {
+                    self.maxDurationSeconds = serverMax
+                }
+                print("[PhoneCall] Gemini session registered, tier=\(sessionResponse.tier ?? "?"), maxDuration=\(self.maxDurationSeconds)s, session_id=\(sessionResponse.sessionId?.uuidString ?? "nil")")
 
                 await RealtimeVoiceService.shared.connect(
                     scenario: scenario,
                     variant: variant,
                     level: self.currentLevel,
-                    nativeLanguage: self.nativeLanguageCode,
-                    ephemeralKey: ephemeralKey,
-                    provider: self.currentProvider
+                    nativeLanguage: self.nativeLanguageCode
                 )
                 print("[PhoneCall] after connect, voice state=\(RealtimeVoiceService.shared.state)")
 

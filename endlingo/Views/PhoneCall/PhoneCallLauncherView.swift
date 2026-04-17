@@ -11,11 +11,6 @@ struct PhoneCallLauncherView: View {
     @State private var history = PhoneCallHistoryService.shared
     @State private var subscription = SubscriptionService.shared
     @State private var showPaywall = false
-    @AppStorage("selectedAIProvider") private var selectedProviderRaw: String = CallAIProvider.openAI.rawValue
-
-    private var selectedProvider: CallAIProvider {
-        CallAIProvider(rawValue: selectedProviderRaw) ?? .openAI
-    }
 
     private var level: EnglishLevel {
         EnglishLevel(rawValue: selectedLevelRaw) ?? .a2
@@ -119,14 +114,6 @@ struct PhoneCallLauncherView: View {
                 // 차단성 알림(지역 제한/한도 초과)은 시나리오 탭 전에 인지할 수 있도록 상단에 배치
                 blockingNotice
 
-                // AI 엔진 선택
-                Picker(String(localized: "AI 엔진"), selection: $selectedProviderRaw) {
-                    Text("OpenAI").tag(CallAIProvider.openAI.rawValue)
-                    Text("Gemini").tag(CallAIProvider.gemini.rawValue)
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 16)
-
                 VStack(alignment: .leading, spacing: 8) {
                     Text("시나리오를 선택하세요")
                         .font(.headline)
@@ -219,7 +206,7 @@ struct PhoneCallLauncherView: View {
     private func scenarioRow(_ scenario: PhoneCallScenario) -> some View {
         Button {
             guard !isLimitReached else { return }
-            controller.incomingCall(scenario: scenario, level: level, aiProvider: selectedProvider)
+            controller.incomingCall(scenario: scenario, level: level)
         } label: {
             HStack(spacing: 12) {
                 Image(scenario.iconName)
@@ -343,7 +330,7 @@ struct PhoneCallLauncherView: View {
                 Label("이용 안내", systemImage: "info.circle")
                     .font(.footnote.bold())
                     .foregroundStyle(.secondary)
-                Text("통화는 OpenAI Realtime API로 연결됩니다. 조용한 환경에서 이어폰 사용을 권장합니다")
+                Text("통화는 Google Gemini Live API로 연결됩니다. 조용한 환경에서 이어폰 사용을 권장합니다")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

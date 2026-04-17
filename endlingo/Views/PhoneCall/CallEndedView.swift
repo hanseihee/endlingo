@@ -146,11 +146,9 @@ struct CallEndedView: View {
         }
         let level = selectedLevelRaw
         let sessionId = savedSessionId
-        // provider를 MainActor에서 캡처 (통화가 바뀌기 전 값 고정)
-        let provider = PhoneCallController.shared.currentProvider
 
         Task {
-            let issues = await PhoneCallAIService.review(transcript: lines, level: level, provider: provider)
+            let issues = await PhoneCallAIService.review(transcript: lines, level: level)
             await MainActor.run {
                 reviewIssues = issues
                 isLoadingReview = false

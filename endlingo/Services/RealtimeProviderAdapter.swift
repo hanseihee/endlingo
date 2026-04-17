@@ -1,16 +1,8 @@
 import Foundation
 
-// MARK: - AI Provider 선택
-
-/// 통화에 사용할 AI 프로바이더.
-enum CallAIProvider: String, CaseIterable, Sendable {
-    case openAI
-    case gemini
-}
-
 // MARK: - Provider Adapter Protocol
 
-/// OpenAI / Gemini 등 AI 프로바이더별 실시간 음성 전송 계층을 추상화하는 프로토콜.
+/// 실시간 음성 전송 계층 추상화.
 ///
 /// 책임:
 /// - 네트워크 연결 수명 주기 (connect / disconnect)
@@ -21,9 +13,9 @@ enum CallAIProvider: String, CaseIterable, Sendable {
 /// - AVAudioEngine, mic tap, playback scheduling
 @MainActor
 protocol RealtimeProviderAdapter: AnyObject {
-    /// 마이크 캡처에 사용할 PCM16 샘플레이트 (OpenAI: 24000, Gemini: 16000).
+    /// 마이크 캡처에 사용할 PCM16 샘플레이트.
     var inputSampleRate: Double { get }
-    /// 서버가 반환하는 오디오의 PCM16 샘플레이트 (공통: 24000).
+    /// 서버가 반환하는 오디오의 PCM16 샘플레이트.
     var outputSampleRate: Double { get }
 
     /// 서버에 연결하고 세션을 구성합니다.
@@ -43,22 +35,18 @@ struct ProviderSessionConfig: Sendable {
     let instructions: String
     let voice: String
     let firstResponseInstructions: String
-    /// OpenAI용 ephemeral key. Gemini는 nil (Firebase SDK가 인증 처리).
-    let ephemeralKey: String?
-    /// Gemini용 모델 이름. OpenAI는 nil (adapter 내부에서 결정).
+    /// Gemini 모델 이름.
     let geminiModel: String?
 
     init(
         instructions: String,
         voice: String,
         firstResponseInstructions: String,
-        ephemeralKey: String? = nil,
         geminiModel: String? = nil
     ) {
         self.instructions = instructions
         self.voice = voice
         self.firstResponseInstructions = firstResponseInstructions
-        self.ephemeralKey = ephemeralKey
         self.geminiModel = geminiModel
     }
 }

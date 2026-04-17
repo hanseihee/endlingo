@@ -1,7 +1,7 @@
 @preconcurrency import AVFoundation
 import Foundation
 
-/// OpenAI / Gemini 공통 오디오 엔진 파이프라인.
+/// AI 전화영어 공통 오디오 엔진 파이프라인.
 ///
 /// 책임:
 /// - AVAudioEngine + VPIO 구성 및 수명 주기 관리
@@ -31,9 +31,9 @@ final class CallAudioPipeline {
 
     // MARK: - Config
 
-    /// 마이크 캡처 목표 샘플레이트 (OpenAI: 24000, Gemini: 16000).
+    /// 마이크 캡처 목표 샘플레이트 (Gemini: 16000).
     private let inputSampleRate: Double
-    /// 서버 오디오 수신 샘플레이트 (공통: 24000).
+    /// 서버 오디오 수신 샘플레이트 (Gemini: 24000).
     private let outputSampleRate: Double
 
     // MARK: - Audio Engine
