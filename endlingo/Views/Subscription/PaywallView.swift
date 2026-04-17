@@ -4,6 +4,10 @@ import RevenueCat
 /// Premium 구독 구매 화면.
 /// PhoneCallLauncherView의 blockingNotice 또는 프로필에서 sheet로 표시.
 struct PaywallView: View {
+    /// Apple App Store 심사 가이드라인 3.1.2 요구사항에 따라 paywall 내에서 접근 가능해야 함.
+    private static let termsURL = URL(string: "https://hanseihee.github.io/endlingo/legal/terms.html")!
+    private static let privacyURL = URL(string: "https://hanseihee.github.io/endlingo/legal/privacy.html")!
+
     @Environment(\.dismiss) private var dismiss
     @State private var subscription = SubscriptionService.shared
 
@@ -162,8 +166,15 @@ struct PaywallView: View {
 
                 Spacer()
 
-                Text(package.localizedPriceString)
-                    .font(.body.weight(.semibold))
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(package.localizedPriceString)
+                        .font(.body.weight(.semibold))
+                    if let suffix = periodSuffix(for: package) {
+                        Text(suffix)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
             .padding(16)
             .background(
@@ -226,7 +237,7 @@ struct PaywallView: View {
     // MARK: - Footer
 
     private var footerSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 14) {
             Button {
                 Task {
                     do {
@@ -242,11 +253,47 @@ struct PaywallView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("구독은 언제든 해지할 수 있습니다. 무료 체험 기간이 끝나면 자동으로 결제됩니다.")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-                .multilineTextAlignment(.center)
+            Divider()
+
+            // Apple Guideline 3.1.2 필수: 자동 갱신 구독 고지
+            VStack(alignment: .leading, spacing: 4) {
+                Text("결제는 구매 확인 시 Apple 계정으로 청구됩니다.")
+                Text("구독은 현재 기간 종료 최소 24시간 전까지 해지하지 않으면 자동 갱신됩니다.")
+                Text("현재 기간 종료 24시간 이내에 갱신 요금이 청구됩니다.")
+                Text("구독 관리 및 자동 갱신 해지는 iPhone 설정 > Apple ID > 구독에서 할 수 있습니다.")
+                Text("무료 체험 기간에 해지하지 않으면 유료 구독으로 자동 전환됩니다.")
+            }
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 10) {
+                Link(destination: Self.termsURL) {
+                    Text("이용약관")
+                        .underline()
+                }
+                Text("·")
+                    .foregroundStyle(.tertiary)
+                Link(destination: Self.privacyURL) {
+                    Text("개인정보처리방침")
+                        .underline()
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
         .padding(.bottom, 16)
+    }
+
+    // MARK: - Helpers
+
+    /// 구독 주기에 따른 가격 suffix ("/ 월", "/ 년"). 단일 결제 상품은 nil.
+    private func periodSuffix(for package: Package) -> LocalizedStringKey? {
+        guard let period = package.storeProduct.subscriptionPeriod else { return nil }
+        switch period.unit {
+        case .month: return "/ 월"
+        case .year: return "/ 년"
+        default: return nil
+        }
     }
 }
