@@ -9,13 +9,14 @@ enum PhoneCallAIService {
     // MARK: - Public API
 
     /// 단일 발화를 네이티브 언어로 번역합니다. 실패 시 nil 반환 (UI가 번역 생략).
-    /// 현재 활성 통화의 provider(OpenAI/Gemini)에 따라 서버가 동일 엔진을 사용.
-    static func translate(text: String) async -> String? {
-        let provider = await currentProviderString()
+    /// `provider`는 호출자(통화 스코프)가 캡처한 값 — 통화 간 race 방지.
+    /// 생략 시 현재 MainActor의 PhoneCallController.currentProvider를 사용.
+    static func translate(text: String, provider: CallAIProvider? = nil) async -> String? {
+        let providerStr = await resolveProvider(provider)
         let body: [String: Any] = [
             "text": text,
             "native_language": currentNativeLanguage(),
-            "provider": provider,
+            "provider": providerStr,
         ]
         do {
             let response: TranslationResponse = try await callFunction("translate-phone-turn", body: body)
@@ -30,15 +31,16 @@ enum PhoneCallAIService {
     /// 통화 종료 후 사용자 발화에 대한 교정 피드백을 가져옵니다.
     static func review(
         transcript: [PhoneCallRecord.TranscriptLine],
-        level: String
+        level: String,
+        provider: CallAIProvider? = nil
     ) async -> [CallIssue] {
         let transcriptJson = transcript.map { ["speaker": $0.speaker, "text": $0.text] }
-        let provider = await currentProviderString()
+        let providerStr = await resolveProvider(provider)
         let body: [String: Any] = [
             "transcript": transcriptJson,
             "native_language": currentNativeLanguage(),
             "level": level,
-            "provider": provider,
+            "provider": providerStr,
         ]
         do {
             let response: ReviewResponse = try await callFunction("review-phone-call", body: body)
@@ -49,11 +51,15 @@ enum PhoneCallAIService {
         }
     }
 
-    /// 현재 활성 통화의 AI provider를 서버 전달용 문자열로 반환.
-    /// 통화 중이 아니면 OpenAI 기본값.
-    @MainActor
-    private static func currentProviderString() -> String {
-        switch PhoneCallController.shared.currentProvider {
+    /// 명시적 provider가 있으면 그걸 쓰고, 없으면 현재 컨트롤러의 값을 조회.
+    private static func resolveProvider(_ explicit: CallAIProvider?) async -> String {
+        let provider: CallAIProvider
+        if let explicit {
+            provider = explicit
+        } else {
+            provider = await MainActor.run { PhoneCallController.shared.currentProvider }
+        }
+        switch provider {
         case .openAI: return "openai"
         case .gemini: return "gemini"
         }

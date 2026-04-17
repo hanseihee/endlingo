@@ -199,8 +199,10 @@ final class RealtimeVoiceService: NSObject {
     // MARK: - Translation
 
     private func fetchTranslation(for entryId: UUID, text: String) {
+        // provider를 MainActor에서 캡처 (통화 간 race 방지)
+        let provider = PhoneCallController.shared.currentProvider
         Task { [weak self] in
-            guard let translation = await PhoneCallAIService.translate(text: text) else { return }
+            guard let translation = await PhoneCallAIService.translate(text: text, provider: provider) else { return }
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 if let idx = self.transcript.firstIndex(where: { $0.id == entryId }) {
