@@ -15,8 +15,6 @@ struct PaywallView: View {
     @State private var selectedPackage: Package?
     @State private var errorMessage: String?
     @State private var showRestoreSuccess = false
-    /// 무료 체험 자격 (productIdentifier → eligible). 이미 체험 사용한 유저에겐 "7일 무료" 미표시.
-    @State private var trialEligibility: [String: Bool] = [:]
 
     var body: some View {
         NavigationStack {
@@ -48,14 +46,6 @@ struct PaywallView: View {
                 do {
                     offering = try await subscription.loadCurrentOffering()
                     selectedPackage = offering?.annual ?? offering?.monthly
-
-                    // 무료 체험 자격 검증 — 이미 사용한 유저에겐 "7일 무료" 미표시
-                    let productIds = [offering?.monthly, offering?.annual]
-                        .compactMap { $0?.storeProduct.productIdentifier }
-                    let eligibility = await Purchases.shared.checkTrialOrIntroDiscountEligibility(productIdentifiers: productIds)
-                    for (id, result) in eligibility {
-                        trialEligibility[id] = result.status == .eligible
-                    }
                 } catch {
                     errorMessage = error.localizedDescription
                 }
@@ -155,13 +145,6 @@ struct PaywallView: View {
                                 .clipShape(Capsule())
                         }
                     }
-                    if let intro = package.storeProduct.introductoryDiscount,
-                       intro.price == 0,
-                       trialEligibility[package.storeProduct.productIdentifier] == true {
-                        Text("7일 무료 체험")
-                            .font(.caption)
-                            .foregroundStyle(.green)
-                    }
                 }
 
                 Spacer()
@@ -219,8 +202,7 @@ struct PaywallView: View {
                         ProgressView()
                             .tint(.white)
                     } else {
-                        let eligible = selectedPackage.flatMap { trialEligibility[$0.storeProduct.productIdentifier] } ?? false
-                        Text(eligible ? "무료 체험 시작" : "구독하기")
+                        Text("구독하기")
                             .font(.body.weight(.bold))
                     }
                 }
@@ -261,7 +243,6 @@ struct PaywallView: View {
                 Text("구독은 현재 기간 종료 최소 24시간 전까지 해지하지 않으면 자동 갱신됩니다.")
                 Text("현재 기간 종료 24시간 이내에 갱신 요금이 청구됩니다.")
                 Text("구독 관리 및 자동 갱신 해지는 iPhone 설정 > Apple ID > 구독에서 할 수 있습니다.")
-                Text("무료 체험 기간에 해지하지 않으면 유료 구독으로 자동 전환됩니다.")
             }
             .font(.caption2)
             .foregroundStyle(.tertiary)

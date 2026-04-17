@@ -305,16 +305,6 @@
         }
       }
     },
-    "7일 무료 체험" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "7日間無料体験"
-          }
-        }
-      }
-    },
     "7일 연속 학습했습니다" : {
       "localizations" : {
         "ja" : {
@@ -1209,22 +1199,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gói đăng ký sẽ tự động gia hạn nếu bạn không hủy ít nhất 24 giờ trước khi kết thúc kỳ hạn hiện tại."
-          }
-        }
-      }
-    },
-    "무료 체험 기간에 해지하지 않으면 유료 구독으로 자동 전환됩니다." : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "無料トライアル期間中に解約しない場合、有料サブスクリプションに自動的に移行します。"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nếu không hủy trong thời gian dùng thử miễn phí, gói đăng ký sẽ tự động chuyển sang trả phí."
           }
         }
       }
@@ -2610,16 +2584,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無料1分→10分に拡張"
-          }
-        }
-      }
-    },
-    "무료 체험 시작" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "無料体験を始める"
           }
         }
       }
