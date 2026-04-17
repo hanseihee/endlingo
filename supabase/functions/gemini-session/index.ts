@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 /**
  * Gemini Live API용 세션 등록 + quota 관리.
  *
- * OpenAI와 달리 Gemini는 Firebase SDK가 클라이언트에서 직접 인증하므로
- * ephemeral key를 발급할 필요가 없습니다.
+ * 클라이언트가 Gemini API key로 직접 인증하므로 ephemeral key는 발급하지 않습니다.
  * 이 Edge Function은 quota 관리 + pending row 삽입만 수행합니다.
  *
  * 환경변수:
@@ -60,6 +59,26 @@ Deno.serve(async (req) => {
     now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0,
   ));
 
+  // 통화 응답 전·도중 비정상 종료(앱 강제종료/네트워크 단절 등)로 남은 pending row를
+  // premium 최대 통화 시간(10분)보다 넉넉하게 보고, 15분 경과 시 expired로 강제 전환.
+  // 기존 cron은 24시간 이후에만 정리하므로 같은 날 재시도가 call_in_progress로 막혔음.
+  const STALE_PENDING_MS = 15 * 60 * 1000;
+  const staleThreshold = new Date(Date.now() - STALE_PENDING_MS).toISOString();
+  const { error: staleCleanupError } = await adminClient
+    .from("phone_call_sessions")
+    .update({
+      status: "expired",
+      duration_seconds: 0,
+      completed_at: new Date().toISOString(),
+    })
+    .eq("user_id", user.id)
+    .eq("status", "pending")
+    .lt("started_at", staleThreshold);
+  if (staleCleanupError) {
+    console.error("Stale pending cleanup failed:", staleCleanupError);
+    // cleanup 실패는 치명적이지 않음 — 정상 로직 계속 진행
+  }
+
   const { data: usageData, error: usageError } = await adminClient
     .from("phone_call_sessions")
     .select("duration_seconds, status")
@@ -71,7 +90,7 @@ Deno.serve(async (req) => {
     return json({ error: "quota_check_failed" }, 503);
   }
 
-  // 동시 통화 방지
+  // 동시 통화 방지 (stale cleanup 이후이므로 진짜 진행 중인 통화만 남음)
   const pendingCount = (usageData || []).filter(
     (r: { status?: string }) => r.status === "pending"
   ).length;

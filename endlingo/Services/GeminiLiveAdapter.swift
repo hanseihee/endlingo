@@ -274,7 +274,10 @@ final class GeminiLiveAdapter: RealtimeProviderAdapter {
 
     private func performWebSocketUpgrade(conn: NWConnection, path: String) async throws {
         let wsKey = Data((0..<16).map { _ in UInt8.random(in: 0...255) }).base64EncodedString()
-        let request = "GET \(path) HTTP/1.1\r\nHost: \(host)\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: \(wsKey)\r\n\r\n"
+        // Raw TCP+TLS + 수동 WebSocket upgrade 구조라 iOS SDK가 자동으로 붙여주는 헤더가 없음.
+        // Google API Key Bundle ID 제한을 통과하려면 X-Ios-Bundle-Identifier를 명시적으로 전송해야 함.
+        let bundleId = Bundle.main.bundleIdentifier ?? ""
+        let request = "GET \(path) HTTP/1.1\r\nHost: \(host)\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: \(wsKey)\r\nX-Ios-Bundle-Identifier: \(bundleId)\r\n\r\n"
 
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             conn.send(content: request.data(using: .utf8), completion: .contentProcessed { err in
