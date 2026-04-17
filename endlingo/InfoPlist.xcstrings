@@ -15,6 +15,12 @@
             "state" : "translated",
             "value" : "영어하자"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "endlingo"
+          }
         }
       }
     },
@@ -22,9 +28,21 @@
       "comment" : "Bundle name",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "endlingo"
+          }
+        },
         "ko" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
+            "value" : "endlingo"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
             "value" : "endlingo"
           }
         }
@@ -36,13 +54,19 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "英語の文章を音読して発音を確認するためにマイクへのアクセスが必要です。"
+            "value" : "英語の発音練習とAI電話英会話で英語の会話をするためにマイクへのアクセスが必要です。AI電話英会話の使用時、音声はGoogle Geminiのサーバーに送信されリアルタイム応答の生成に使用されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "영어 문장을 따라 읽고 발음을 확인하기 위해 마이크 접근이 필요합니다."
+            "value" : "영어 발음 연습과 AI 전화영어에서 영어로 대화하기 위해 마이크 접근이 필요합니다. AI 전화영어 사용 시 음성은 Google Gemini 서버로 전송되어 실시간 응답 생성에 사용됩니다."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ứng dụng cần quyền truy cập micro để luyện phát âm và trò chuyện bằng tiếng Anh qua tính năng điện thoại AI. Khi dùng điện thoại tiếng Anh AI, giọng nói sẽ được gửi đến máy chủ Google Gemini để tạo phản hồi thời gian thực."
           }
         }
       }
@@ -60,6 +84,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "따라 읽기 기능에서 음성을 텍스트로 변환하기 위해 음성 인식이 필요합니다."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ứng dụng cần quyền nhận dạng giọng nói để chuyển âm thanh thành văn bản trong tính năng đọc theo."
           }
         }
       }
