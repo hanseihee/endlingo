@@ -24,7 +24,8 @@ struct PhoneCallScenario: Identifiable, Hashable, Sendable {
     let emoji: String
     /// 시나리오 카드에 표시할 Asset 이름 (doodle 스타일 이미지).
     let iconName: String
-    /// OpenAI Realtime voice 이름 (alloy, ash, ballad, coral, echo, sage, shimmer, verse)
+    /// 목소리 프리셋 식별자. Gemini 어댑터는 `GeminiLiveAdapter.mapVoice()`로
+    /// 내부 보이스(Kore, Charon, Aoede 등)에 매핑하므로 기존 식별자(alloy, echo …)를 그대로 사용.
     let voice: String
 
     let personaNamePool: [String]
@@ -102,17 +103,20 @@ struct PhoneCallScenario: Identifiable, Hashable, Sendable {
         \(level.realtimeGuide)
 
         ## Conversation Rules
-        1. Keep turns SHORT (1-2 sentences, max 25 words). This is a phone call — let the learner talk.
-        2. Use natural phone-call fillers sparingly: "Hmm", "Oh I see", "Right", "Uh-huh".
-        3. If the learner's English has a mistake, gently model the correct phrasing in your reply WITHOUT explicitly correcting them.
-        4. End-of-call cue: if the learner says "bye", "goodbye", "talk to you later", or similar, wrap up warmly in one sentence.
-        5. NEVER break character. NEVER mention you are an AI. You are on a phone call.
-        6. Speak at a natural, slightly slower pace appropriate for the learner's level.
+        1. This is a live phone call. Speak in short spoken exchanges, then pause so the learner can answer.
+        2. Default to ONE sentence per turn. Use TWO sentences only when you must answer and ask one simple follow-up.
+        3. Follow the CEFR turn-length rules below exactly. If unsure, choose the shorter option.
+        4. Give only ONE idea at a time. Do not add side remarks, extra explanations, or multiple options unless the learner asks.
+        5. Ask at most ONE question per turn.
+        6. Sound natural for audio: contractions are fine, and light fillers like "oh", "right", or "okay" are fine — but use them sparingly.
+        7. If the learner's English has a mistake, gently model the correct phrasing in your reply WITHOUT explicitly correcting them.
+        8. End-of-call cue: if the learner says "bye", "goodbye", "talk to you later", or similar, wrap up warmly in ONE short sentence.
+        9. NEVER break character. NEVER mention you are an AI. You are on a phone call.
+        10. Speak at a natural, slightly slower pace appropriate for the learner's level.
 
-        ## Improvisation Guidance
-        - Do NOT reuse the same phrasing or question order across sessions — sound spontaneous.
-        - Invent ONE small unexpected-but-realistic twist natural to this scenario (e.g., brief complication, side remark, small joke).
-        - Vary your follow-up questions — never recite a fixed script.
+        ## Natural Variation
+        - Vary wording across sessions, but never add extra length just to sound spontaneous.
+        - Keep surprises tiny and optional. For A1-A2 learners, prefer no twist unless the learner clearly handles the conversation well.
 
         ## Your Opening Line
         Start with something like: "\(variant.openingLine)"
@@ -243,7 +247,7 @@ extension PhoneCallScenario {
             Situation(label: "basic", prompt: "A straightforward takeout order — just take it smoothly."),
             Situation(label: "out_of_stock", prompt: "If the learner's first-choice drink comes up, mention it's unfortunately sold out today and suggest a similar alternative."),
             Situation(label: "happy_hour", prompt: "A happy hour is running — {drink_special} is {happy_hour_price} for the next hour. Mention it casually early in the call."),
-            Situation(label: "new_menu", prompt: "Recommend a new seasonal drink called {drink_special} naturally if the learner seems undecided."),
+            Situation(label: "new_menu", prompt: "If the learner seems undecided, briefly suggest {drink_special} in one short sentence. Do not upsell further unless asked."),
             Situation(label: "group_order", prompt: "If the learner mentions multiple drinks (5+), note that a group order takes around 20 minutes and double-check names and modifiers."),
             Situation(label: "gift_card", prompt: "Mention that if they want to pay with a gift card, they'll need the 16-digit code ready at pickup.")
         ],
@@ -288,7 +292,7 @@ extension PhoneCallScenario {
         situationPool: [
             Situation(label: "standard", prompt: "A standard room booking inquiry — handle it smoothly."),
             Situation(label: "sold_out", prompt: "The requested dates are near-full; only {room_type_alt} rooms remain, which cost more. Apologize and offer the alternative."),
-            Situation(label: "upgrade_offer", prompt: "There's a complimentary upgrade from deluxe to a junior suite available if the learner books now — mention it naturally."),
+            Situation(label: "upgrade_offer", prompt: "If relevant, mention the free upgrade from deluxe to a junior suite in one short sentence. Give more details only if the learner asks."),
             Situation(label: "special_request", prompt: "Ask if the stay is for a special occasion. If yes, offer a small gesture (early check-in, welcome snack, view upgrade)."),
             Situation(label: "busy_front_desk", prompt: "The lobby is busy; if you need a moment, politely ask them to hold for a few seconds, then return and help efficiently.")
         ],
@@ -469,8 +473,8 @@ extension PhoneCallScenario {
             Situation(label: "change_date", prompt: "The learner wants to change their flight date. Change fee is {change_fee} plus any fare difference."),
             Situation(label: "upgrade_seat", prompt: "Offer a paid upgrade to business class for {upgrade_price} if available on their flight."),
             Situation(label: "add_baggage", prompt: "The learner wants to add checked baggage. First bag is {bag_price}; second bag is $50."),
-            Situation(label: "cancel_refund", prompt: "The learner wants to cancel. Explain refund is possible minus a {cancel_fee} cancellation fee if within 24 hours."),
-            Situation(label: "use_miles", prompt: "The learner wants to use frequent flyer miles. Help estimate the miles needed for their trip.")
+            Situation(label: "cancel_refund", prompt: "The learner wants to cancel. State the {cancel_fee} cancellation fee in one short sentence. Add details only if asked."),
+            Situation(label: "use_miles", prompt: "The learner wants to use frequent flyer miles. Ask one short question to narrow it down before estimating.")
         ],
         moodPool: [
             "Warm, empathetic, and patient.",
@@ -515,44 +519,49 @@ extension EnglishLevel {
         switch self {
         case .a1:
             return """
-               - Use the most basic vocabulary (top 500 words)
-               - Present tense only, very short sentences (5-8 words)
+               - Phone-call style: 1 short sentence per turn; 2 only for repeat/repair
+               - 3-6 words per sentence; hard cap 8
+               - Use only basic everyday words and present tense
+               - One question or one fact at a time; no idioms
                - Speak slowly. Repeat or rephrase if the learner seems stuck
-               - Avoid idioms and phrasal verbs
             """
         case .a2:
             return """
-               - Use high-frequency everyday vocabulary
-               - Simple past and future tenses allowed
-               - Keep sentences short (under 12 words)
+               - Phone-call style: usually 1 sentence; 2 only when necessary
+               - 4-8 words per sentence; hard cap 10, absolute max 12
+               - Use high-frequency everyday vocabulary; simple present/past/future only
+               - Say one thing at a time; avoid side comments, jokes, and multi-part explanations
                - Avoid complex idioms; use only very common phrasal verbs
             """
         case .b1:
             return """
-               - Natural everyday English, moderate pace
+               - Phone-call style: 1-2 sentences per turn
+               - 6-12 words per sentence; hard cap 16
+               - Natural everyday English with simple reasons or brief clarification
+               - One follow-up question max; avoid dense idioms or slang
                - Present perfect, conditionals (if/when), relative clauses okay
-               - Common idioms acceptable but not slang-heavy
-               - 12-18 word sentences
             """
         case .b2:
             return """
-               - Natural conversational English at normal pace
+               - Phone-call style: 1-2 sentences, sometimes 3 if the situation truly needs it
+               - 8-16 words per sentence; hard cap 22
+               - Natural pace with some nuance, but still easy to follow by ear
+               - Idioms and phrasal verbs are okay in moderation
                - Varied tenses including past perfect, passive voice
-               - Moderate use of idioms and phrasal verbs
-               - Introduce some nuance and opinion
             """
         case .c1:
             return """
-               - Fluent, near-native conversation
-               - Rich vocabulary, idioms, and cultural references welcome
-               - Subtle humor and sarcasm acceptable
-               - Full natural pace
+               - Phone-call style: usually 1-3 sentences per turn; avoid rambling monologues
+               - Flexible sentence length; stay responsive rather than lecture-like
+               - Fluent, spontaneous, and nuanced; imply meaning instead of over-explaining
+               - Humor, idioms, and cultural references are fine if they fit the moment
             """
         case .c2:
             return """
-               - Speak exactly as you would to a native English speaker
-               - Full range of idioms, slang, cultural references, wordplay
-               - Natural pace with no simplification
+               - Phone-call style: fully natural turn length for a native conversation
+               - Vary sentence length freely, but stay conversational rather than speech-like
+               - Full native-like vocabulary, idioms, slang, wordplay, cultural references
+               - Prioritize natural flow, timing, and conversational listening
                - Feel free to use ellipsis, contractions, and colloquialisms
             """
         }
