@@ -126,7 +126,7 @@ final class RealtimeVoiceService: NSObject {
             voice: variant.voice,
             firstResponseInstructions: variant.firstResponseInstructions,
             ephemeralKey: provider == .openAI ? ephemeralKey : nil,
-            geminiModel: provider == .gemini ? "gemini-2.5-flash-native-audio-preview-12-2025" : nil
+            geminiModel: provider == .gemini ? "gemini-3.1-flash-live-preview" : nil
         )
 
         do {
