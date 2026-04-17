@@ -19,6 +19,8 @@ final class GamificationService {
         static let wordSave = 5
         static let grammarSave = 5
         static let quizCorrect = 3
+        /// AI 전화영어 1통화 완료 (최소 1분 이상)
+        static let phoneCall = 30
     }
 
     private var streakMultiplier: Int {
@@ -96,6 +98,15 @@ final class GamificationService {
     /// 문법 저장 시 XP 지급
     func awardGrammarSaveXP() {
         let xp = XP.grammarSave * streakMultiplier
+        stats.totalXP += xp
+        stats.recalculateLevel()
+        persistStats()
+        checkBadges()
+    }
+
+    /// AI 전화영어 1통화 완료 시 XP 지급
+    func awardPhoneCallXP() {
+        let xp = XP.phoneCall * streakMultiplier
         stats.totalXP += xp
         stats.recalculateLevel()
         persistStats()

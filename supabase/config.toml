@@ -393,3 +393,13 @@ entrypoint = "./functions/generate-daily-lessons/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/generate-daily-lessons/*.html" ]
+
+[functions.translate-phone-turn]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/translate-phone-turn/index.ts"
+
+[functions.review-phone-call]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/review-phone-call/index.ts"

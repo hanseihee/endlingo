@@ -8,10 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		B50C39AE2F625C2A00A1597E /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = B50C39AD2F625C2A00A1597E /* Supabase */; };
+		B59AAA272F909BAE00A92C90 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = B5AA00022F800000DEADBEE0 /* RevenueCat */; };
+		B59AAA282F909BAE00A92C90 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = B5AA00032F800000DEADBEE1 /* RevenueCatUI */; };
 		B5A6F03F2F66FEB200B2B2D7 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5A6F03E2F66FEB200B2B2D7 /* WidgetKit.framework */; };
 		B5A6F0412F66FEB200B2B2D7 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5A6F0402F66FEB200B2B2D7 /* SwiftUI.framework */; };
 		B5A6F0522F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B5A6F03C2F66FEB200B2B2D7 /* YeongeohajaWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B5DB12922F65C4F000A0599A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = B5DB12912F65C4F000A0599A /* FirebaseAnalytics */; };
+		B5DB12942F65C4F000A0599A /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = B5DB12932F65C4F000A0599A /* FirebaseAI */; };
 		B5F5E4852F6D799C0075D91A /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = B5F5E4842F6D799C0075D91A /* GoogleSignIn */; };
 		B5F5E66D2F6D847E0075D91A /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = B5F5E66C2F6D847E0075D91A /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
@@ -115,8 +118,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B59AAA282F909BAE00A92C90 /* RevenueCatUI in Frameworks */,
+				B59AAA272F909BAE00A92C90 /* RevenueCat in Frameworks */,
 				B5F5E66D2F6D847E0075D91A /* GoogleMobileAds in Frameworks */,
 				B5DB12922F65C4F000A0599A /* FirebaseAnalytics in Frameworks */,
+				B5DB12942F65C4F000A0599A /* FirebaseAI in Frameworks */,
 				B50C39AE2F625C2A00A1597E /* Supabase in Frameworks */,
 				B5F5E4852F6D799C0075D91A /* GoogleSignIn in Frameworks */,
 			);
@@ -205,8 +211,11 @@
 			packageProductDependencies = (
 				B50C39AD2F625C2A00A1597E /* Supabase */,
 				B5DB12912F65C4F000A0599A /* FirebaseAnalytics */,
+				B5DB12932F65C4F000A0599A /* FirebaseAI */,
 				B5F5E4842F6D799C0075D91A /* GoogleSignIn */,
 				B5F5E66C2F6D847E0075D91A /* GoogleMobileAds */,
+				B5AA00022F800000DEADBEE0 /* RevenueCat */,
+				B5AA00032F800000DEADBEE1 /* RevenueCatUI */,
 			);
 			productName = endlingo;
 			productReference = B558E0B92F623EEE00A126B5 /* endlingo.app */;
@@ -322,6 +331,7 @@
 				B5DB12902F65C4F000A0599A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				B5F5E4832F6D799C0075D91A /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				B5F5E66B2F6D847E0075D91A /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				B5AA00012F800000DEADBEEF /* XCRemoteSwiftPackageReference "purchases-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B558E0BA2F623EEE00A126B5 /* Products */;
@@ -545,7 +555,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = endlingo/endlingo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = RT556U3WKT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -554,7 +564,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = NO;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "영어 문장을 따라 읽고 발음을 확인하기 위해 마이크 접근이 필요합니다.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "영어 발음 연습과 AI 전화영어에서 영어로 대화하기 위해 마이크 접근이 필요합니다. AI 전화영어 사용 시 음성은 Google Gemini 서버로 전송되어 실시간 응답 생성에 사용됩니다.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "따라 읽기 기능에서 음성을 텍스트로 변환하기 위해 음성 인식이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -584,7 +594,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = endlingo/endlingo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = RT556U3WKT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -593,7 +603,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = NO;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "영어 문장을 따라 읽고 발음을 확인하기 위해 마이크 접근이 필요합니다.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "영어 발음 연습과 AI 전화영어에서 영어로 대화하기 위해 마이크 접근이 필요합니다. AI 전화영어 사용 시 음성은 Google Gemini 서버로 전송되어 실시간 응답 생성에 사용됩니다.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "따라 읽기 기능에서 음성을 텍스트로 변환하기 위해 음성 인식이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -707,7 +717,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = YeongeohajaWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = RT556U3WKT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = YeongeohajaWidget/Info.plist;
@@ -739,7 +749,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = YeongeohajaWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = RT556U3WKT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = YeongeohajaWidget/Info.plist;
@@ -823,6 +833,14 @@
 				minimumVersion = 2.5.1;
 			};
 		};
+		B5AA00012F800000DEADBEEF /* XCRemoteSwiftPackageReference "purchases-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
 		B5DB12902F65C4F000A0599A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
@@ -855,10 +873,25 @@
 			package = B50C39AC2F625C2A00A1597E /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
 		};
+		B5AA00022F800000DEADBEE0 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B5AA00012F800000DEADBEEF /* XCRemoteSwiftPackageReference "purchases-ios" */;
+			productName = RevenueCat;
+		};
+		B5AA00032F800000DEADBEE1 /* RevenueCatUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B5AA00012F800000DEADBEEF /* XCRemoteSwiftPackageReference "purchases-ios" */;
+			productName = RevenueCatUI;
+		};
 		B5DB12912F65C4F000A0599A /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B5DB12902F65C4F000A0599A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAnalytics;
+		};
+		B5DB12932F65C4F000A0599A /* FirebaseAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B5DB12902F65C4F000A0599A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAI;
 		};
 		B5F5E4842F6D799C0075D91A /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;

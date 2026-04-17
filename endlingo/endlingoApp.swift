@@ -3,6 +3,7 @@ import FirebaseCore
 import FirebaseAnalytics
 import GoogleSignIn
 import GoogleMobileAds
+import RevenueCat
 
 @main
 struct endlingoApp: App {
@@ -47,6 +48,8 @@ struct endlingoApp: App {
                 }
             }
             .task {
+                // RevenueCat SDK 초기화 (@MainActor 안전, Swift 6 호환)
+                SubscriptionService.shared.configure()
                 await updateService.checkForUpdate()
             }
             .onOpenURL { url in
@@ -61,6 +64,16 @@ struct endlingoApp: App {
                 NotificationService.shared.scheduleDailyNotification(
                     hour: notificationHour, minute: notificationMinute
                 )
+            }
+            // RevenueCat userId 연동 — AuthService 상태 변화 시 자동 logIn/logOut
+            .onChange(of: auth.isLoggedIn) { _, isLoggedIn in
+                Task {
+                    if isLoggedIn, let userId = auth.userId?.uuidString {
+                        await SubscriptionService.shared.logIn(userId: userId)
+                    } else {
+                        await SubscriptionService.shared.logOut()
+                    }
+                }
             }
         }
     }

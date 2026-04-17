@@ -1,14 +1,22 @@
 import SwiftUI
 import GoogleMobileAds
 
-/// AdMob 배너 광고 (하단 고정용, 로드 실패 시 숨김)
+/// AdMob 배너 광고 (하단 고정용, 로드 실패 시 숨김, Premium이면 자동 숨김)
 struct BannerAdView: View {
     @State private var adHeight: CGFloat = 0
+    private let subscription = SubscriptionService.shared
 
     var body: some View {
-        BannerAdRepresentable(adHeight: $adHeight)
-            .frame(height: adHeight)
+        if subscription.showAds {
+            BannerAdRepresentable(adHeight: $adHeight)
+                .frame(height: adHeight)
+        }
     }
+}
+
+extension SubscriptionService {
+    /// BannerAdView에서 사용. Premium이면 광고 숨김.
+    var showAds: Bool { currentTier.showAds }
 }
 
 private struct BannerAdRepresentable: UIViewRepresentable {

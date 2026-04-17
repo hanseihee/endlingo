@@ -85,7 +85,8 @@ final class AuthService {
         Self.lastLoginMethod = .email
         async let v: () = VocabularyService.shared.syncAfterLogin()
         async let g: () = GrammarService.shared.syncAfterLogin()
-        _ = await (v, g)
+        async let p: () = PhoneCallHistoryService.shared.syncAfterLogin()
+        _ = await (v, g, p)
         await GamificationService.shared.syncAfterLogin()
     }
 
@@ -134,6 +135,7 @@ final class AuthService {
                 VocabularyService.shared.clearAfterLogout()
                 GrammarService.shared.clearAfterLogout()
                 GamificationService.shared.clearAfterLogout()
+                PhoneCallHistoryService.shared.clearAfterLogout()
                 NotificationService.shared.cancelAll()
                 resetUserData()
             }
@@ -153,6 +155,7 @@ final class AuthService {
         VocabularyService.shared.clearAfterLogout()
         GrammarService.shared.clearAfterLogout()
         GamificationService.shared.clearAfterLogout()
+        PhoneCallHistoryService.shared.clearAfterLogout()
         NotificationService.shared.cancelAll()
         resetUserData()
     }
@@ -180,7 +183,8 @@ final class AuthService {
         Self.lastLoginMethod = .apple
         async let v: () = VocabularyService.shared.syncAfterLogin()
         async let g: () = GrammarService.shared.syncAfterLogin()
-        _ = await (v, g)
+        async let p: () = PhoneCallHistoryService.shared.syncAfterLogin()
+        _ = await (v, g, p)
         await GamificationService.shared.syncAfterLogin()
     }
 
@@ -224,7 +228,8 @@ final class AuthService {
         Self.lastLoginMethod = .google
         async let v: () = VocabularyService.shared.syncAfterLogin()
         async let g: () = GrammarService.shared.syncAfterLogin()
-        _ = await (v, g)
+        async let p: () = PhoneCallHistoryService.shared.syncAfterLogin()
+        _ = await (v, g, p)
         await GamificationService.shared.syncAfterLogin()
     }
 
@@ -256,7 +261,8 @@ final class AuthService {
             isLoggedIn = true
             async let v: () = VocabularyService.shared.syncAfterLogin()
             async let g: () = GrammarService.shared.syncAfterLogin()
-            _ = await (v, g)
+            async let p: () = PhoneCallHistoryService.shared.syncAfterLogin()
+            _ = await (v, g, p)
             await GamificationService.shared.syncAfterLogin()
         } catch {
             print("Deep link error: \(error)")
@@ -326,7 +332,8 @@ final class AuthService {
             isLoggedIn = true
             async let v: () = VocabularyService.shared.syncAfterLogin()
             async let g: () = GrammarService.shared.syncAfterLogin()
-            _ = await (v, g)
+            async let p: () = PhoneCallHistoryService.shared.syncAfterLogin()
+            _ = await (v, g, p)
             await GamificationService.shared.syncAfterLogin()
         } catch {
             // No stored session

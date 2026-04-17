@@ -4,40 +4,39 @@ struct HistoryView: View {
     @State private var gamification = GamificationService.shared
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // 통계 요약
-                    StatsSummaryCard(stats: gamification.stats)
-                        .padding(.horizontal, 16)
+        // NavigationStack은 부모(ProfileView)에서 제공하므로 여기선 감싸지 않음.
+        ScrollView {
+            VStack(spacing: 20) {
+                // 통계 요약
+                StatsSummaryCard(stats: gamification.stats)
+                    .padding(.horizontal, 16)
 
-                    // 주간 비교
-                    WeekComparisonCard()
-                        .padding(.horizontal, 16)
+                // 주간 비교
+                WeekComparisonCard()
+                    .padding(.horizontal, 16)
 
-                    // 학습 캘린더
-                    LearningCalendarView()
-                        .padding(.horizontal, 16)
+                // 학습 캘린더
+                LearningCalendarView()
+                    .padding(.horizontal, 16)
 
-                    // 최근 활동
-                    RecentActivityCard()
-                        .padding(.horizontal, 16)
-                }
-                .padding(.vertical, 8)
-                .readableContentWidth()
+                // 최근 활동
+                RecentActivityCard()
+                    .padding(.horizontal, 16)
             }
-            .scrollIndicators(.hidden)
-            .safeAreaInset(edge: .bottom) {
-                BannerAdView()
-                    .padding(.bottom, 4)
-            }
-            .navigationTitle("기록")
-            .background(Color(.systemGroupedBackground))
-            .overlay {
-                // 배지 획득 알림
-                if let badge = gamification.newBadge {
-                    badgeToast(badge)
-                }
+            .padding(.vertical, 8)
+            .readableContentWidth()
+        }
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .bottom) {
+            BannerAdView()
+                .padding(.bottom, 4)
+        }
+        .navigationTitle("기록")
+        .background(Color(.systemGroupedBackground))
+        .overlay {
+            // 배지 획득 알림
+            if let badge = gamification.newBadge {
+                badgeToast(badge)
             }
         }
     }
