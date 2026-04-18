@@ -244,13 +244,21 @@ final class SubscriptionService {
     }
 
     /// customerInfo 변경 실시간 감지 (구독 갱신, 만료, 환불, 가족 공유 등).
-    /// customerInfo 변경 실시간 감지 (구독 갱신, 만료, 환불 등).
     /// @MainActor 클래스이므로 Task 내 직접 호출 가능.
+    ///
+    /// tier가 실제로 변경될 때마다 서버에도 동기화해 RevenueCat 캐시와 서버 측
+    /// 실시간 판정 사이의 mismatch가 유지되지 않도록 한다. 샌드박스 자동 갱신이나
+    /// logIn 직후 customerInfo 재발행처럼 비동기로 들어오는 이벤트도 서버에 반영됨.
     private func startCustomerInfoListener() {
         customerInfoTask?.cancel()
         customerInfoTask = Task { @MainActor [weak self] in
             for await customerInfo in Purchases.shared.customerInfoStream {
-                self?.updateTier(from: customerInfo)
+                guard let self else { continue }
+                let previousTier = self.currentTier
+                self.updateTier(from: customerInfo)
+                if self.currentTier != previousTier, AuthService.shared.isLoggedIn {
+                    await self.syncToServer(customerInfo: customerInfo)
+                }
             }
         }
     }
