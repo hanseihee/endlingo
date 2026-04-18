@@ -50,6 +50,8 @@ struct endlingoApp: App {
             .task {
                 // RevenueCat SDK 초기화 (auth 세션 복원 후 identified user로 시작).
                 await SubscriptionService.shared.configure()
+                // AdMob interstitial 광고 사전 로드 (전화영어 탭 진입 시 노출).
+                InterstitialAdService.shared.preload()
                 await updateService.checkForUpdate()
             }
             .onOpenURL { url in

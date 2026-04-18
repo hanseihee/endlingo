@@ -34,6 +34,12 @@ struct ContentView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .tint(Color.accentColor)
+        // 전화영어 탭 진입 시 interstitial 광고 표시 (Premium·cooldown 자동 처리).
+        .onChange(of: selectedTab) { _, newValue in
+            if newValue == 3 {
+                InterstitialAdService.shared.showIfReady()
+            }
+        }
     }
 }
 
