@@ -50,8 +50,16 @@ Deno.serve(async (req) => {
     return json({ error: "unauthorized" }, 401);
   }
 
+  // 클라가 보낸 hint(is_premium). 보안상 final tier 결정에는 쓰지 않지만,
+  // RC empty race를 구분하는 보조 신호로 사용한다.
+  let clientHintIsPremium = false;
+  try {
+    const body = await req.json();
+    clientHintIsPremium = body?.is_premium === true;
+  } catch { /* body 없음 — 기본값 false */ }
+
   // ---- 2) RevenueCat REST로 실제 entitlement 조회 (retry 포함) ----
-  // 클라가 보낸 body는 의도적으로 무시. 신뢰 가능한 값은 오직 RevenueCat 응답.
+  // 클라 hint는 신뢰 근거가 아니다. 신뢰 가능한 값은 오직 RevenueCat 응답.
   // 구매 직후 RC 서버가 Apple 영수증을 아직 반영하지 못한 경우 빈 subscriber가
   // 돌아오는 race가 있어, 짧은 retry + pending 응답으로 client가 free로 강등하지
   // 않도록 보호한다.
@@ -64,26 +72,38 @@ Deno.serve(async (req) => {
 
   const adminClient = createClient(supabaseUrl, serviceKey);
 
-  // 빈 subscriber(entitlement 없음)가 계속 돌아오는 경우는 두 가지.
+  // 빈 subscriber(entitlement 없음)가 계속 돌아오는 경우는 세 가지.
   // (A) 실제로 구독이 없는 사용자(free)
-  // (B) 구매 직후 RC 서버 지연 또는 alias 혼선으로 인한 일시 empty
-  // DB에 기존 premium 상태가 있으면 (B) 가능성이 크므로 pending 반환으로 client를
-  // 덮어쓰지 않고 다음 sync를 기다리게 한다.
+  // (B) DB에 기존 premium 상태가 있는데 RC가 일시 empty → "DB premium valid" 분기
+  // (C) 클라가 방금 구매해서 isPremium=true hint를 보냈지만 RC가 아직 receipt 미반영
+  // (B)/(C) 모두 client tier를 free로 강등하지 않도록 pending 응답.
   const { data: existingForVerify } = await adminClient
     .from("user_subscriptions")
     .select("tier, is_active, expires_at, premium_activated_at")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (rcLookup.status === "empty" && existingForVerify?.tier === "premium") {
-    const expiresTs = existingForVerify.expires_at ? new Date(existingForVerify.expires_at as string).getTime() : 0;
-    const stillValid = !existingForVerify.expires_at || expiresTs > Date.now();
-    if (stillValid) {
-      console.log(`[sync-subscription] user=${user.id} RC empty but DB premium valid — returning pending`);
+  if (rcLookup.status === "empty") {
+    // (B) 기존 DB premium 보호
+    if (existingForVerify?.tier === "premium") {
+      const expiresTs = existingForVerify.expires_at ? new Date(existingForVerify.expires_at as string).getTime() : 0;
+      const stillValid = !existingForVerify.expires_at || expiresTs > Date.now();
+      if (stillValid) {
+        console.log(`[sync-subscription] user=${user.id} RC empty but DB premium valid — returning pending`);
+        return json({
+          ok: true,
+          verification: "pending",
+          reason: "rc_empty_but_db_premium_valid",
+        });
+      }
+    }
+    // (C) 클라가 구매 직후 hint=premium을 보냈는데 RC empty
+    if (clientHintIsPremium) {
+      console.log(`[sync-subscription] user=${user.id} client hint=premium but RC empty — returning pending`);
       return json({
         ok: true,
         verification: "pending",
-        reason: "rc_empty_but_db_premium_valid",
+        reason: "client_premium_rc_empty",
       });
     }
   }
