@@ -78,28 +78,25 @@ final class SubscriptionService {
 
     /// 앱 시작 시 1회 호출. RevenueCat SDK 초기화 + customerInfo 스트림 구독.
     ///
-    /// F2 fix: auth 세션 복원이 끝날 때까지 잠시 대기한 뒤, 이미 로그인된 상태면
-    /// `configure(appUserID:)`로 바로 identified user로 시작한다. 이렇게 해야
-    /// anonymous($RCAnonymousID)로 먼저 붙었다가 나중에 logIn으로 alias만 생기는
-    /// 경로가 막히고, 서버 `/v1/subscribers/{uuid}` 조회가 항상 진짜 subscriber를
-    /// 찾을 수 있다.
+    /// F2 fix: configure 자체는 즉시 수행해 다른 곳에서 `Purchases.shared`를 호출해도
+    /// crash가 나지 않게 하고, 그 직후 auth 세션 복원을 기다려 가능한 한 빨리
+    /// identified user로 logIn한다. `.onChange(of: auth.isLoggedIn)` 경로와 race가
+    /// 나도 `Purchases.logIn`은 멱등이라 안전.
     func configure() async {
+        Purchases.logLevel = .warn
+        Purchases.configure(withAPIKey: Self.apiKey)
+        startCustomerInfoListener()
+
         // auth.isLoading이 true인 동안 세션 복원 진행 중. 최대 3초 대기.
         await waitForAuthRestore(maxSeconds: 3)
 
-        Purchases.logLevel = .warn
-        let builder = Configuration.Builder(withAPIKey: Self.apiKey)
-        let config: Configuration
         if let userId = AuthService.shared.userId?.uuidString.lowercased() {
-            config = builder.with(appUserID: userId).build()
-            print("[Subscription] configure with identified userId=\(userId)")
+            print("[Subscription] configure → logIn identified userId=\(userId)")
+            await logIn(userId: userId)
         } else {
-            config = builder.build()
             print("[Subscription] configure anonymously (no auth session yet)")
+            await refreshTier()
         }
-        Purchases.configure(with: config)
-        startCustomerInfoListener()
-        await refreshTier()
     }
 
     /// AuthService.isLoading이 false가 될 때까지 대기 (50ms polling, 최대 maxSeconds).
