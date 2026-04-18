@@ -48,8 +48,8 @@ struct endlingoApp: App {
                 }
             }
             .task {
-                // RevenueCat SDK 초기화 (@MainActor 안전, Swift 6 호환)
-                SubscriptionService.shared.configure()
+                // RevenueCat SDK 초기화 (auth 세션 복원 후 identified user로 시작).
+                await SubscriptionService.shared.configure()
                 await updateService.checkForUpdate()
             }
             .onOpenURL { url in

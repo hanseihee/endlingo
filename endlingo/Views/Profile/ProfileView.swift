@@ -15,6 +15,7 @@ struct ProfileView: View {
     @State private var showChangePassword = false
     @State private var notificationTime = Date()
     @State private var showPaywall = false
+    @State private var showLoginRequiredForPaywall = false
     @State private var subscription = SubscriptionService.shared
 
     private var appVersion: String {
@@ -94,7 +95,14 @@ struct ProfileView: View {
                         }
                     } else {
                         Button {
-                            showPaywall = true
+                            // F1: 게스트 상태에서 Paywall로 진입하면 구매가 $RCAnonymousID에
+                            // 귀속되어 나중에 logIn해도 alias로만 연결되는 고질적 문제 발생.
+                            // 로그인 필수로 강제해 모든 구매가 Supabase UUID에 귀속되도록 보장.
+                            if auth.isLoggedIn {
+                                showPaywall = true
+                            } else {
+                                showLoginRequiredForPaywall = true
+                            }
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: "crown")
@@ -253,6 +261,11 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showPaywall) {
                 PaywallView()
+            }
+            .alert("로그인 후 이용 가능", isPresented: $showLoginRequiredForPaywall) {
+                Button("확인", role: .cancel) {}
+            } message: {
+                Text("Premium 구독은 계정에 귀속됩니다. 먼저 계정에 로그인한 뒤 다시 시도해주세요. (계정 섹션에서 이메일로 로그인)")
             }
         }
     }

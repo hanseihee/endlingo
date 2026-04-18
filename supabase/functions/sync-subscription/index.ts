@@ -50,39 +50,49 @@ Deno.serve(async (req) => {
     return json({ error: "unauthorized" }, 401);
   }
 
-  // ---- 2) RevenueCat REST로 실제 entitlement 조회 ----
+  // ---- 2) RevenueCat REST로 실제 entitlement 조회 (retry 포함) ----
   // 클라가 보낸 body는 의도적으로 무시. 신뢰 가능한 값은 오직 RevenueCat 응답.
-  const rcUrl = `${RC_API_BASE}/subscribers/${encodeURIComponent(user.id)}`;
-  let rcResponse: Response;
-  try {
-    rcResponse = await fetch(rcUrl, {
-      headers: {
-        "Authorization": `Bearer ${rcSecret}`,
-        "Accept": "application/json",
-      },
-    });
-  } catch (e) {
-    console.error("RevenueCat fetch failed:", e);
+  // 구매 직후 RC 서버가 Apple 영수증을 아직 반영하지 못한 경우 빈 subscriber가
+  // 돌아오는 race가 있어, 짧은 retry + pending 응답으로 client가 free로 강등하지
+  // 않도록 보호한다.
+  const rcLookup = await fetchRCSubscriberWithRetry(rcSecret, user.id);
+
+  // RC 통신 자체가 실패한 경우(네트워크 에러, 5xx 반복). 서버 상태 변경 없이 에러.
+  if (rcLookup.status === "unreachable") {
     return json({ error: "revenuecat_unreachable" }, 503);
   }
 
-  // 404는 "해당 app_user_id로 기록 없음" 의미 — 신규/비구매 사용자. free로 취급.
-  // 200은 entitlement 포함 가능한 정상 응답.
-  // 그 외 상태는 신뢰할 수 없는 응답이므로 서버 상태 변경 없이 에러 반환.
-  if (!rcResponse.ok && rcResponse.status !== 404) {
-    const body = await rcResponse.text().catch(() => "");
-    console.error(`RevenueCat ${rcResponse.status}:`, body.slice(0, 300));
-    return json({ error: "revenuecat_error", status: rcResponse.status }, 503);
+  // 빈 subscriber(entitlement 없음)가 계속 돌아오는 경우는 두 가지.
+  // (A) 실제로 구독이 없는 사용자(free)
+  // (B) 구매 직후 RC 서버 지연 또는 alias 혼선으로 인한 일시 empty
+  // DB에 기존 premium 상태가 있으면 (B) 가능성이 크므로 pending 반환으로 client를
+  // 덮어쓰지 않고 다음 sync를 기다리게 한다.
+  const { data: existingForVerify } = await adminClient
+    .from("user_subscriptions")
+    .select("tier, is_active, expires_at, premium_activated_at")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (rcLookup.status === "empty" && existingForVerify?.tier === "premium") {
+    const expiresTs = existingForVerify.expires_at ? new Date(existingForVerify.expires_at as string).getTime() : 0;
+    const stillValid = !existingForVerify.expires_at || expiresTs > Date.now();
+    if (stillValid) {
+      console.log(`[sync-subscription] user=${user.id} RC empty but DB premium valid — returning pending`);
+      return json({
+        ok: true,
+        verification: "pending",
+        reason: "rc_empty_but_db_premium_valid",
+      });
+    }
   }
 
   let isPremium = false;
   let productId: string | null = null;
   let expiresAt: string | null = null;
 
-  if (rcResponse.ok) {
-    const rcData = await rcResponse.json().catch(() => null);
-    const entitlement = rcData?.subscriber?.entitlements?.[ENTITLEMENT_ID];
-
+  if (rcLookup.status === "found" && rcLookup.subscriber) {
+    const subscriber = rcLookup.subscriber;
+    const entitlement = subscriber?.entitlements?.[ENTITLEMENT_ID];
     if (entitlement) {
       if (entitlement.expires_date) {
         const expiresDate = new Date(entitlement.expires_date as string);
@@ -102,20 +112,13 @@ Deno.serve(async (req) => {
 
   const newTier = isPremium ? "premium" : "free";
 
-  // ---- 3) 기존 row 조회로 premium_activated_at 유지 여부 판단 ----
-  const admin = createClient(supabaseUrl, serviceKey);
-  const { data: existing } = await admin
-    .from("user_subscriptions")
-    .select("tier, premium_activated_at")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
+  // ---- 3) premium_activated_at 유지 여부 판단 (위에서 조회한 existingForVerify 재사용) ----
   // Free → Premium 전환 순간만 새로 기록. 이미 premium이면 기존 시점 유지
   // (RENEWAL로 premium_activated_at이 초기화되면 quota가 무한 리셋되는 부작용 방지).
   let premiumActivatedAt: string | null;
   if (isPremium) {
-    if (existing?.tier === "premium" && existing?.premium_activated_at) {
-      premiumActivatedAt = existing.premium_activated_at as string;
+    if (existingForVerify?.tier === "premium" && existingForVerify?.premium_activated_at) {
+      premiumActivatedAt = existingForVerify.premium_activated_at as string;
     } else {
       premiumActivatedAt = new Date().toISOString();
     }
@@ -124,7 +127,7 @@ Deno.serve(async (req) => {
   }
 
   // ---- 4) upsert ----
-  const { error: upsertError } = await admin
+  const { error: upsertError } = await adminClient
     .from("user_subscriptions")
     .upsert({
       user_id: user.id,
@@ -164,4 +167,80 @@ function corsHeaders(): Record<string, string> {
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
+}
+
+/**
+ * RC REST `/v1/subscribers/{id}`를 호출해 subscriber 정보를 가져온다.
+ *
+ * 반환값:
+ *  - status: "found"       → subscriber에 entitlement 포함
+ *  - status: "empty"       → subscriber는 있으나 entitlement 비어있음
+ *                            (purchase 직후 지연 또는 실제 free 사용자)
+ *  - status: "unreachable" → 네트워크/5xx/비정상 응답
+ *
+ * 빈 subscriber가 돌아오는 경우 짧게 2회 재시도해 RC 서버가 영수증을
+ * 받아들일 시간을 준다. 최종 empty는 free로 확정하지 않고 호출자가 판단.
+ */
+async function fetchRCSubscriberWithRetry(
+  rcSecret: string,
+  userId: string,
+): Promise<
+  | { status: "found"; subscriber: any }
+  | { status: "empty"; subscriber: any }
+  | { status: "unreachable" }
+> {
+  const rcUrl = `${RC_API_BASE}/subscribers/${encodeURIComponent(userId)}`;
+  const maxAttempts = 3;
+  let lastSubscriber: any = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    let response: Response;
+    try {
+      response = await fetch(rcUrl, {
+        headers: {
+          "Authorization": `Bearer ${rcSecret}`,
+          "Accept": "application/json",
+        },
+      });
+    } catch (e) {
+      console.error(`[sync-subscription] RC fetch error (attempt ${attempt}):`, e);
+      if (attempt === maxAttempts) return { status: "unreachable" };
+      await sleep(400 * attempt);
+      continue;
+    }
+
+    // 404는 "해당 id로 기록 없음" — 재시도해도 의미 없음.
+    if (response.status === 404) {
+      return { status: "empty", subscriber: null };
+    }
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      console.error(`[sync-subscription] RC ${response.status} (attempt ${attempt}): ${body.slice(0, 300)}`);
+      if (attempt === maxAttempts) return { status: "unreachable" };
+      await sleep(400 * attempt);
+      continue;
+    }
+
+    const bodyText = await response.text();
+    if (attempt === 1) {
+      console.log(`[sync-subscription] RC raw body (first 1500 chars): ${bodyText.slice(0, 1500)}`);
+    }
+    const data = (() => { try { return JSON.parse(bodyText); } catch { return null; } })();
+    const subscriber = data?.subscriber;
+    lastSubscriber = subscriber;
+    const entitlement = subscriber?.entitlements?.["premium"];
+    console.log(`[sync-subscription] parsed (attempt ${attempt}): original_app_user_id=${subscriber?.original_app_user_id ?? "?"}, entitlements_keys=${Object.keys(subscriber?.entitlements ?? {}).join(",")}`);
+
+    if (entitlement) {
+      return { status: "found", subscriber };
+    }
+    // 빈 entitlement: 재시도로 RC 서버 영수증 처리 시간 확보.
+    if (attempt < maxAttempts) {
+      await sleep(500 * attempt);
+    }
+  }
+  return { status: "empty", subscriber: lastSubscriber };
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

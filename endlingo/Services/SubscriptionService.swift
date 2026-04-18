@@ -61,6 +61,14 @@ final class SubscriptionService {
     @ObservationIgnored
     private var customerInfoTask: Task<Void, Never>?
 
+    /// F4: 마지막 purchase/restore 시각. RC 서버가 영수증을 반영하기 전 짧은 시차에
+    /// sync-subscription이 free를 돌려주더라도 이 grace window 동안은 premium을 유지해
+    /// "구매 직후 Free UI로 튀는" 현상을 막는다. 또한 서버가 명시적으로 "pending"을
+    /// 돌려주는 경우에도 본 local tier를 덮어쓰지 않는다.
+    @ObservationIgnored
+    private var optimisticPremiumUntil: Date?
+    private static let purchaseGraceWindow: TimeInterval = 15
+
     // MARK: - Configuration
 
     private static let apiKey = "appl_dZdecswLYrPEMecCiffexKcQPHo"
@@ -69,27 +77,53 @@ final class SubscriptionService {
     private init() {}
 
     /// 앱 시작 시 1회 호출. RevenueCat SDK 초기화 + customerInfo 스트림 구독.
-    func configure() {
-        Purchases.logLevel = .warn
-        Purchases.configure(withAPIKey: Self.apiKey)
-        startCustomerInfoListener()
+    ///
+    /// F2 fix: auth 세션 복원이 끝날 때까지 잠시 대기한 뒤, 이미 로그인된 상태면
+    /// `configure(appUserID:)`로 바로 identified user로 시작한다. 이렇게 해야
+    /// anonymous($RCAnonymousID)로 먼저 붙었다가 나중에 logIn으로 alias만 생기는
+    /// 경로가 막히고, 서버 `/v1/subscribers/{uuid}` 조회가 항상 진짜 subscriber를
+    /// 찾을 수 있다.
+    func configure() async {
+        // auth.isLoading이 true인 동안 세션 복원 진행 중. 최대 3초 대기.
+        await waitForAuthRestore(maxSeconds: 3)
 
-        Task {
-            await refreshTier()
+        Purchases.logLevel = .warn
+        let builder = Configuration.Builder(withAPIKey: Self.apiKey)
+        let config: Configuration
+        if let userId = AuthService.shared.userId?.uuidString.lowercased() {
+            config = builder.with(appUserID: userId).build()
+            print("[Subscription] configure with identified userId=\(userId)")
+        } else {
+            config = builder.build()
+            print("[Subscription] configure anonymously (no auth session yet)")
         }
-        print("[Subscription] configured (apiKey=\(Self.apiKey.prefix(12))...)")
+        Purchases.configure(with: config)
+        startCustomerInfoListener()
+        await refreshTier()
+    }
+
+    /// AuthService.isLoading이 false가 될 때까지 대기 (50ms polling, 최대 maxSeconds).
+    /// 세션 복원이 오래 걸리거나 실패해도 configure가 무한 대기하지 않도록 timeout.
+    private func waitForAuthRestore(maxSeconds: Double) async {
+        let start = Date()
+        while AuthService.shared.isLoading {
+            if Date().timeIntervalSince(start) >= maxSeconds { break }
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
     }
 
     // MARK: - Auth Integration
 
     /// AuthService 로그인 직후 호출. RevenueCat에 userId를 연결해
     /// 디바이스 간 구독 상태를 동기화합니다.
+    /// UUID는 lowercase로 normalize — RC/Supabase 양쪽 일관성 유지.
     func logIn(userId: String) async {
+        let normalized = userId.lowercased()
         do {
-            let (customerInfo, _) = try await Purchases.shared.logIn(userId)
+            let (customerInfo, _) = try await Purchases.shared.logIn(normalized)
             updateTier(from: customerInfo)
             await syncToServer(customerInfo: customerInfo)
-            print("[Subscription] logIn userId=\(userId), tier=\(currentTier.rawValue)")
+            print("[Subscription] logIn userId=\(normalized), tier=\(currentTier.rawValue)")
         } catch {
             print("[Subscription] logIn failed: \(error.localizedDescription)")
         }
@@ -125,8 +159,9 @@ final class SubscriptionService {
 
         let (_, customerInfo, userCancelled) = try await Purchases.shared.purchase(package: package)
         updateTier(from: customerInfo)
+        // F4: purchase 성공 = Apple 영수증 유효. RC 서버가 아직 처리 전이어도 premium 보장.
+        optimisticPremiumUntil = Date().addingTimeInterval(Self.purchaseGraceWindow)
         // 구매 직후 서버 `user_subscriptions`에 즉시 반영.
-        // RevenueCat webhook 지연으로 인해 gemini-session이 free로 판정하던 M1 문제 차단.
         await syncToServer(customerInfo: customerInfo)
         return !userCancelled
     }
@@ -138,6 +173,8 @@ final class SubscriptionService {
 
         let customerInfo = try await Purchases.shared.restorePurchases()
         updateTier(from: customerInfo)
+        // F4: restore 직후에도 Apple 영수증은 유효 — RC 서버 지연 중 free downgrade 보류.
+        optimisticPremiumUntil = Date().addingTimeInterval(Self.purchaseGraceWindow)
         await syncToServer(customerInfo: customerInfo)
     }
 
@@ -187,17 +224,34 @@ final class SubscriptionService {
             // 서버 응답에서 tier/premium_activated_at을 받아 로컬 상태를 서버 truth로 재동기화.
             // RevenueCat SDK의 customerInfo는 캐시 기반이라 구독 만료 직후에도 isActive=true가
             // 잠깐 유지될 수 있는데, 서버는 REST API로 실시간 조회하므로 더 정확하다.
-            // 불일치를 방치하면 UI는 Premium인데 실제 통화는 서버가 Free quota로 거절하는
-            // 상황이 발생하므로, 서버 판정을 신뢰하고 로컬을 덮어쓴다.
             if (200..<300).contains(status),
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+
+                // F3 응답: 서버가 RC REST 조회로 subscriber를 확정 못 한 경우(신규 생성된
+                // 빈 subscriber 등)를 "pending"으로 내려준다. 이때는 local tier를 건드리지 않고
+                // 다음 sync(scenePhase 복귀, customerInfoStream, 재구매 등)를 기다린다.
+                if let verification = json["verification"] as? String, verification == "pending" {
+                    print("[Subscription] sync-subscription verification pending — keeping local tier=\(currentTier.rawValue)")
+                    return
+                }
+
                 if let serverTierStr = json["tier"] as? String {
                     let serverTier: Tier = serverTierStr == "premium" ? .premium : .free
+
+                    // F4: purchase/restore 직후 grace window 동안은 premium → free 강등 보류.
+                    // Apple 영수증이 유효하지만 RC 서버가 아직 처리 못 했을 가능성이 크다.
+                    let withinGrace = optimisticPremiumUntil.map { Date() < $0 } ?? false
+                    let wouldDowngrade = currentTier == .premium && serverTier == .free
+
                     if serverTier != currentTier {
-                        print("[Subscription] tier corrected by server: \(currentTier.rawValue) → \(serverTier.rawValue)")
-                        currentTier = serverTier
-                        if serverTier == .free {
-                            premiumActivatedAt = nil
+                        if wouldDowngrade && withinGrace {
+                            print("[Subscription] server=free within purchase grace — holding premium")
+                        } else {
+                            print("[Subscription] tier corrected by server: \(currentTier.rawValue) → \(serverTier.rawValue)")
+                            currentTier = serverTier
+                            if serverTier == .free {
+                                premiumActivatedAt = nil
+                            }
                         }
                     }
                 }
@@ -208,7 +262,11 @@ final class SubscriptionService {
                         premiumActivatedAt = date
                     }
                 } else if json["premium_activated_at"] is NSNull {
-                    premiumActivatedAt = nil
+                    // 서버가 free로 내렸지만 로컬이 grace window로 premium 유지 중이면
+                    // premiumActivatedAt을 nil로 바꾸면 quota 계산이 어긋나므로 덮어쓰지 않음.
+                    if currentTier == .free {
+                        premiumActivatedAt = nil
+                    }
                 }
             }
         } catch {
