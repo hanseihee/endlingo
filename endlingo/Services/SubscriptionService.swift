@@ -114,12 +114,18 @@ final class SubscriptionService {
     /// AuthService 로그인 직후 호출. RevenueCat에 userId를 연결해
     /// 디바이스 간 구독 상태를 동기화합니다.
     /// UUID는 lowercase로 normalize — RC/Supabase 양쪽 일관성 유지.
+    ///
+    /// `Purchases.logIn` 응답의 customerInfo는 cached 값이라 entitlement가 stale일 수
+    /// 있다(특히 alias 처리·구매 직후). 그 stale 값으로 syncToServer를 호출하면 서버가
+    /// 정직하게 free로 응답해 잘못된 강등이 발생하므로, 명시적으로 fresh fetch로
+    /// 한 번 더 받아 정확한 상태를 sync한다.
     func logIn(userId: String) async {
         let normalized = userId.lowercased()
         do {
-            let (customerInfo, _) = try await Purchases.shared.logIn(normalized)
-            updateTier(from: customerInfo)
-            await syncToServer(customerInfo: customerInfo)
+            _ = try await Purchases.shared.logIn(normalized)
+            let info = try await Purchases.shared.customerInfo(fetchPolicy: .fetchCurrent)
+            updateTier(from: info)
+            await syncToServer(customerInfo: info)
             print("[Subscription] logIn userId=\(normalized), tier=\(currentTier.rawValue)")
         } catch {
             print("[Subscription] logIn failed: \(error.localizedDescription)")
@@ -178,9 +184,10 @@ final class SubscriptionService {
     // MARK: - Private
 
     /// 서버에서 최신 customerInfo를 가져와 tier 갱신.
+    /// fetchPolicy를 명시해 SDK 캐시 대신 RC 서버의 최신 entitlement를 받는다.
     func refreshTier() async {
         do {
-            let customerInfo = try await Purchases.shared.customerInfo()
+            let customerInfo = try await Purchases.shared.customerInfo(fetchPolicy: .fetchCurrent)
             updateTier(from: customerInfo)
             // 로그인된 경우 서버 user_subscriptions도 함께 최신화 (webhook 지연 보정).
             if AuthService.shared.isLoggedIn {
