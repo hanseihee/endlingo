@@ -11,6 +11,7 @@ struct PhoneCallLauncherView: View {
     @State private var history = PhoneCallHistoryService.shared
     @State private var subscription = SubscriptionService.shared
     @State private var showPaywall = false
+    @Environment(\.scenePhase) private var scenePhase
 
     private var level: EnglishLevel {
         EnglishLevel(rawValue: selectedLevelRaw) ?? .a2
@@ -62,6 +63,15 @@ struct PhoneCallLauncherView: View {
             print("[Launcher] onTask — loggedIn=\(auth.isLoggedIn), userId=\(auth.userId?.uuidString ?? "nil"), today=\(history.todayCallCount), remaining=\(history.remainingTodayCallCount)")
             await history.refreshFromServer()
             print("[Launcher] after refresh — today=\(history.todayCallCount), remaining=\(history.remainingTodayCallCount), isLimitReached=\(isLimitReached)")
+        }
+        // 앱이 background에서 foreground로 복귀할 때 quota/구독 상태를 다시 당겨온다.
+        // 다른 기기 사용, webhook 반영, 이전 PATCH 실패분을 자동 반영.
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active, auth.isLoggedIn else { return }
+            Task {
+                await history.refreshFromServer()
+                await subscription.refreshTier()
+            }
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView()

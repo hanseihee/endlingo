@@ -106,7 +106,27 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   }
 
-  // ---- 5) DB upsert ----
+  // ---- 5) premium_activated_at 계산 ----
+  // Free → Premium 전환 순간을 기록해 "전환 이후 quota 재시작" 정책을 구현.
+  // 이미 premium인 상태에서 RENEWAL이 오면 기존 값 유지(무한 리셋 방지).
+  const { data: existing } = await admin
+    .from("user_subscriptions")
+    .select("tier, premium_activated_at")
+    .eq("user_id", appUserId)
+    .maybeSingle();
+
+  let premiumActivatedAt: string | null;
+  if (tier === "premium") {
+    if (existing?.tier === "premium" && existing?.premium_activated_at) {
+      premiumActivatedAt = existing.premium_activated_at as string;
+    } else {
+      premiumActivatedAt = new Date().toISOString();
+    }
+  } else {
+    premiumActivatedAt = null;
+  }
+
+  // ---- 6) DB upsert ----
   const { error: upsertError } = await admin
     .from("user_subscriptions")
     .upsert({
@@ -115,6 +135,7 @@ Deno.serve(async (req) => {
       is_active: isActive,
       product_id: productId ?? null,
       expires_at: expiresAt,
+      premium_activated_at: premiumActivatedAt,
       last_event: type,
       last_event_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

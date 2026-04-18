@@ -166,27 +166,52 @@ final class PhoneCallController: NSObject {
 
     // MARK: - Private
 
-    private func cleanup() {
+    /// 통화 종료 시 공통 정리 루틴.
+    /// - Parameter finalDurationSeconds:
+    ///   CXEndCallAction(정상 종료) 경로에서는 실제 elapsed를 전달해 서버 quota에 반영.
+    ///   연결 실패/즉시 종료 경로에서는 nil → 0초로 기록.
+    private func cleanup(finalDurationSeconds: Int? = nil) {
         currentCallUUID = nil
-        geminiSessionTask?.cancel()
+
+        // L3 race 방지: geminiSessionTask가 아직 완료 전인 상태에서 사용자가
+        // Decline하거나 실패로 빠지면 currentSessionId가 nil이지만 서버에는
+        // pending row가 생성될 수 있다. Task 결과를 기다려 session_id를 받아
+        // 정리까지 수행한다.
+        let pendingTask = geminiSessionTask
         geminiSessionTask = nil
-        // 연결 실패 등으로 통화가 즉시 종료된 경우 pending row를 completed로 전환.
-        // CallEndedView를 거치지 않는 경로에서 pending row가 남아 다음 통화를 차단하는 것을 방지.
+
+        let durationForPending = finalDurationSeconds ?? 0
         if let sessionId = currentSessionId {
-            cancelPendingSession(sessionId: sessionId)
+            finalizePendingSession(sessionId: sessionId, duration: durationForPending)
+        } else if let pendingTask {
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if let response = try? await pendingTask.value,
+                   let sessionId = response.sessionId {
+                    self.finalizePendingSession(sessionId: sessionId, duration: durationForPending)
+                    // Decline 등으로 answer 전에 세션을 받은 경우에도 CallEndedView가
+                    // 뜨지 않으므로 여기서 currentSessionId를 채워둘 필요 없음.
+                    // 정상 경로(answer)에서는 이미 CXAnswerCallAction이 세팅해 둔 상태.
+                }
+            }
         }
-        // resetToIdle()로 가기 전 재진입 시 stale sessionId를 쓰지 않도록 즉시 초기화.
-        currentSessionId = nil
+
+        // C1 fix: cleanup에서 즉시 currentSessionId를 nil로 리셋하면
+        // CallEndedView.saveRecordIfNeeded()가 sessionId 기반 complete() 대신
+        // record() 새 INSERT 경로를 타서 동일 통화가 서버에 2건으로 기록된다.
+        // currentSessionId는 resetToIdle() 또는 다음 incomingCall()에서 초기화되므로
+        // 여기서 nil로 덮어쓰지 않는다.
         RealtimeVoiceService.shared.disconnect()
     }
 
-    /// pending 상태인 session row를 duration=0으로 완료 처리.
-    private func cancelPendingSession(sessionId: UUID) {
+    /// pending 상태인 session row를 completed로 전환.
+    /// - Parameter duration: 정상 종료면 실제 elapsed, 실패 경로면 0.
+    private func finalizePendingSession(sessionId: UUID, duration: Int) {
         Task {
             guard let token = await AuthService.shared.accessToken else { return }
             let payload: [String: Any] = [
                 "status": "completed",
-                "duration_seconds": 0,
+                "duration_seconds": duration,
                 "completed_at": ISO8601DateFormatter().string(from: Date()),
             ]
             var request = URLRequest(url: URL(string: "\(SupabaseConfig.restBaseURL)/phone_call_sessions?id=eq.\(sessionId.uuidString)")!)
@@ -196,7 +221,7 @@ final class PhoneCallController: NSObject {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
             _ = try? await URLSession.shared.data(for: request)
-            print("[PhoneCall] pending session \(sessionId) → completed (cleanup)")
+            print("[PhoneCall] pending session \(sessionId) → completed duration=\(duration)s")
         }
     }
 
@@ -215,7 +240,10 @@ extension PhoneCallController: CXProviderDelegate {
         Task { @MainActor in
             self.phase = .ended(reason: nil)
             self.callEndDate = Date()
-            self.cleanup()
+            // 통화가 실제로 진행 중이었으면 elapsed를 quota에 반영.
+            // callStartDate가 nil이면 elapsedSeconds는 0이므로 안전.
+            let finalDuration = self.callStartDate != nil ? self.elapsedSeconds : 0
+            self.cleanup(finalDurationSeconds: finalDuration)
         }
     }
 
@@ -283,7 +311,11 @@ extension PhoneCallController: CXProviderDelegate {
         Task { @MainActor in
             self.callEndDate = Date()
             self.phase = .ended(reason: nil)
-            self.cleanup()
+            // 정상 종료 경로: 실제 통화 시간을 서버 quota에 즉시 반영.
+            // CallEndedView의 30초/2턴 가드로 인해 짧은 통화가 0초로 남아
+            // quota 회피가 가능했던 구멍을 차단.
+            let finalDuration = self.callStartDate != nil ? self.elapsedSeconds : 0
+            self.cleanup(finalDurationSeconds: finalDuration)
             action.fulfill()
         }
     }

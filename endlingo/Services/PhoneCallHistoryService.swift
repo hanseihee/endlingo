@@ -16,20 +16,35 @@ final class PhoneCallHistoryService {
     private let fileURL: URL
     private var auth: AuthService { AuthService.shared }
 
+    /// quota 계산 시작 시점.
+    /// - Free: UTC 00:00 (오늘 전체)
+    /// - Premium: max(UTC 00:00, premiumActivatedAt). Free → Premium 전환 이후 세션만 합산해
+    ///   "구매 직후 깨끗한 10분 재시작" UX를 제공.
+    private var quotaWindowStart: Date {
+        let todayStart = Self.todayStartUTC
+        if SubscriptionService.shared.currentTier == .premium,
+           let activated = SubscriptionService.shared.premiumActivatedAt,
+           activated > todayStart {
+            return activated
+        }
+        return todayStart
+    }
+
     /// 오늘(UTC 00:00 기준) 사용한 총 통화 시간 (초).
+    /// Premium 유저는 전환 시점 이후만 합산.
     /// 로컬 records 기반이라 서버의 pending row(duration=0)와 소폭 차이 가능.
     /// 통화 중 앱 강제 종료 시 해당 통화 시간이 반영되지 않을 수 있음 (사용자에게 유리한 방향).
     /// 정확한 quota는 gemini-session Edge Function이 서버 DB 기준으로 판정.
     var todayUsedSeconds: Int {
-        let todayStart = Self.todayStartUTC
-        return records.filter { $0.startedAt >= todayStart }
+        let start = quotaWindowStart
+        return records.filter { $0.startedAt >= start }
             .reduce(0) { $0 + $1.durationSeconds }
     }
 
     /// 오늘 사용한 통화 수. UI 참고용.
     var todayCallCount: Int {
-        let todayStart = Self.todayStartUTC
-        return records.filter { $0.startedAt >= todayStart }.count
+        let start = quotaWindowStart
+        return records.filter { $0.startedAt >= start }.count
     }
 
     /// 오늘 남은 통화 가능 시간 (초). tier에 따라 동적.
@@ -173,6 +188,9 @@ final class PhoneCallHistoryService {
     }
 
     /// Supabase REST PATCH 헬퍼.
+    /// 상태코드를 확인하고 최대 3회까지 exponential backoff로 재시도한다.
+    /// complete()/updateReview()의 silent fail로 인해 서버 duration/transcript가 반영되지 않아
+    /// pending row가 남거나 quota가 누락되던 문제를 방지.
     private static func updateSession(id: UUID, payload: [String: Any], token: String) async {
         guard let url = URL(string: "\(SupabaseConfig.restBaseURL)/phone_call_sessions?id=eq.\(id.uuidString)") else { return }
         var request = URLRequest(url: url)
@@ -182,7 +200,29 @@ final class PhoneCallHistoryService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("return=minimal", forHTTPHeaderField: "Prefer")
         request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
-        _ = try? await URLSession.shared.data(for: request)
+
+        let maxAttempts = 3
+        for attempt in 1...maxAttempts {
+            do {
+                let (_, response) = try await URLSession.shared.data(for: request)
+                let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+                if (200..<300).contains(status) {
+                    if attempt > 1 {
+                        print("[PhoneCallHistory] session \(id) PATCH succeeded on attempt \(attempt)")
+                    }
+                    return
+                }
+                print("[PhoneCallHistory] session \(id) PATCH failed status=\(status), attempt=\(attempt)")
+                // 4xx(클라이언트 오류)는 재시도해도 성공 가능성 낮음
+                if (400..<500).contains(status) { return }
+            } catch {
+                print("[PhoneCallHistory] session \(id) PATCH error=\(error.localizedDescription), attempt=\(attempt)")
+            }
+            if attempt < maxAttempts {
+                let delayNs = UInt64(pow(2.0, Double(attempt - 1)) * 500_000_000) // 0.5s, 1s, 2s
+                try? await Task.sleep(nanoseconds: delayNs)
+            }
+        }
     }
 
     func remove(id: UUID) {

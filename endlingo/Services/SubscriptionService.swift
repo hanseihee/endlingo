@@ -49,6 +49,12 @@ final class SubscriptionService {
     private(set) var currentTier: Tier = .free
     private(set) var isLoading: Bool = false
 
+    /// Free → Premium 전환 시점 (UTC). Premium 상태가 아니면 nil.
+    /// `PhoneCallHistoryService.todayUsedSeconds`에서 이 시점 이후 세션만 합산해
+    /// "전환 후 깨끗한 quota 재시작" 정책을 구현한다.
+    /// 서버와 완벽히 동일한 타임스탬프는 아니지만 UX 근사치로 충분.
+    private(set) var premiumActivatedAt: Date?
+
     /// Premium 여부 편의 프로퍼티.
     var isPremium: Bool { currentTier == .premium }
 
@@ -82,6 +88,7 @@ final class SubscriptionService {
         do {
             let (customerInfo, _) = try await Purchases.shared.logIn(userId)
             updateTier(from: customerInfo)
+            await syncToServer(customerInfo: customerInfo)
             print("[Subscription] logIn userId=\(userId), tier=\(currentTier.rawValue)")
         } catch {
             print("[Subscription] logIn failed: \(error.localizedDescription)")
@@ -118,6 +125,9 @@ final class SubscriptionService {
 
         let (_, customerInfo, userCancelled) = try await Purchases.shared.purchase(package: package)
         updateTier(from: customerInfo)
+        // 구매 직후 서버 `user_subscriptions`에 즉시 반영.
+        // RevenueCat webhook 지연으로 인해 gemini-session이 free로 판정하던 M1 문제 차단.
+        await syncToServer(customerInfo: customerInfo)
         return !userCancelled
     }
 
@@ -128,6 +138,7 @@ final class SubscriptionService {
 
         let customerInfo = try await Purchases.shared.restorePurchases()
         updateTier(from: customerInfo)
+        await syncToServer(customerInfo: customerInfo)
     }
 
     // MARK: - Private
@@ -137,8 +148,61 @@ final class SubscriptionService {
         do {
             let customerInfo = try await Purchases.shared.customerInfo()
             updateTier(from: customerInfo)
+            // 로그인된 경우 서버 user_subscriptions도 함께 최신화 (webhook 지연 보정).
+            if AuthService.shared.isLoggedIn {
+                await syncToServer(customerInfo: customerInfo)
+            }
         } catch {
             print("[Subscription] refreshTier failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// `sync-subscription` Edge Function으로 현재 entitlement를 서버에 upsert.
+    /// webhook 지연·유실에 상관없이 클라가 본 진실을 서버에 반영해
+    /// `gemini-session`의 tier 판정이 stale해지는 것을 방지.
+    private func syncToServer(customerInfo: CustomerInfo) async {
+        guard AuthService.shared.isLoggedIn,
+              let token = await AuthService.shared.accessToken else { return }
+
+        let entitlement = customerInfo.entitlements[Self.entitlementId]
+        let isPremium = entitlement?.isActive == true
+        let productId = entitlement?.productIdentifier
+        let expiresAtMs: Int? = entitlement?.expirationDate.map { Int($0.timeIntervalSince1970 * 1000) }
+
+        var payload: [String: Any] = ["is_premium": isPremium]
+        if let productId { payload["product_id"] = productId }
+        if let expiresAtMs { payload["expires_at_ms"] = expiresAtMs }
+
+        guard let url = URL(string: "\(SupabaseConfig.functionsBaseURL)/sync-subscription") else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue(SupabaseConfig.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+        request.timeoutInterval = 10
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            print("[Subscription] sync-subscription status=\(status), isPremium=\(isPremium)")
+
+            // 서버 응답에서 premium_activated_at을 받아 로컬 값을 서버 시각으로 재동기화.
+            // 기기 간 전환 시점 일관성 유지.
+            if (200..<300).contains(status),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                if let iso = json["premium_activated_at"] as? String {
+                    let formatter = ISO8601DateFormatter()
+                    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                    if let date = formatter.date(from: iso) ?? ISO8601DateFormatter().date(from: iso) {
+                        premiumActivatedAt = date
+                    }
+                } else if json["premium_activated_at"] is NSNull {
+                    premiumActivatedAt = nil
+                }
+            }
+        } catch {
+            print("[Subscription] sync-subscription failed: \(error.localizedDescription)")
         }
     }
 
@@ -153,8 +217,16 @@ final class SubscriptionService {
 
         if isActive {
             currentTier = .premium
+            // 앱 재실행 직후에도 wasActive=false이므로 무조건 Date()로 찍으면
+            // quota 계산이 매번 리셋된다. premiumActivatedAt이 nil일 때만 임시 세팅하고,
+            // 서버 동기화(syncToServer) 응답에서 서버 확정 시각으로 덮어쓴다.
+            if !wasActive && premiumActivatedAt == nil {
+                premiumActivatedAt = Date()
+                print("[Subscription] premiumActivatedAt set (tentative) = \(premiumActivatedAt!)")
+            }
         } else {
             currentTier = .free
+            premiumActivatedAt = nil
         }
         if wasActive != isPremium {
             print("[Subscription] tier changed → \(currentTier.rawValue)")

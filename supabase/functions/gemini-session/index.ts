@@ -79,22 +79,47 @@ Deno.serve(async (req) => {
     // cleanup 실패는 치명적이지 않음 — 정상 로직 계속 진행
   }
 
+  // 구독 상태 선조회 — quota 계산 기준 시점 결정을 위해 필요.
+  const { data: subData } = await adminClient
+    .from("user_subscriptions")
+    .select("tier, is_active, expires_at, premium_activated_at")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  // 합산 기준 시점 결정:
+  // - Premium인 경우: Free → Premium 전환 이후 세션만 합산 (깨끗한 quota 재시작)
+  // - Free인 경우: UTC 오늘 전체
+  const effectiveStart = (() => {
+    if (subData?.tier === "premium" &&
+        subData?.is_active !== false &&
+        (!subData.expires_at || new Date(subData.expires_at as string) > new Date()) &&
+        subData?.premium_activated_at) {
+      const activatedAt = new Date(subData.premium_activated_at as string);
+      return activatedAt > todayStartUTC ? activatedAt : todayStartUTC;
+    }
+    return todayStartUTC;
+  })();
+
   const { data: usageData, error: usageError } = await adminClient
     .from("phone_call_sessions")
-    .select("duration_seconds, status")
+    .select("duration_seconds, status, started_at")
     .eq("user_id", user.id)
-    .gte("started_at", todayStartUTC.toISOString());
+    .gte("started_at", effectiveStart.toISOString());
 
   if (usageError) {
     console.error("Quota check failed:", usageError);
     return json({ error: "quota_check_failed" }, 503);
   }
 
-  // 동시 통화 방지 (stale cleanup 이후이므로 진짜 진행 중인 통화만 남음)
-  const pendingCount = (usageData || []).filter(
-    (r: { status?: string }) => r.status === "pending"
-  ).length;
-  if (pendingCount > 0) {
+  // 동시 통화 방지: effectiveStart와 무관하게 오늘 전체에서 pending row 확인.
+  // (전환 시점 직전에 시작된 pending row도 차단해야 하므로)
+  const { data: pendingData } = await adminClient
+    .from("phone_call_sessions")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("status", "pending")
+    .gte("started_at", todayStartUTC.toISOString());
+  if ((pendingData?.length ?? 0) > 0) {
     return json({ error: "call_in_progress", message: "이미 진행 중인 통화가 있습니다" }, 429);
   }
 
@@ -118,16 +143,14 @@ Deno.serve(async (req) => {
     // body 없음 — 기본값 사용
   }
 
-  // ---- 4) 서버 측 tier 검증 ----
-  const { data: subData } = await adminClient
-    .from("user_subscriptions")
-    .select("tier, expires_at")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
+  // ---- 4) 서버 측 tier 검증 (위에서 조회한 subData 재사용) ----
+  // tier 검증: tier=premium 이라고 해도 is_active=false(환불/취소)나
+  // expires_at 경과는 모두 free로 다운그레이드.
+  // is_active 누락/null은 하위 호환을 위해 통과시킨다(기존 row 보호).
   const serverTier = (
     subData?.tier === "premium" &&
-    (!subData.expires_at || new Date(subData.expires_at) > new Date())
+    subData?.is_active !== false &&
+    (!subData.expires_at || new Date(subData.expires_at as string) > new Date())
   ) ? "premium" : "free";
 
   const limits = TIER_LIMITS[serverTier] || TIER_LIMITS.free;
@@ -159,8 +182,11 @@ Deno.serve(async (req) => {
     .select("id")
     .single();
 
-  if (insertError) {
+  // pending row insert 실패 시 200으로 넘기면 동시통화 차단과 quota 합산이
+  // 모두 뚫리므로 500으로 실패시키고 클라이언트가 통화를 시작하지 못하게 한다.
+  if (insertError || !insertedRow?.id) {
     console.error("pending session insert failed:", insertError);
+    return json({ error: "session_register_failed" }, 500);
   }
 
   return json({
@@ -168,7 +194,7 @@ Deno.serve(async (req) => {
     tier: serverTier,
     max_duration_seconds: maxDuration,
     remaining_seconds_today: remainingSeconds - maxDuration,
-    session_id: insertedRow?.id ?? null,
+    session_id: insertedRow.id,
   });
 });
 

@@ -97,6 +97,13 @@ final class RealtimeVoiceService: NSObject {
         pipeline.setSpeakerEnabled(isSpeakerOn)
         audioPipeline = pipeline
 
+        // 마이크 권한이 undetermined면 즉시 요청. 최초 진입 사용자가 권한 미부여 상태에서
+        // 오디오 엔진 시작 실패로 .error에 빠지는 것을 방지.
+        if case .undetermined = AVAudioApplication.shared.recordPermission {
+            let granted = await AVAudioApplication.requestRecordPermission()
+            print("[RealtimeVoice] mic permission requested → granted=\(granted)")
+        }
+
         // 진단: 현재 마이크 권한 + AVAudioSession 상태 덤프
         let audioSession = AVAudioSession.sharedInstance()
         let permission: String
@@ -107,6 +114,12 @@ final class RealtimeVoiceService: NSObject {
         @unknown default: permission = "unknown"
         }
         print("[RealtimeVoice] connect start — micPermission=\(permission), inputAvail=\(audioSession.isInputAvailable), category=\(audioSession.category.rawValue)")
+
+        // 권한 거부 상태면 조기 실패 처리 — 무의미한 연결 시도를 피한다.
+        if AVAudioApplication.shared.recordPermission == .denied {
+            state = .error(String(localized: "마이크 권한이 필요합니다. 설정에서 권한을 허용해주세요"))
+            return
+        }
 
         let config = ProviderSessionConfig(
             instructions: scenario.instructions(for: level, nativeLanguage: nativeLanguage, variant: variant),

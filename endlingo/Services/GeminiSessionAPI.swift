@@ -68,6 +68,10 @@ enum GeminiSessionAPI {
             }
             let info = parseDailyLimitInfo(data)
             throw CallSessionError.dailyLimitReached(info)
+        case 500:
+            // Edge Function이 pending row 삽입 등 서버 상태 준비에 실패한 경우.
+            // 통화를 시작하면 동시통화 차단과 quota 합산이 뚫리므로 바로 에러로 전파.
+            throw CallSessionError.serverUnavailable
         case 503:
             throw CallSessionError.serverUnavailable
         default:
