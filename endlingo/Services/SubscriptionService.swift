@@ -184,10 +184,23 @@ final class SubscriptionService {
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
             print("[Subscription] sync-subscription status=\(status), isPremium=\(isPremium)")
 
-            // 서버 응답에서 premium_activated_at을 받아 로컬 값을 서버 시각으로 재동기화.
-            // 기기 간 전환 시점 일관성 유지.
+            // 서버 응답에서 tier/premium_activated_at을 받아 로컬 상태를 서버 truth로 재동기화.
+            // RevenueCat SDK의 customerInfo는 캐시 기반이라 구독 만료 직후에도 isActive=true가
+            // 잠깐 유지될 수 있는데, 서버는 REST API로 실시간 조회하므로 더 정확하다.
+            // 불일치를 방치하면 UI는 Premium인데 실제 통화는 서버가 Free quota로 거절하는
+            // 상황이 발생하므로, 서버 판정을 신뢰하고 로컬을 덮어쓴다.
             if (200..<300).contains(status),
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                if let serverTierStr = json["tier"] as? String {
+                    let serverTier: Tier = serverTierStr == "premium" ? .premium : .free
+                    if serverTier != currentTier {
+                        print("[Subscription] tier corrected by server: \(currentTier.rawValue) → \(serverTier.rawValue)")
+                        currentTier = serverTier
+                        if serverTier == .free {
+                            premiumActivatedAt = nil
+                        }
+                    }
+                }
                 if let iso = json["premium_activated_at"] as? String {
                     let formatter = ISO8601DateFormatter()
                     formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
