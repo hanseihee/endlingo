@@ -13,6 +13,10 @@ struct PhoneCallRecord: Codable, Identifiable, Hashable, Sendable {
     let startedAt: Date
     let createdAt: Date
     var reviewIssues: [CallReviewIssue]?
+    /// 세션 발생 시점의 tier ('free' | 'premium').
+    /// Premium 시기 통화를 Premium 만료 후 Free quota에서 제외하기 위해 필요.
+    /// 기존 row(컬럼 추가 전)는 default 'free'로 backfill되어 nil이 아닌 'free'로 옴.
+    var tierAtSession: String?
 
     struct TranscriptLine: Codable, Hashable, Sendable {
         let speaker: String  // "user" | "assistant"
@@ -32,5 +36,6 @@ struct PhoneCallRecord: Codable, Identifiable, Hashable, Sendable {
         case startedAt = "started_at"
         case createdAt = "created_at"
         case reviewIssues = "review_issues"
+        case tierAtSession = "tier_at_session"
     }
 }

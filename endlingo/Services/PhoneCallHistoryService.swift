@@ -32,19 +32,27 @@ final class PhoneCallHistoryService {
 
     /// 오늘(UTC 00:00 기준) 사용한 총 통화 시간 (초).
     /// Premium 유저는 전환 시점 이후만 합산.
+    /// Free 유저는 tier_at_session='free' 세션만 합산 — Premium 시기 통화는 제외.
     /// 로컬 records 기반이라 서버의 pending row(duration=0)와 소폭 차이 가능.
     /// 통화 중 앱 강제 종료 시 해당 통화 시간이 반영되지 않을 수 있음 (사용자에게 유리한 방향).
     /// 정확한 quota는 gemini-session Edge Function이 서버 DB 기준으로 판정.
     var todayUsedSeconds: Int {
         let start = quotaWindowStart
-        return records.filter { $0.startedAt >= start }
+        let isPremium = SubscriptionService.shared.currentTier == .premium
+        return records
+            .filter { $0.startedAt >= start }
+            .filter { isPremium || $0.tierAtSession != "premium" }
             .reduce(0) { $0 + $1.durationSeconds }
     }
 
     /// 오늘 사용한 통화 수. UI 참고용.
     var todayCallCount: Int {
         let start = quotaWindowStart
-        return records.filter { $0.startedAt >= start }.count
+        let isPremium = SubscriptionService.shared.currentTier == .premium
+        return records
+            .filter { $0.startedAt >= start }
+            .filter { isPremium || $0.tierAtSession != "premium" }
+            .count
     }
 
     /// 오늘 남은 통화 가능 시간 (초). tier에 따라 동적.

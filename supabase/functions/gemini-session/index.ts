@@ -86,14 +86,19 @@ Deno.serve(async (req) => {
     .eq("user_id", user.id)
     .maybeSingle();
 
+  // 서버 tier 판정을 먼저 수행 (effectiveStart와 quota 합산 모두에서 사용).
+  // tier=premium이라고 해도 is_active=false(환불/취소)나 expires_at 경과는 free로 다운그레이드.
+  const serverTier = (
+    subData?.tier === "premium" &&
+    subData?.is_active !== false &&
+    (!subData.expires_at || new Date(subData.expires_at as string) > new Date())
+  ) ? "premium" : "free";
+
   // 합산 기준 시점 결정:
   // - Premium인 경우: Free → Premium 전환 이후 세션만 합산 (깨끗한 quota 재시작)
   // - Free인 경우: UTC 오늘 전체
   const effectiveStart = (() => {
-    if (subData?.tier === "premium" &&
-        subData?.is_active !== false &&
-        (!subData.expires_at || new Date(subData.expires_at as string) > new Date()) &&
-        subData?.premium_activated_at) {
+    if (serverTier === "premium" && subData?.premium_activated_at) {
       const activatedAt = new Date(subData.premium_activated_at as string);
       return activatedAt > todayStartUTC ? activatedAt : todayStartUTC;
     }
@@ -102,7 +107,7 @@ Deno.serve(async (req) => {
 
   const { data: usageData, error: usageError } = await adminClient
     .from("phone_call_sessions")
-    .select("duration_seconds, status, started_at")
+    .select("duration_seconds, status, started_at, tier_at_session")
     .eq("user_id", user.id)
     .gte("started_at", effectiveStart.toISOString());
 
@@ -123,10 +128,16 @@ Deno.serve(async (req) => {
     return json({ error: "call_in_progress", message: "이미 진행 중인 통화가 있습니다" }, 429);
   }
 
-  const usedSeconds = (usageData || []).reduce(
-    (sum: number, r: { duration_seconds: number }) => sum + (r.duration_seconds || 0),
-    0
-  );
+  // Free quota는 tier_at_session='free' 세션만 합산 — Premium 시기 통화는 제외.
+  // Premium quota는 effectiveStart(=premium_activated_at) 이후 모든 세션 합산.
+  const usedSeconds = (usageData || [])
+    .filter((r: { tier_at_session?: string }) =>
+      serverTier === "premium" || r.tier_at_session !== "premium"
+    )
+    .reduce(
+      (sum: number, r: { duration_seconds: number }) => sum + (r.duration_seconds || 0),
+      0
+    );
 
   // ---- 3) 요청 파라미터 파싱 ----
   let scenarioId = "unknown";
@@ -143,16 +154,7 @@ Deno.serve(async (req) => {
     // body 없음 — 기본값 사용
   }
 
-  // ---- 4) 서버 측 tier 검증 (위에서 조회한 subData 재사용) ----
-  // tier 검증: tier=premium 이라고 해도 is_active=false(환불/취소)나
-  // expires_at 경과는 모두 free로 다운그레이드.
-  // is_active 누락/null은 하위 호환을 위해 통과시킨다(기존 row 보호).
-  const serverTier = (
-    subData?.tier === "premium" &&
-    subData?.is_active !== false &&
-    (!subData.expires_at || new Date(subData.expires_at as string) > new Date())
-  ) ? "premium" : "free";
-
+  // ---- 4) tier 검증 (위에서 결정한 serverTier 재사용) ----
   const limits = TIER_LIMITS[serverTier] || TIER_LIMITS.free;
   if (usedSeconds >= limits.dailySeconds) {
     return json({
@@ -178,6 +180,7 @@ Deno.serve(async (req) => {
       started_at: new Date().toISOString(),
       status: "pending",
       transcript: [],
+      tier_at_session: serverTier,
     })
     .select("id")
     .single();
