@@ -23,13 +23,12 @@ final class InterstitialAdService: NSObject {
     /// 사용자가 전화영어 탭을 짧은 시간 안에 여러 번 들락거려도 한 번만 표시.
     private static let cooldownSeconds: TimeInterval = 180  // 3분
 
-    // AdMob 광고 단위 ID. Debug는 Google 공식 테스트 ID,
-    // Release는 AdMob Console에서 발급한 실제 interstitial ID로 교체 필요.
+    // AdMob 광고 단위 ID. Debug는 Google 공식 테스트 ID로 항상 정상 광고 송출,
+    // Release는 AdMob Console에서 발급한 endlingo 전용 interstitial 단위.
     #if DEBUG
     private static let adUnitId = "ca-app-pub-3940256099942544/4411468910"
     #else
-    // TODO: AdMob Console → Apps → endlingo → Ad units → Interstitial 신규 생성 후 ID 교체
-    private static let adUnitId = "ca-app-pub-4582716621646848/0000000000"
+    private static let adUnitId = "ca-app-pub-4582716621646848/1432634226"
     #endif
 
     private override init() {
