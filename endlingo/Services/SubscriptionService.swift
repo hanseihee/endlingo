@@ -157,21 +157,18 @@ final class SubscriptionService {
         }
     }
 
-    /// `sync-subscription` Edge Function으로 현재 entitlement를 서버에 upsert.
-    /// webhook 지연·유실에 상관없이 클라가 본 진실을 서버에 반영해
-    /// `gemini-session`의 tier 판정이 stale해지는 것을 방지.
+    /// `sync-subscription` Edge Function으로 서버에 구독 상태 동기화 요청.
+    /// 서버는 클라 body를 무시하고 RevenueCat REST API로 직접 재검증하므로,
+    /// 여기서 보내는 payload는 진단·로깅용 hint일 뿐 신뢰 근거가 아니다.
     private func syncToServer(customerInfo: CustomerInfo) async {
         guard AuthService.shared.isLoggedIn,
               let token = await AuthService.shared.accessToken else { return }
 
         let entitlement = customerInfo.entitlements[Self.entitlementId]
         let isPremium = entitlement?.isActive == true
-        let productId = entitlement?.productIdentifier
-        let expiresAtMs: Int? = entitlement?.expirationDate.map { Int($0.timeIntervalSince1970 * 1000) }
 
-        var payload: [String: Any] = ["is_premium": isPremium]
-        if let productId { payload["product_id"] = productId }
-        if let expiresAtMs { payload["expires_at_ms"] = expiresAtMs }
+        // 서버가 RevenueCat API로 재검증하므로 body는 최소화 (진단용 hint).
+        let payload: [String: Any] = ["is_premium": isPremium]
 
         guard let url = URL(string: "\(SupabaseConfig.functionsBaseURL)/sync-subscription") else { return }
         var request = URLRequest(url: url)
