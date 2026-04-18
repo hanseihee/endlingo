@@ -62,6 +62,8 @@ Deno.serve(async (req) => {
     return json({ error: "revenuecat_unreachable" }, 503);
   }
 
+  const adminClient = createClient(supabaseUrl, serviceKey);
+
   // 빈 subscriber(entitlement 없음)가 계속 돌아오는 경우는 두 가지.
   // (A) 실제로 구독이 없는 사용자(free)
   // (B) 구매 직후 RC 서버 지연 또는 alias 혼선으로 인한 일시 empty
