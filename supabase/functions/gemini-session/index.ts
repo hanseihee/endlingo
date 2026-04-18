@@ -12,7 +12,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  */
 
 const TIER_LIMITS: Record<string, { dailySeconds: number; maxSingleSeconds: number }> = {
-  free:    { dailySeconds: 60,  maxSingleSeconds: 60  },
+  free:    { dailySeconds: 120, maxSingleSeconds: 120 },
   premium: { dailySeconds: 600, maxSingleSeconds: 600 },
 };
 

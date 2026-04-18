@@ -83,7 +83,7 @@ struct PaywallView: View {
 
     private var benefitsSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            benefitRow(icon: "phone.fill", color: .green, title: "AI 전화영어 하루 10분", subtitle: "무료 1분 → 10분으로 확장")
+            benefitRow(icon: "phone.fill", color: .green, title: "AI 전화영어 하루 10분", subtitle: "무료 2분 → 10분으로 확장")
             benefitRow(icon: "globe", color: .blue, title: "실시간 번역", subtitle: "통화 중 실시간 한국어 번역")
             benefitRow(icon: "text.badge.checkmark", color: .purple, title: "영작 피드백", subtitle: "통화 후 문장 교정")
             benefitRow(icon: "nosign", color: .red, title: "광고 제거", subtitle: "모든 배너 광고 제거")

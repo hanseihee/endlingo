@@ -25,7 +25,7 @@ final class SubscriptionService {
         /// 하루 총 통화 가능 시간 (초). 여러 통화 합산.
         var dailyCallDurationSeconds: Int {
             switch self {
-            case .free: return 60       // 1분
+            case .free: return 120      // 2분
             case .premium: return 600   // 10분
             }
         }
@@ -33,7 +33,7 @@ final class SubscriptionService {
         /// 1회 통화 최대 시간 (초).
         var maxSingleCallSeconds: Int {
             switch self {
-            case .free: return 60       // 1분
+            case .free: return 120      // 2분
             case .premium: return 600   // 10분
             }
         }
